@@ -4,12 +4,12 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 export const firebaseConfig = {
-  apiKey: "AIzaSyBUrjWPr-hOhpuhjB5eOoMivRPjKa9U",
+  apiKey: "AIzaSyCewccKdoEW9RILRN2LLUiMJmgRMgznLLM",
   authDomain: "malloya--app.firebaseapp.com",
   projectId: "malloya--app",
   storageBucket: "malloya--app.firebasestorage.app",
   messagingSenderId: "574142082152",
-  appId: "1:574142082152:web:cdb23bd4ddc8ef3c2c1fdd",
+  appId: "1:574142082152:web:c2b9d8d4477113372c1fdd",
 };
 
 /**

@@ -35,7 +35,7 @@ export async function adminSignOut() {
   await signOut(auth());
 }
 
-/** Admin authorisation: custom claim first, then the adminUsers collection. */
+/** Admin authorisation: custom claim first, then the "admins" collection. */
 export async function checkIsAdmin(user) {
   if (!user || user.isAnonymous) return false;
   try {
@@ -45,7 +45,7 @@ export async function checkIsAdmin(user) {
     /* ignore */
   }
   try {
-    const snap = await getDoc(doc(db(), "adminUsers", user.uid));
+    const snap = await getDoc(doc(db(), "admins", user.uid));
     return snap.exists();
   } catch {
     return false;

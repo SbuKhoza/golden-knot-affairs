@@ -15,7 +15,11 @@ import { Route as ProgramRouteImport } from './routes/program'
 import { Route as RsvpRouteImport } from './routes/rsvp'
 import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
+import { Route as AdminGuestsRouteImport } from './routes/admin.guests'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
+import { Route as AdminRsvpsRouteImport } from './routes/admin.rsvps'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -47,9 +51,29 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/admin/dashboard',
+  path: '/admin/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminGuestsRoute = AdminGuestsRouteImport.update({
+  id: '/admin/guests',
+  path: '/admin/guests',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin/login',
   path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRsvpsRoute = AdminRsvpsRouteImport.update({
+  id: '/admin/rsvps',
+  path: '/admin/rsvps',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/admin/settings',
+  path: '/admin/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -59,7 +83,11 @@ export interface FileRoutesByFullPath {
   '/program': typeof ProgramRoute
   '/rsvp': typeof RsvpRoute
   '/verify': typeof VerifyRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/guests': typeof AdminGuestsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/rsvps': typeof AdminRsvpsRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -68,7 +96,11 @@ export interface FileRoutesByTo {
   '/program': typeof ProgramRoute
   '/rsvp': typeof RsvpRoute
   '/verify': typeof VerifyRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/guests': typeof AdminGuestsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/rsvps': typeof AdminRsvpsRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
@@ -78,7 +110,11 @@ export interface FileRoutesById {
   '/program': typeof ProgramRoute
   '/rsvp': typeof RsvpRoute
   '/verify': typeof VerifyRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/guests': typeof AdminGuestsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/rsvps': typeof AdminRsvpsRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -89,7 +125,11 @@ export interface FileRouteTypes {
     | '/program'
     | '/rsvp'
     | '/verify'
+    | '/admin/dashboard'
+    | '/admin/guests'
     | '/admin/login'
+    | '/admin/rsvps'
+    | '/admin/settings'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -98,7 +138,11 @@ export interface FileRouteTypes {
     | '/program'
     | '/rsvp'
     | '/verify'
+    | '/admin/dashboard'
+    | '/admin/guests'
     | '/admin/login'
+    | '/admin/rsvps'
+    | '/admin/settings'
     | '/admin'
   id:
     | '__root__'
@@ -107,7 +151,11 @@ export interface FileRouteTypes {
     | '/program'
     | '/rsvp'
     | '/verify'
+    | '/admin/dashboard'
+    | '/admin/guests'
     | '/admin/login'
+    | '/admin/rsvps'
+    | '/admin/settings'
     | '/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -117,7 +165,11 @@ export interface RootRouteChildren {
   ProgramRoute: typeof ProgramRoute
   RsvpRoute: typeof RsvpRoute
   VerifyRoute: typeof VerifyRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminGuestsRoute: typeof AdminGuestsRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminRsvpsRoute: typeof AdminRsvpsRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -165,11 +217,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/guests': {
+      id: '/admin/guests'
+      path: '/admin/guests'
+      fullPath: '/admin/guests'
+      preLoaderRoute: typeof AdminGuestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/admin/login'
       fullPath: '/admin/login'
       preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/rsvps': {
+      id: '/admin/rsvps'
+      path: '/admin/rsvps'
+      fullPath: '/admin/rsvps'
+      preLoaderRoute: typeof AdminRsvpsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/admin/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -181,7 +261,11 @@ const rootRouteChildren: RootRouteChildren = {
   ProgramRoute: ProgramRoute,
   RsvpRoute: RsvpRoute,
   VerifyRoute: VerifyRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
+  AdminGuestsRoute: AdminGuestsRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminRsvpsRoute: AdminRsvpsRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
