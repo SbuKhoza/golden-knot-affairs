@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InvitationRouteImport } from './routes/invitation'
 import { Route as ProgramRouteImport } from './routes/program'
+import { Route as RsvpRouteImport } from './routes/rsvp'
 import { Route as VerifyRouteImport } from './routes/verify'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const ProgramRoute = ProgramRouteImport.update({
   path: '/program',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RsvpRoute = RsvpRouteImport.update({
+  id: '/rsvp',
+  path: '/rsvp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VerifyRoute = VerifyRouteImport.update({
   id: '/verify',
   path: '/verify',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/invitation': typeof InvitationRoute
   '/program': typeof ProgramRoute
+  '/rsvp': typeof RsvpRoute
   '/verify': typeof VerifyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/invitation': typeof InvitationRoute
   '/program': typeof ProgramRoute
+  '/rsvp': typeof RsvpRoute
   '/verify': typeof VerifyRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/invitation': typeof InvitationRoute
   '/program': typeof ProgramRoute
+  '/rsvp': typeof RsvpRoute
   '/verify': typeof VerifyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/invitation' | '/program' | '/verify'
+  fullPaths: '/' | '/invitation' | '/program' | '/rsvp' | '/verify'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/invitation' | '/program' | '/verify'
-  id: '__root__' | '/' | '/invitation' | '/program' | '/verify'
+  to: '/' | '/invitation' | '/program' | '/rsvp' | '/verify'
+  id: '__root__' | '/' | '/invitation' | '/program' | '/rsvp' | '/verify'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   InvitationRoute: typeof InvitationRoute
   ProgramRoute: typeof ProgramRoute
+  RsvpRoute: typeof RsvpRoute
   VerifyRoute: typeof VerifyRoute
 }
 
@@ -92,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProgramRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rsvp': {
+      id: '/rsvp'
+      path: '/rsvp'
+      fullPath: '/rsvp'
+      preLoaderRoute: typeof RsvpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/verify': {
       id: '/verify'
       path: '/verify'
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   InvitationRoute: InvitationRoute,
   ProgramRoute: ProgramRoute,
+  RsvpRoute: RsvpRoute,
   VerifyRoute: VerifyRoute,
 }
 export const routeTree = rootRouteImport
