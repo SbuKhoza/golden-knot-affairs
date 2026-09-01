@@ -10,11 +10,31 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as InvitationRouteImport } from './routes/invitation'
+import { Route as ProgramRouteImport } from './routes/program'
+import { Route as RsvpRouteImport } from './routes/rsvp'
 import { Route as VerifyRouteImport } from './routes/verify'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminLoginRouteImport } from './routes/admin.login'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvitationRoute = InvitationRouteImport.update({
+  id: '/invitation',
+  path: '/invitation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgramRoute = ProgramRouteImport.update({
+  id: '/program',
+  path: '/program',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RsvpRoute = RsvpRouteImport.update({
+  id: '/rsvp',
+  path: '/rsvp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifyRoute = VerifyRouteImport.update({
@@ -22,31 +42,83 @@ const VerifyRoute = VerifyRouteImport.update({
   path: '/verify',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin/login',
+  path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/invitation': typeof InvitationRoute
+  '/program': typeof ProgramRoute
+  '/rsvp': typeof RsvpRoute
   '/verify': typeof VerifyRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/invitation': typeof InvitationRoute
+  '/program': typeof ProgramRoute
+  '/rsvp': typeof RsvpRoute
   '/verify': typeof VerifyRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/invitation': typeof InvitationRoute
+  '/program': typeof ProgramRoute
+  '/rsvp': typeof RsvpRoute
   '/verify': typeof VerifyRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/verify'
+  fullPaths:
+    | '/'
+    | '/invitation'
+    | '/program'
+    | '/rsvp'
+    | '/verify'
+    | '/admin/login'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/verify'
-  id: '__root__' | '/' | '/verify'
+  to:
+    | '/'
+    | '/invitation'
+    | '/program'
+    | '/rsvp'
+    | '/verify'
+    | '/admin/login'
+    | '/admin'
+  id:
+    | '__root__'
+    | '/'
+    | '/invitation'
+    | '/program'
+    | '/rsvp'
+    | '/verify'
+    | '/admin/login'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  InvitationRoute: typeof InvitationRoute
+  ProgramRoute: typeof ProgramRoute
+  RsvpRoute: typeof RsvpRoute
   VerifyRoute: typeof VerifyRoute
+  AdminLoginRoute: typeof AdminLoginRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,6 +130,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/invitation': {
+      id: '/invitation'
+      path: '/invitation'
+      fullPath: '/invitation'
+      preLoaderRoute: typeof InvitationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/program': {
+      id: '/program'
+      path: '/program'
+      fullPath: '/program'
+      preLoaderRoute: typeof ProgramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rsvp': {
+      id: '/rsvp'
+      path: '/rsvp'
+      fullPath: '/rsvp'
+      preLoaderRoute: typeof RsvpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/verify': {
       id: '/verify'
       path: '/verify'
@@ -65,12 +158,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  InvitationRoute: InvitationRoute,
+  ProgramRoute: ProgramRoute,
+  RsvpRoute: RsvpRoute,
   VerifyRoute: VerifyRoute,
+  AdminLoginRoute: AdminLoginRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
