@@ -124,8 +124,12 @@ function InvitationPage({ guest, settings, signOut }) {
             <div className="grid gap-8 sm:grid-cols-2">
               <Detail label="Ceremony">{settings.ceremonyTime}</Detail>
               <Detail label="Reception">{settings.receptionTime}</Detail>
-              <Detail label="Venue">{settings.venueName}</Detail>
+              <Detail label="Ceremony venue">
+                {settings.ceremonyVenueName || settings.venueName}
+              </Detail>
+              <Detail label="Reception venue">{settings.receptionVenueName}</Detail>
               <Detail label="Dress code">{settings.dressCode}</Detail>
+              <Detail label="Your table">{guest.tableNumber ? `Table ${guest.tableNumber}` : ""}</Detail>
             </div>
 
             <div className="mt-10 rounded-lg bg-secondary/60 px-6 py-5">
@@ -134,24 +138,36 @@ function InvitationPage({ guest, settings, signOut }) {
                 {guest.numberOfSeats} seat{guest.numberOfSeats > 1 ? "s" : ""}
                 {guest.plusOneAllowed ? " · plus one welcome" : ""}
               </p>
+              {guest.tableNumber ? (
+                <p className="mt-1 font-display text-lg text-primary">Table {guest.tableNumber}</p>
+              ) : null}
             </div>
           </div>
         </section>
 
-        {settings.venueAddress ? (
-          <section className="animate-soft mt-8 rounded-2xl border border-border/60 bg-card/70 p-8 text-center">
-            <h2 className="font-display text-2xl">Finding us</h2>
-            <p className="mt-3 whitespace-pre-line text-sm text-muted-foreground">{settings.venueAddress}</p>
-            {mapsUrl ? (
-              <a
-                href={mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-6 inline-block rounded-md border border-gold/60 px-6 py-3 text-xs uppercase tracking-[0.3em] text-primary transition hover:bg-secondary"
+        {venues.length ? (
+          <section className="animate-soft mt-8 grid gap-4 sm:grid-cols-2">
+            {venues.map((venue) => (
+              <div
+                key={venue.key}
+                className="rounded-2xl border border-border/60 bg-card/70 p-8 text-center"
               >
-                Open in maps
-              </a>
-            ) : null}
+                <p className="text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground">{venue.label}</p>
+                <h2 className="mt-2 font-display text-2xl">{venue.name || venue.label}</h2>
+                {venue.time ? <p className="mt-1 text-sm text-muted-foreground">{venue.time}</p> : null}
+                {venue.address ? (
+                  <p className="mt-3 whitespace-pre-line text-sm text-muted-foreground">{venue.address}</p>
+                ) : null}
+                <a
+                  href={mapsFor(venue)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-6 inline-block rounded-md border border-gold/60 px-6 py-3 text-xs uppercase tracking-[0.3em] text-primary transition hover:bg-secondary"
+                >
+                  Open in maps
+                </a>
+              </div>
+            ))}
           </section>
         ) : null}
 
