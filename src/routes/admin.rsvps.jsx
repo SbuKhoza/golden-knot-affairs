@@ -63,6 +63,7 @@ function RsvpsPage() {
         id: guest.id,
         name: `${guest.firstName} ${guest.surname}`,
         seats: guest.numberOfSeats,
+        tableNumber: guest.tableNumber || "",
         status: guest.rsvpStatus || "pending",
         numberAttending: rsvp?.numberAttending ?? "—",
         guestNames: (rsvp?.guestNames || []).join(", "),
@@ -96,10 +97,11 @@ function RsvpsPage() {
   }, [guests, rsvps]);
 
   function handleExport() {
-    const headers = ["Guest", "Seats", "Status", "Attending", "Guest Names", "Dietary", "Special", "Message", "Submitted"];
+    const headers = ["Guest", "Seats", "Table", "Status", "Attending", "Guest Names", "Dietary", "Special", "Message", "Submitted"];
     const csvRows = filtered.map((r) => [
       r.name,
       r.seats,
+      r.tableNumber,
       r.status,
       r.numberAttending,
       r.guestNames,
@@ -168,6 +170,7 @@ function RsvpsPage() {
               <tr>
                 <th className="px-4 py-3">Guest</th>
                 <th className="px-4 py-3">Seats</th>
+                <th className="px-4 py-3">Table</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Attending</th>
                 <th className="px-4 py-3">Names</th>
@@ -181,6 +184,7 @@ function RsvpsPage() {
                 <tr key={r.id} className="border-b border-border/60 last:border-0">
                   <td className="px-4 py-3">{r.name}</td>
                   <td className="px-4 py-3">{r.seats}</td>
+                  <td className="px-4 py-3">{r.tableNumber || "—"}</td>
                   <td className="px-4 py-3">
                     <Badge status={r.status} />
                   </td>

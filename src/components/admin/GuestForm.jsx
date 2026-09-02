@@ -7,6 +7,7 @@ const emptyGuest = {
   phone: "",
   invitationType: "individual",
   numberOfSeats: 1,
+  tableNumber: "",
   plusOneAllowed: false,
   plusOneName: "",
   notes: "",
@@ -92,6 +93,16 @@ export function GuestForm({ initial, onSubmit, onCancel, submitting }) {
             <option value="couple">Couple</option>
             <option value="family">Family / household</option>
           </select>
+        </div>
+        <div>
+          <label className={labelClass} htmlFor="gf-table">Table number</label>
+          <input
+            id="gf-table"
+            className={fieldClass}
+            value={values.tableNumber}
+            onChange={(e) => update("tableNumber", e.target.value)}
+            placeholder="e.g. 5"
+          />
         </div>
         <div>
           <label className={labelClass} htmlFor="gf-seats">Number of seats</label>

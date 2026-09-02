@@ -39,6 +39,19 @@ function Field({ label, htmlFor, children }) {
   );
 }
 
+function RemoveButton({ onClick, disabled }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded-md border border-destructive/40 px-3 py-2 text-[0.65rem] uppercase tracking-[0.2em] text-destructive transition hover:bg-destructive/10 disabled:opacity-60"
+    >
+      {disabled ? "Removing…" : "Remove"}
+    </button>
+  );
+}
+
 function SettingsPage() {
   const [values, setValues] = useState(defaultSettings);
   const [loading, setLoading] = useState(true);
@@ -80,6 +93,22 @@ function SettingsPage() {
       update(key, url);
     } catch (err) {
       setError(friendlyError(err, "We couldn't upload that file."));
+    } finally {
+      setUploadingKey("");
+    }
+  }
+
+  async function handleRemove(key) {
+    setError("");
+    setNotice("");
+    setUploadingKey(key);
+    try {
+      const next = { ...values, [key]: "" };
+      setValues(next);
+      await saveSettings(next);
+      setNotice("File removed.");
+    } catch (err) {
+      setError(friendlyError(err, "We couldn't remove that file."));
     } finally {
       setUploadingKey("");
     }
@@ -131,20 +160,48 @@ function SettingsPage() {
           <Field label="Reception time" htmlFor="ws-reception">
             <input id="ws-reception" className={inputClass} placeholder="17:00" value={values.receptionTime} onChange={(e) => update("receptionTime", e.target.value)} />
           </Field>
-          <Field label="Venue name" htmlFor="ws-venue">
-            <input id="ws-venue" className={inputClass} value={values.venueName} onChange={(e) => update("venueName", e.target.value)} />
-          </Field>
         </div>
-        <div className="mt-4">
-          <Field label="Venue address" htmlFor="ws-address">
-            <textarea
-              id="ws-address"
-              rows={2}
-              className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none transition focus:border-gold focus:ring-2 focus:ring-ring/40"
-              value={values.venueAddress}
-              onChange={(e) => update("venueAddress", e.target.value)}
-            />
-          </Field>
+        <div className="mt-6 grid gap-6 sm:grid-cols-2">
+          <div className="space-y-4 rounded-lg border border-border/60 p-4">
+            <h3 className="text-xs uppercase tracking-[0.25em] text-muted-foreground">Ceremony venue</h3>
+            <Field label="Venue name" htmlFor="ws-cer-venue">
+              <input
+                id="ws-cer-venue"
+                className={inputClass}
+                value={values.ceremonyVenueName}
+                onChange={(e) => update("ceremonyVenueName", e.target.value)}
+              />
+            </Field>
+            <Field label="Venue address" htmlFor="ws-cer-address">
+              <textarea
+                id="ws-cer-address"
+                rows={2}
+                className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none transition focus:border-gold focus:ring-2 focus:ring-ring/40"
+                value={values.ceremonyVenueAddress}
+                onChange={(e) => update("ceremonyVenueAddress", e.target.value)}
+              />
+            </Field>
+          </div>
+          <div className="space-y-4 rounded-lg border border-border/60 p-4">
+            <h3 className="text-xs uppercase tracking-[0.25em] text-muted-foreground">Reception venue</h3>
+            <Field label="Venue name" htmlFor="ws-rec-venue">
+              <input
+                id="ws-rec-venue"
+                className={inputClass}
+                value={values.receptionVenueName}
+                onChange={(e) => update("receptionVenueName", e.target.value)}
+              />
+            </Field>
+            <Field label="Venue address" htmlFor="ws-rec-address">
+              <textarea
+                id="ws-rec-address"
+                rows={2}
+                className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none transition focus:border-gold focus:ring-2 focus:ring-ring/40"
+                value={values.receptionVenueAddress}
+                onChange={(e) => update("receptionVenueAddress", e.target.value)}
+              />
+            </Field>
+          </div>
         </div>
       </section>
 
@@ -171,7 +228,10 @@ function SettingsPage() {
               className="text-sm"
             />
             {values.invitationImageUrl ? (
-              <img src={values.invitationImageUrl} alt="" className="mt-2 h-24 rounded-md object-cover" />
+              <div className="mt-2 flex items-center gap-3">
+                <img src={values.invitationImageUrl} alt="" className="h-24 rounded-md object-cover" />
+                <RemoveButton onClick={() => handleRemove("invitationImageUrl")} disabled={uploadingKey === "invitationImageUrl"} />
+              </div>
             ) : null}
           </Field>
           <Field label="Background image">
@@ -183,7 +243,10 @@ function SettingsPage() {
               className="text-sm"
             />
             {values.backgroundImageUrl ? (
-              <img src={values.backgroundImageUrl} alt="" className="mt-2 h-24 rounded-md object-cover" />
+              <div className="mt-2 flex items-center gap-3">
+                <img src={values.backgroundImageUrl} alt="" className="h-24 rounded-md object-cover" />
+                <RemoveButton onClick={() => handleRemove("backgroundImageUrl")} disabled={uploadingKey === "backgroundImageUrl"} />
+              </div>
             ) : null}
           </Field>
           <Field label="Invitation PDF (optional)">
@@ -195,14 +258,17 @@ function SettingsPage() {
               className="text-sm"
             />
             {values.invitationPdfUrl ? (
-              
-              <a  href={values.invitationPdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 block text-xs text-primary underline underline-offset-4"
-              >
-                View current PDF
-              </a>
+              <div className="mt-2 flex items-center gap-3">
+                <a
+                  href={values.invitationPdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-primary underline underline-offset-4"
+                >
+                  View current PDF
+                </a>
+                <RemoveButton onClick={() => handleRemove("invitationPdfUrl")} disabled={uploadingKey === "invitationPdfUrl"} />
+              </div>
             ) : null}
           </Field>
         </div>

@@ -11,6 +11,47 @@ function centered(pdf, text, y, size, style = "normal") {
   pdf.text(String(text), pdf.internal.pageSize.getWidth() / 2, y, { align: "center" });
 }
 
+function wrapped(pdf, text, y, size, maxWidth) {
+  pdf.setFont("times", "normal");
+  pdf.setFontSize(size);
+  const lines = pdf.splitTextToSize(String(text), maxWidth);
+  pdf.text(lines, pdf.internal.pageSize.getWidth() / 2, y, { align: "center" });
+  return lines.length * (size * 0.42);
+}
+
+/** Loads an image URL into a data URL so jsPDF can embed it. */
+async function loadImage(url) {
+  const response = await fetch(url, { mode: "cors" });
+  if (!response.ok) throw new Error("image-fetch-failed");
+  const blob = await response.blob();
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+  const size = await new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+  const format = blob.type.includes("png") ? "PNG" : blob.type.includes("webp") ? "WEBP" : "JPEG";
+  return { dataUrl, format, ...size };
+}
+
+function venuePair(settings) {
+  const ceremony = {
+    name: settings.ceremonyVenueName || settings.venueName || "",
+    address: settings.ceremonyVenueAddress || settings.venueAddress || "",
+  };
+  const reception = {
+    name: settings.receptionVenueName || "",
+    address: settings.receptionVenueAddress || "",
+  };
+  return { ceremony, reception };
+}
+
 export async function generateInvitationPdf(settings, guest) {
   const JsPDF = await loadJsPdf();
   const pdf = new JsPDF({ unit: "mm", format: "a4" });
@@ -25,47 +66,87 @@ export async function generateInvitationPdf(settings, guest) {
   pdf.setLineWidth(0.2);
   pdf.rect(15, 15, w - 30, h - 30);
 
-  let y = 45;
+  let y = 30;
+
+  if (settings.invitationImageUrl) {
+    try {
+      const image = await loadImage(settings.invitationImageUrl);
+      const maxW = w - 50;
+      const maxH = 70;
+      const ratio = Math.min(maxW / image.width, maxH / image.height);
+      const drawW = image.width * ratio;
+      const drawH = image.height * ratio;
+      pdf.addImage(image.dataUrl, image.format, (w - drawW) / 2, y, drawW, drawH);
+      y += drawH + 12;
+    } catch {
+      /* fall back to a text-only invitation */
+    }
+  }
+
   centered(pdf, "TOGETHER WITH THEIR FAMILIES", y, 11);
-  y += 22;
-  centered(pdf, settings.brideName || "Bride", y, 30, "italic");
-  y += 14;
-  centered(pdf, "&", y, 16);
-  y += 16;
-  centered(pdf, settings.groomName || "Groom", y, 30, "italic");
   y += 20;
-  centered(pdf, "request the pleasure of your company", y, 12);
-  y += 18;
-  centered(pdf, formatWeddingDate(settings.weddingDate), y, 15, "bold");
-  if (settings.ceremonyTime) {
-    y += 10;
-    centered(pdf, `Ceremony at ${settings.ceremonyTime}`, y, 12);
-  }
-  if (settings.receptionTime) {
-    y += 8;
-    centered(pdf, `Reception at ${settings.receptionTime}`, y, 12);
-  }
+  centered(pdf, settings.brideName || "Bride", y, 28, "italic");
+  y += 12;
+  centered(pdf, "&", y, 15);
+  y += 14;
+  centered(pdf, settings.groomName || "Groom", y, 28, "italic");
   y += 16;
-  if (settings.venueName) centered(pdf, settings.venueName, y, 14, "bold");
-  if (settings.venueAddress) {
-    y += 8;
-    pdf.setFont("times", "normal");
-    pdf.setFontSize(11);
-    const lines = pdf.splitTextToSize(settings.venueAddress, w - 60);
-    pdf.text(lines, w / 2, y, { align: "center" });
-    y += lines.length * 6;
+  centered(pdf, "request the pleasure of your company", y, 12);
+  y += 14;
+  centered(pdf, formatWeddingDate(settings.weddingDate), y, 15, "bold");
+
+  const { ceremony, reception } = venuePair(settings);
+
+  if (ceremony.name || settings.ceremonyTime) {
+    y += 14;
+    centered(pdf, "CEREMONY", y, 9);
+    if (settings.ceremonyTime) {
+      y += 7;
+      centered(pdf, settings.ceremonyTime, y, 12);
+    }
+    if (ceremony.name) {
+      y += 7;
+      centered(pdf, ceremony.name, y, 13, "bold");
+    }
+    if (ceremony.address) {
+      y += 6;
+      y += wrapped(pdf, ceremony.address, y, 10, w - 70);
+    }
   }
+
+  if (reception.name || settings.receptionTime) {
+    y += 12;
+    centered(pdf, "RECEPTION", y, 9);
+    if (settings.receptionTime) {
+      y += 7;
+      centered(pdf, settings.receptionTime, y, 12);
+    }
+    if (reception.name) {
+      y += 7;
+      centered(pdf, reception.name, y, 13, "bold");
+    }
+    if (reception.address) {
+      y += 6;
+      y += wrapped(pdf, reception.address, y, 10, w - 70);
+    }
+  }
+
   if (settings.dressCode) {
     y += 12;
     centered(pdf, `Dress code: ${settings.dressCode}`, y, 11, "italic");
   }
+
   if (guest) {
-    y += 20;
+    y += 16;
     centered(pdf, "Reserved for", y, 10);
-    y += 9;
-    centered(pdf, `${guest.firstName} ${guest.surname}`, y, 16, "bold");
     y += 8;
+    centered(pdf, `${guest.firstName} ${guest.surname}`, y, 16, "bold");
+    y += 7;
     centered(pdf, `${guest.numberOfSeats} seat${guest.numberOfSeats > 1 ? "s" : ""}`, y, 11);
+    if (guest.tableNumber) {
+      y += 7;
+      centered(pdf, `Table ${guest.tableNumber}`, y, 12, "bold");
+    }
   }
   return pdf;
 }

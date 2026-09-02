@@ -1,4 +1,5 @@
 import {
+  browserLocalPersistence,
   browserSessionPersistence,
   onAuthStateChanged,
   setPersistence,
@@ -13,13 +14,19 @@ import { auth, db } from "@/firebase/config";
 export async function ensureGuestSignIn() {
   const a = auth();
   if (a.currentUser) return a.currentUser;
-  await setPersistence(a, browserSessionPersistence);
+  try {
+    await setPersistence(a, browserSessionPersistence);
+  } catch {
+    /* keep the existing persistence */
+  }
   const cred = await signInAnonymously(a);
   return cred.user;
 }
 
 export async function adminSignIn(email, password) {
   const a = auth();
+  // Admins stay signed in across refreshes/tabs until they click Logout.
+  await setPersistence(a, browserLocalPersistence);
   const cred = await signInWithEmailAndPassword(a, email.trim(), password);
   const isAdmin = await checkIsAdmin(cred.user);
   if (!isAdmin) {

@@ -10,6 +10,8 @@ const HEADER_ALIASES = {
   email: "email",
   phone: "phone",
   seats: "numberOfSeats",
+  table: "tableNumber",
+  "table number": "tableNumber",
   "number of seats": "numberOfSeats",
   "plus one allowed": "plusOneAllowed",
   plusoneallowed: "plusOneAllowed",
@@ -80,6 +82,7 @@ export function parseGuestImportCsv(text, existingGuests = []) {
       phone: record.phone || "",
       numberOfSeats: Number.isFinite(seats) && seats > 0 ? Math.round(seats) : 1,
       plusOneAllowed: toBoolean(record.plusOneAllowed),
+      tableNumber: record.tableNumber || "",
       invitationType: "individual",
     });
   });
