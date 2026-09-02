@@ -31,6 +31,7 @@ const COLUMNS = [
   ["firstName", "Name"],
   ["surname", "Surname"],
   ["numberOfSeats", "Seats"],
+  ["tableNumber", "Table"],
   ["rsvpStatus", "RSVP"],
 ];
 
@@ -187,6 +188,7 @@ function GuestsPage() {
                   <td className="px-4 py-3">{guest.firstName}</td>
                   <td className="px-4 py-3">{guest.surname}</td>
                   <td className="px-4 py-3">{guest.numberOfSeats}</td>
+                  <td className="px-4 py-3">{guest.tableNumber || "—"}</td>
                   <td className="px-4 py-3">
                     <Badge status={guest.rsvpStatus} />
                   </td>

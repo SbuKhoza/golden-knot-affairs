@@ -195,25 +195,47 @@ export async function generateInvitationPdf(settings, guest) {
   rule(pdf, y, 34);
   y += 13;
 
-  // Venue
-  if (settings.venueName) {
-    centered(pdf, settings.venueName.toUpperCase(), y, 13, "bold", INK, 0.6);
-    y += 8;
-  }
-  if (settings.venueAddress) {
-    pdf.setFont("times", "normal");
-    pdf.setFontSize(11.5);
-    pdf.setTextColor(...INK);
-    const lines = pdf.splitTextToSize(settings.venueAddress, w - 74);
-    pdf.text(lines, w / 2, y, { align: "center" });
-    y += lines.length * 5.8 + 4;
+  // Ceremony venue
+  if (settings.ceremonyVenueName || settings.ceremonyVenueAddress) {
+    centered(pdf, "CEREMONY", y, 8.5, "normal", GOLD, 2);
+    y += 6;
+    if (settings.ceremonyVenueName) {
+      centered(pdf, settings.ceremonyVenueName.toUpperCase(), y, 13, "bold", INK, 0.6);
+      y += 8;
+    }
+    if (settings.ceremonyVenueAddress) {
+      pdf.setFont("times", "normal");
+      pdf.setFontSize(11.5);
+      pdf.setTextColor(...INK);
+      const lines = pdf.splitTextToSize(settings.ceremonyVenueAddress, w - 74);
+      pdf.text(lines, w / 2, y, { align: "center" });
+      y += lines.length * 5.8 + 4;
+    }
   }
 
-  // Reception (if present, as a secondary line)
-  if (settings.receptionTime) {
-    y += 5;
-    centered(pdf, `Reception to follow at ${settings.receptionTime}`, y, 11, "italic");
-    y += 2;
+  // Reception venue
+  if (settings.receptionTime || settings.receptionVenueName || settings.receptionVenueAddress) {
+    y += 10;
+    rule(pdf, y, 18);
+    y += 8;
+    centered(pdf, "RECEPTION", y, 8.5, "normal", GOLD, 2);
+    y += 6;
+    if (settings.receptionTime) {
+      centered(pdf, settings.receptionTime, y, 12, "italic");
+      y += 7;
+    }
+    if (settings.receptionVenueName) {
+      centered(pdf, settings.receptionVenueName.toUpperCase(), y, 13, "bold", INK, 0.6);
+      y += 8;
+    }
+    if (settings.receptionVenueAddress) {
+      pdf.setFont("times", "normal");
+      pdf.setFontSize(11.5);
+      pdf.setTextColor(...INK);
+      const lines = pdf.splitTextToSize(settings.receptionVenueAddress, w - 74);
+      pdf.text(lines, w / 2, y, { align: "center" });
+      y += lines.length * 5.8 + 4;
+    }
   }
 
   // Dress code
@@ -239,26 +261,23 @@ export async function generateInvitationPdf(settings, guest) {
 
   // Reserved-for footer — ornamental panel
   if (guest) {
+    const seatLine = `${guest.firstName} ${guest.surname} · ${guest.numberOfSeats} seat${guest.numberOfSeats > 1 ? "s" : ""}`;
+    const reservedLine = guest.tableNumber ? `${seatLine} · Table ${guest.tableNumber}` : seatLine;
     const panelY = h - 40;
     const panelH = 22;
+    const panelHalfWidth = Math.min(80, Math.max(55, reservedLine.length * 1.9));
     pdf.setFillColor(...CREAM_DEEP);
-    pdf.roundedRect(w / 2 - 55, panelY, 110, panelH, 3, 3, "F");
+    pdf.roundedRect(w / 2 - panelHalfWidth, panelY, panelHalfWidth * 2, panelH, 3, 3, "F");
     pdf.setDrawColor(...GOLD);
     pdf.setLineWidth(0.3);
-    pdf.roundedRect(w / 2 - 55, panelY, 110, panelH, 3, 3, "S");
-    diamond(pdf, w / 2 - 55, panelY, 1.1);
-    diamond(pdf, w / 2 + 55, panelY, 1.1);
-    diamond(pdf, w / 2 - 55, panelY + panelH, 1.1);
-    diamond(pdf, w / 2 + 55, panelY + panelH, 1.1);
+    pdf.roundedRect(w / 2 - panelHalfWidth, panelY, panelHalfWidth * 2, panelH, 3, 3, "S");
+    diamond(pdf, w / 2 - panelHalfWidth, panelY, 1.1);
+    diamond(pdf, w / 2 + panelHalfWidth, panelY, 1.1);
+    diamond(pdf, w / 2 - panelHalfWidth, panelY + panelH, 1.1);
+    diamond(pdf, w / 2 + panelHalfWidth, panelY + panelH, 1.1);
 
     centered(pdf, "RESERVED FOR", panelY + 8, 8.5, "normal", GOLD, 2);
-    centered(
-      pdf,
-      `${guest.firstName} ${guest.surname} · ${guest.numberOfSeats} seat${guest.numberOfSeats > 1 ? "s" : ""}`,
-      panelY + 17,
-      12.5,
-      "bold",
-    );
+    centered(pdf, reservedLine, panelY + 17, guest.tableNumber ? 11 : 12.5, "bold");
   }
 
   return pdf;

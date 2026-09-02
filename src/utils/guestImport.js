@@ -14,6 +14,9 @@ const HEADER_ALIASES = {
   "plus one allowed": "plusOneAllowed",
   plusoneallowed: "plusOneAllowed",
   "plus one": "plusOneAllowed",
+  table: "tableNumber",
+  "table number": "tableNumber",
+  "table no": "tableNumber",
 };
 
 function toBoolean(value) {
@@ -79,6 +82,7 @@ export function parseGuestImportCsv(text, existingGuests = []) {
       email: record.email || "",
       phone: record.phone || "",
       numberOfSeats: Number.isFinite(seats) && seats > 0 ? Math.round(seats) : 1,
+      tableNumber: record.tableNumber || "",
       plusOneAllowed: toBoolean(record.plusOneAllowed),
       invitationType: "individual",
     });

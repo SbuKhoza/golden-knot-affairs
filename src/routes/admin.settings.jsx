@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Loader } from "@/components/common/Loader";
 import { defaultSettings, saveSettings, subscribeToSettings } from "@/services/settingsService";
-import { uploadWeddingFile, validateFile } from "@/services/storageService";
+import { deleteWeddingFile, uploadWeddingFile, validateFile } from "@/services/storageService";
 import { fileToCompressedDataUrl } from "@/utils/image";
 import { friendlyError } from "@/utils/format";
 
@@ -55,6 +55,7 @@ function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingKey, setUploadingKey] = useState("");
+  const [removingKey, setRemovingKey] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
@@ -74,6 +75,30 @@ function SettingsPage() {
 
   function update(key, value) {
     setValues((prev) => ({ ...prev, [key]: value }));
+  }
+
+  // Removing a file must (a) delete the object from Storage so it's really
+  // gone, and (b) persist the cleared field(s) to Firestore right away —
+  // not just local state — otherwise a refresh re-loads the old URL from
+  // the still-unsaved document and the "removed" file appears to come back.
+  async function handleRemove(urlKey) {
+    setError("");
+    setNotice("");
+    const url = values[urlKey];
+    const isImageUrlField = urlKey.endsWith("Url") && Object.prototype.hasOwnProperty.call(defaultSettings, dataKeyFor(urlKey));
+    const dataKey = isImageUrlField ? dataKeyFor(urlKey) : null;
+    const clearedFields = dataKey ? { [urlKey]: "", [dataKey]: "" } : { [urlKey]: "" };
+
+    setRemovingKey(urlKey);
+    setValues((prev) => ({ ...prev, ...clearedFields }));
+    try {
+      await deleteWeddingFile(url);
+      await saveSettings(clearedFields);
+    } catch (err) {
+      setError(friendlyError(err, "We couldn't remove that file. Please try again."));
+    } finally {
+      setRemovingKey("");
+    }
   }
 
   async function handleUpload(key, file, kind) {
@@ -149,27 +174,54 @@ function SettingsPage() {
           <Field label="Dress code" htmlFor="ws-dress">
             <input id="ws-dress" className={inputClass} value={values.dressCode} onChange={(e) => update("dressCode", e.target.value)} />
           </Field>
-          <Field label="Ceremony time" htmlFor="ws-ceremony">
-            <input id="ws-ceremony" className={inputClass} placeholder="14:30" value={values.ceremonyTime} onChange={(e) => update("ceremonyTime", e.target.value)} />
-          </Field>
-          <Field label="Reception time" htmlFor="ws-reception">
-            <input id="ws-reception" className={inputClass} placeholder="17:00" value={values.receptionTime} onChange={(e) => update("receptionTime", e.target.value)} />
-          </Field>
-          <Field label="Venue name" htmlFor="ws-venue">
-            <input id="ws-venue" className={inputClass} value={values.venueName} onChange={(e) => update("venueName", e.target.value)} />
-          </Field>
         </div>
-        <div className="mt-4">
-          <Field label="Venue address" htmlFor="ws-address">
-            <textarea
-              id="ws-address"
-              rows={2}
-              className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none transition focus:border-gold focus:ring-2 focus:ring-ring/40"
-              value={values.venueAddress}
-              onChange={(e) => update("venueAddress", e.target.value)}
-            />
-          </Field>
+
+        <div className="mt-6 rounded-lg border border-border/60 p-4">
+          <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Ceremony</h3>
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+            <Field label="Ceremony time" htmlFor="ws-ceremony">
+              <input id="ws-ceremony" className={inputClass} placeholder="14:30" value={values.ceremonyTime} onChange={(e) => update("ceremonyTime", e.target.value)} />
+            </Field>
+            <Field label="Ceremony venue name" htmlFor="ws-ceremony-venue">
+              <input id="ws-ceremony-venue" className={inputClass} value={values.ceremonyVenueName} onChange={(e) => update("ceremonyVenueName", e.target.value)} />
+            </Field>
+          </div>
+          <div className="mt-4">
+            <Field label="Ceremony venue address" htmlFor="ws-ceremony-address">
+              <textarea
+                id="ws-ceremony-address"
+                rows={2}
+                className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none transition focus:border-gold focus:ring-2 focus:ring-ring/40"
+                value={values.ceremonyVenueAddress}
+                onChange={(e) => update("ceremonyVenueAddress", e.target.value)}
+              />
+            </Field>
+          </div>
         </div>
+
+        <div className="mt-4 rounded-lg border border-border/60 p-4">
+          <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Reception</h3>
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+            <Field label="Reception time" htmlFor="ws-reception">
+              <input id="ws-reception" className={inputClass} placeholder="17:00" value={values.receptionTime} onChange={(e) => update("receptionTime", e.target.value)} />
+            </Field>
+            <Field label="Reception venue name" htmlFor="ws-reception-venue">
+              <input id="ws-reception-venue" className={inputClass} value={values.receptionVenueName} onChange={(e) => update("receptionVenueName", e.target.value)} />
+            </Field>
+          </div>
+          <div className="mt-4">
+            <Field label="Reception venue address" htmlFor="ws-reception-address">
+              <textarea
+                id="ws-reception-address"
+                rows={2}
+                className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none transition focus:border-gold focus:ring-2 focus:ring-ring/40"
+                value={values.receptionVenueAddress}
+                onChange={(e) => update("receptionVenueAddress", e.target.value)}
+              />
+            </Field>
+          </div>
+        </div>
+
         <div className="mt-4">
           <Field label="Dress code image (optional)">
             <input
@@ -190,13 +242,11 @@ function SettingsPage() {
                 />
                 <button
                   type="button"
-                  onClick={() => {
-                    update("dressCodeImageUrl", "");
-                    update(dataKeyFor("dressCodeImageUrl"), "");
-                  }}
-                  className="text-xs text-destructive underline underline-offset-4"
+                  onClick={() => handleRemove("dressCodeImageUrl")}
+                  disabled={removingKey === "dressCodeImageUrl"}
+                  className="text-xs text-destructive underline underline-offset-4 disabled:opacity-60"
                 >
-                  Remove
+                  {removingKey === "dressCodeImageUrl" ? "Removing…" : "Remove"}
                 </button>
               </div>
             ) : null}
@@ -233,13 +283,11 @@ function SettingsPage() {
                 <img src={values.invitationImageUrl} alt="" className="h-24 w-24 rounded-md object-cover" />
                 <button
                   type="button"
-                  onClick={() => {
-                    update("invitationImageUrl", "");
-                    update(dataKeyFor("invitationImageUrl"), "");
-                  }}
-                  className="text-xs text-destructive underline underline-offset-4"
+                  onClick={() => handleRemove("invitationImageUrl")}
+                  disabled={removingKey === "invitationImageUrl"}
+                  className="text-xs text-destructive underline underline-offset-4 disabled:opacity-60"
                 >
-                  Remove
+                  {removingKey === "invitationImageUrl" ? "Removing…" : "Remove"}
                 </button>
               </div>
             ) : null}
@@ -259,13 +307,11 @@ function SettingsPage() {
                 <img src={values.backgroundImageUrl} alt="" className="h-24 w-24 rounded-md object-cover" />
                 <button
                   type="button"
-                  onClick={() => {
-                    update("backgroundImageUrl", "");
-                    update(dataKeyFor("backgroundImageUrl"), "");
-                  }}
-                  className="text-xs text-destructive underline underline-offset-4"
+                  onClick={() => handleRemove("backgroundImageUrl")}
+                  disabled={removingKey === "backgroundImageUrl"}
+                  className="text-xs text-destructive underline underline-offset-4 disabled:opacity-60"
                 >
-                  Remove
+                  {removingKey === "backgroundImageUrl" ? "Removing…" : "Remove"}
                 </button>
               </div>
             ) : null}
@@ -292,10 +338,11 @@ function SettingsPage() {
                 </a>
                 <button
                   type="button"
-                  onClick={() => update("invitationPdfUrl", "")}
-                  className="text-xs text-destructive underline underline-offset-4"
+                  onClick={() => handleRemove("invitationPdfUrl")}
+                  disabled={removingKey === "invitationPdfUrl"}
+                  className="text-xs text-destructive underline underline-offset-4 disabled:opacity-60"
                 >
-                  Remove
+                  {removingKey === "invitationPdfUrl" ? "Removing…" : "Remove"}
                 </button>
               </div>
             ) : null}

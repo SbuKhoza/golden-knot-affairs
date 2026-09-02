@@ -57,9 +57,14 @@ function InvitationPage({ guest, settings, signOut }) {
   const deadlinePassed = isPastDeadline(settings.rsvpDeadline);
   const rsvpOpen = settings.rsvpEnabled !== false && !deadlinePassed;
   const hasBackground = Boolean(settings.backgroundImageUrl);
-  const mapsUrl = settings.venueAddress
+  const ceremonyMapsUrl = settings.ceremonyVenueAddress
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        `${settings.venueName || ""} ${settings.venueAddress}`.trim(),
+        `${settings.ceremonyVenueName || ""} ${settings.ceremonyVenueAddress}`.trim(),
+      )}`
+    : "";
+  const receptionMapsUrl = settings.receptionVenueAddress
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        `${settings.receptionVenueName || ""} ${settings.receptionVenueAddress}`.trim(),
       )}`
     : "";
 
@@ -67,19 +72,11 @@ function InvitationPage({ guest, settings, signOut }) {
     setError("");
     setDownloading("invitation");
     try {
-      if (settings.invitationPdfUrl) {
-        const stillExists = await fetch(settings.invitationPdfUrl, { method: "HEAD" })
-          .then((res) => res.ok)
-          .catch(() => false);
-
-        if (stillExists) {
-          window.open(settings.invitationPdfUrl, "_blank", "noopener");
-          return;
-        }
-        // The uploaded PDF was removed from storage but the URL is still
-        // saved in settings — fall back to generating one on the fly
-        // instead of sending the guest to a 404 page.
-      }
+      // Always generate the invitation PDF client-side: it's the only path
+      // that embeds the uploaded invitation image and this guest's seat/
+      // table details. A separately admin-uploaded PDF (settings.invitationPdfUrl)
+      // is a generic file with no guest-specific content or guaranteed
+      // image, so it's no longer used for this download.
       await downloadInvitationPdf(settings, guest);
     } catch {
       setError("We couldn't prepare that download. Please try again.");
@@ -148,9 +145,16 @@ function InvitationPage({ guest, settings, signOut }) {
               <Ornament className="my-10" />
 
               <div className="grid gap-8 sm:grid-cols-2">
-                <Detail label="Ceremony">{settings.ceremonyTime}</Detail>
-                <Detail label="Reception">{settings.receptionTime}</Detail>
-                <Detail label="Venue">{settings.venueName}</Detail>
+                <Detail label="Ceremony">
+                  {settings.ceremonyTime}
+                  {settings.ceremonyTime && settings.ceremonyVenueName ? " · " : ""}
+                  {settings.ceremonyVenueName}
+                </Detail>
+                <Detail label="Reception">
+                  {settings.receptionTime}
+                  {settings.receptionTime && settings.receptionVenueName ? " · " : ""}
+                  {settings.receptionVenueName}
+                </Detail>
                 <DressCodeDetail
                   label="Dress code"
                   value={settings.dressCode}
@@ -163,18 +167,42 @@ function InvitationPage({ guest, settings, signOut }) {
                 <p className="mt-2 font-display text-xl">
                   {guest.numberOfSeats} seat{guest.numberOfSeats > 1 ? "s" : ""}
                   {guest.plusOneAllowed ? " · plus one welcome" : ""}
+                  {guest.tableNumber ? ` · Table ${guest.tableNumber}` : ""}
                 </p>
               </div>
             </div>
           </section>
 
-          {settings.venueAddress ? (
+          {settings.ceremonyVenueAddress ? (
             <section className="animate-soft mt-8 rounded-2xl border border-border/60 bg-white/85 p-8 text-center backdrop-blur-md">
-              <h2 className="font-display text-2xl">Finding us</h2>
-              <p className="mt-3 whitespace-pre-line text-sm text-muted-foreground">{settings.venueAddress}</p>
-              {mapsUrl ? (
-                
-                <a  href={mapsUrl}
+              <h2 className="font-display text-2xl">Finding the ceremony</h2>
+              {settings.ceremonyVenueName ? (
+                <p className="mt-2 font-display text-lg text-foreground">{settings.ceremonyVenueName}</p>
+              ) : null}
+              <p className="mt-3 whitespace-pre-line text-sm text-muted-foreground">{settings.ceremonyVenueAddress}</p>
+              {ceremonyMapsUrl ? (
+                <a
+                  href={ceremonyMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-6 inline-block rounded-md border border-gold/60 px-6 py-3 text-xs uppercase tracking-[0.3em] text-primary transition hover:bg-secondary"
+                >
+                  Open in maps
+                </a>
+              ) : null}
+            </section>
+          ) : null}
+
+          {settings.receptionVenueAddress ? (
+            <section className="animate-soft mt-8 rounded-2xl border border-border/60 bg-white/85 p-8 text-center backdrop-blur-md">
+              <h2 className="font-display text-2xl">Finding the reception</h2>
+              {settings.receptionVenueName ? (
+                <p className="mt-2 font-display text-lg text-foreground">{settings.receptionVenueName}</p>
+              ) : null}
+              <p className="mt-3 whitespace-pre-line text-sm text-muted-foreground">{settings.receptionVenueAddress}</p>
+              {receptionMapsUrl ? (
+                <a
+                  href={receptionMapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-6 inline-block rounded-md border border-gold/60 px-6 py-3 text-xs uppercase tracking-[0.3em] text-primary transition hover:bg-secondary"

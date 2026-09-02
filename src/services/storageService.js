@@ -1,4 +1,4 @@
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from "@/firebase/config";
 
 const MAX_PDF = 10 * 1024 * 1024;
@@ -26,4 +26,20 @@ export async function uploadWeddingFile(file, folder, kind) {
   const fileRef = ref(storage(), path);
   await uploadBytes(fileRef, file, { contentType: file.type });
   return getDownloadURL(fileRef);
+}
+
+/**
+ * Deletes a previously-uploaded file given its download URL. Best-effort:
+ * if the file is already gone, or the URL isn't a Storage download URL
+ * (e.g. it was cleared already, or points elsewhere), this quietly does
+ * nothing instead of throwing — callers should still remove the URL from
+ * Firestore regardless of whether the underlying file could be deleted.
+ */
+export async function deleteWeddingFile(url) {
+  if (!url || !url.includes("firebasestorage")) return;
+  try {
+    await deleteObject(ref(storage(), url));
+  } catch {
+    /* already deleted, or nothing we can do about it — ignore */
+  }
 }
