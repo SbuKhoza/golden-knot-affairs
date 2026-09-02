@@ -38,11 +38,30 @@ function InvitationPage({ guest, settings, signOut }) {
   const [error, setError] = useState("");
   const deadlinePassed = isPastDeadline(settings.rsvpDeadline);
   const rsvpOpen = settings.rsvpEnabled !== false && !deadlinePassed;
-  const mapsUrl = settings.venueAddress
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        `${settings.venueName || ""} ${settings.venueAddress}`.trim(),
-      )}`
-    : "";
+
+  const venues = [
+    {
+      key: "ceremony",
+      label: "Ceremony",
+      time: settings.ceremonyTime,
+      name: settings.ceremonyVenueName || settings.venueName || "",
+      address: settings.ceremonyVenueAddress || settings.venueAddress || "",
+    },
+    {
+      key: "reception",
+      label: "Reception",
+      time: settings.receptionTime,
+      name: settings.receptionVenueName || "",
+      address: settings.receptionVenueAddress || "",
+    },
+  ].filter((v) => v.name || v.address);
+
+  const mapsFor = (venue) =>
+    venue.address || venue.name
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          `${venue.name} ${venue.address}`.trim(),
+        )}`
+      : "";
 
   async function handleInvitationDownload() {
     setError("");
