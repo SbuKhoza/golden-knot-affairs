@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Loader } from "@/components/common/Loader";
 import { defaultSettings, saveSettings, subscribeToSettings } from "@/services/settingsService";
-import { deleteWeddingFile, uploadWeddingFile, validateFile } from "@/services/storageService";
+import { uploadWeddingFile, validateFile } from "@/services/storageService";
 import { fileToCompressedDataUrl } from "@/utils/image";
 import { friendlyError } from "@/utils/format";
+import { PDF_COLOR_SCHEMES, PDF_TEMPLATES } from "@/utils/pdfThemes";
 
 export const Route = createFileRoute("/admin/settings")({
   head: () => ({
@@ -55,7 +56,6 @@ function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingKey, setUploadingKey] = useState("");
-  const [removingKey, setRemovingKey] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
@@ -75,30 +75,6 @@ function SettingsPage() {
 
   function update(key, value) {
     setValues((prev) => ({ ...prev, [key]: value }));
-  }
-
-  // Removing a file must (a) delete the object from Storage so it's really
-  // gone, and (b) persist the cleared field(s) to Firestore right away —
-  // not just local state — otherwise a refresh re-loads the old URL from
-  // the still-unsaved document and the "removed" file appears to come back.
-  async function handleRemove(urlKey) {
-    setError("");
-    setNotice("");
-    const url = values[urlKey];
-    const isImageUrlField = urlKey.endsWith("Url") && Object.prototype.hasOwnProperty.call(defaultSettings, dataKeyFor(urlKey));
-    const dataKey = isImageUrlField ? dataKeyFor(urlKey) : null;
-    const clearedFields = dataKey ? { [urlKey]: "", [dataKey]: "" } : { [urlKey]: "" };
-
-    setRemovingKey(urlKey);
-    setValues((prev) => ({ ...prev, ...clearedFields }));
-    try {
-      await deleteWeddingFile(url);
-      await saveSettings(clearedFields);
-    } catch (err) {
-      setError(friendlyError(err, "We couldn't remove that file. Please try again."));
-    } finally {
-      setRemovingKey("");
-    }
   }
 
   async function handleUpload(key, file, kind) {
@@ -174,39 +150,69 @@ function SettingsPage() {
           <Field label="Dress code" htmlFor="ws-dress">
             <input id="ws-dress" className={inputClass} value={values.dressCode} onChange={(e) => update("dressCode", e.target.value)} />
           </Field>
+          <Field label="Ceremony time" htmlFor="ws-ceremony">
+            <input id="ws-ceremony" className={inputClass} placeholder="14:30" value={values.ceremonyTime} onChange={(e) => update("ceremonyTime", e.target.value)} />
+          </Field>
+          <Field label="Reception time" htmlFor="ws-reception">
+            <input id="ws-reception" className={inputClass} placeholder="17:00" value={values.receptionTime} onChange={(e) => update("receptionTime", e.target.value)} />
+          </Field>
+          <Field label="Venue name" htmlFor="ws-venue">
+            <input id="ws-venue" className={inputClass} value={values.venueName} onChange={(e) => update("venueName", e.target.value)} />
+          </Field>
         </div>
-
-        <div className="mt-6 rounded-lg border border-border/60 p-4">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Ceremony</h3>
-          <div className="mt-3 grid gap-4 sm:grid-cols-2">
-            <Field label="Ceremony time" htmlFor="ws-ceremony">
-              <input id="ws-ceremony" className={inputClass} placeholder="14:30" value={values.ceremonyTime} onChange={(e) => update("ceremonyTime", e.target.value)} />
-            </Field>
-            <Field label="Ceremony venue name" htmlFor="ws-ceremony-venue">
-              <input id="ws-ceremony-venue" className={inputClass} value={values.ceremonyVenueName} onChange={(e) => update("ceremonyVenueName", e.target.value)} />
-            </Field>
-          </div>
-          <div className="mt-4">
-            <Field label="Ceremony venue address" htmlFor="ws-ceremony-address">
-              <textarea
-                id="ws-ceremony-address"
-                rows={2}
-                className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none transition focus:border-gold focus:ring-2 focus:ring-ring/40"
-                value={values.ceremonyVenueAddress}
-                onChange={(e) => update("ceremonyVenueAddress", e.target.value)}
-              />
-            </Field>
-          </div>
+        <div className="mt-4">
+          <Field label="Venue address" htmlFor="ws-address">
+            <textarea
+              id="ws-address"
+              rows={2}
+              className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none transition focus:border-gold focus:ring-2 focus:ring-ring/40"
+              value={values.venueAddress}
+              onChange={(e) => update("venueAddress", e.target.value)}
+            />
+          </Field>
         </div>
+        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <Field label="Venue latitude (optional)" htmlFor="ws-venue-lat">
+            <input
+              id="ws-venue-lat"
+              inputMode="decimal"
+              placeholder="e.g. -26.204103"
+              className={inputClass}
+              value={values.venueLat}
+              onChange={(e) => update("venueLat", e.target.value)}
+            />
+          </Field>
+          <Field label="Venue longitude (optional)" htmlFor="ws-venue-lng">
+            <input
+              id="ws-venue-lng"
+              inputMode="decimal"
+              placeholder="e.g. 28.047304"
+              className={inputClass}
+              value={values.venueLng}
+              onChange={(e) => update("venueLng", e.target.value)}
+            />
+          </Field>
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Add coordinates to make the venue address clickable on the invitation and PDF — it will open in the
+          guest's maps app. Leave blank and the address just shows as text. You can find coordinates by opening the
+          location in Google Maps, right-clicking the pin, and copying the numbers shown at the top.
+        </p>
 
-        <div className="mt-4 rounded-lg border border-border/60 p-4">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Reception</h3>
-          <div className="mt-3 grid gap-4 sm:grid-cols-2">
-            <Field label="Reception time" htmlFor="ws-reception">
-              <input id="ws-reception" className={inputClass} placeholder="17:00" value={values.receptionTime} onChange={(e) => update("receptionTime", e.target.value)} />
-            </Field>
+        <div className="mt-6 border-t border-border pt-4">
+          <h3 className="font-display text-base">Reception venue</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Only needed if the reception is at a different place from the ceremony above, or if you'd like it
+            called out separately.
+          </p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <Field label="Reception venue name" htmlFor="ws-reception-venue">
-              <input id="ws-reception-venue" className={inputClass} value={values.receptionVenueName} onChange={(e) => update("receptionVenueName", e.target.value)} />
+              <input
+                id="ws-reception-venue"
+                className={inputClass}
+                value={values.receptionVenueName}
+                onChange={(e) => update("receptionVenueName", e.target.value)}
+              />
             </Field>
           </div>
           <div className="mt-4">
@@ -217,6 +223,28 @@ function SettingsPage() {
                 className="w-full rounded-md border border-input bg-background p-3 text-sm outline-none transition focus:border-gold focus:ring-2 focus:ring-ring/40"
                 value={values.receptionVenueAddress}
                 onChange={(e) => update("receptionVenueAddress", e.target.value)}
+              />
+            </Field>
+          </div>
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+            <Field label="Reception latitude (optional)" htmlFor="ws-reception-lat">
+              <input
+                id="ws-reception-lat"
+                inputMode="decimal"
+                placeholder="e.g. -26.107567"
+                className={inputClass}
+                value={values.receptionVenueLat}
+                onChange={(e) => update("receptionVenueLat", e.target.value)}
+              />
+            </Field>
+            <Field label="Reception longitude (optional)" htmlFor="ws-reception-lng">
+              <input
+                id="ws-reception-lng"
+                inputMode="decimal"
+                placeholder="e.g. 28.056702"
+                className={inputClass}
+                value={values.receptionVenueLng}
+                onChange={(e) => update("receptionVenueLng", e.target.value)}
               />
             </Field>
           </div>
@@ -242,15 +270,78 @@ function SettingsPage() {
                 />
                 <button
                   type="button"
-                  onClick={() => handleRemove("dressCodeImageUrl")}
-                  disabled={removingKey === "dressCodeImageUrl"}
-                  className="text-xs text-destructive underline underline-offset-4 disabled:opacity-60"
+                  onClick={() => {
+                    update("dressCodeImageUrl", "");
+                    update(dataKeyFor("dressCodeImageUrl"), "");
+                  }}
+                  className="text-xs text-destructive underline underline-offset-4"
                 >
-                  {removingKey === "dressCodeImageUrl" ? "Removing…" : "Remove"}
+                  Remove
                 </button>
               </div>
             ) : null}
           </Field>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-border bg-card p-6">
+        <h2 className="font-display text-xl">Invitation PDF look</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Choose the layout and color palette used for the generated invitation PDF (guests can still download it
+          from the invitation page).
+        </p>
+
+        <div className="mt-5">
+          <p className={labelClass}>Template</p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {PDF_TEMPLATES.map((tpl) => {
+              const active = (values.pdfTemplate || "classic") === tpl.id;
+              return (
+                <button
+                  key={tpl.id}
+                  type="button"
+                  onClick={() => update("pdfTemplate", tpl.id)}
+                  aria-pressed={active}
+                  className={`rounded-lg border p-4 text-left transition ${
+                    active ? "border-gold bg-secondary/60 ring-2 ring-gold/40" : "border-border hover:border-gold/50"
+                  }`}
+                >
+                  <p className="font-display text-sm">{tpl.label}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{tpl.description}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-5">
+          <p className={labelClass}>Color combination</p>
+          <div className="flex flex-wrap gap-3">
+            {PDF_COLOR_SCHEMES.map((scheme) => {
+              const active = (values.pdfColorScheme || "gold-cream") === scheme.id;
+              return (
+                <button
+                  key={scheme.id}
+                  type="button"
+                  onClick={() => update("pdfColorScheme", scheme.id)}
+                  aria-pressed={active}
+                  title={scheme.label}
+                  className={`flex items-center gap-2 rounded-full border px-3 py-2 text-xs transition ${
+                    active ? "border-gold ring-2 ring-gold/40" : "border-border hover:border-gold/50"
+                  }`}
+                >
+                  <span
+                    className="size-5 rounded-full border border-black/10"
+                    style={{
+                      background: `linear-gradient(135deg, ${scheme.hex.accent} 50%, ${scheme.hex.surface} 50%)`,
+                    }}
+                    aria-hidden="true"
+                  />
+                  {scheme.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </section>
 
@@ -283,11 +374,13 @@ function SettingsPage() {
                 <img src={values.invitationImageUrl} alt="" className="h-24 w-24 rounded-md object-cover" />
                 <button
                   type="button"
-                  onClick={() => handleRemove("invitationImageUrl")}
-                  disabled={removingKey === "invitationImageUrl"}
-                  className="text-xs text-destructive underline underline-offset-4 disabled:opacity-60"
+                  onClick={() => {
+                    update("invitationImageUrl", "");
+                    update(dataKeyFor("invitationImageUrl"), "");
+                  }}
+                  className="text-xs text-destructive underline underline-offset-4"
                 >
-                  {removingKey === "invitationImageUrl" ? "Removing…" : "Remove"}
+                  Remove
                 </button>
               </div>
             ) : null}
@@ -307,11 +400,13 @@ function SettingsPage() {
                 <img src={values.backgroundImageUrl} alt="" className="h-24 w-24 rounded-md object-cover" />
                 <button
                   type="button"
-                  onClick={() => handleRemove("backgroundImageUrl")}
-                  disabled={removingKey === "backgroundImageUrl"}
-                  className="text-xs text-destructive underline underline-offset-4 disabled:opacity-60"
+                  onClick={() => {
+                    update("backgroundImageUrl", "");
+                    update(dataKeyFor("backgroundImageUrl"), "");
+                  }}
+                  className="text-xs text-destructive underline underline-offset-4"
                 >
-                  {removingKey === "backgroundImageUrl" ? "Removing…" : "Remove"}
+                  Remove
                 </button>
               </div>
             ) : null}
@@ -338,11 +433,10 @@ function SettingsPage() {
                 </a>
                 <button
                   type="button"
-                  onClick={() => handleRemove("invitationPdfUrl")}
-                  disabled={removingKey === "invitationPdfUrl"}
-                  className="text-xs text-destructive underline underline-offset-4 disabled:opacity-60"
+                  onClick={() => update("invitationPdfUrl", "")}
+                  className="text-xs text-destructive underline underline-offset-4"
                 >
-                  {removingKey === "invitationPdfUrl" ? "Removing…" : "Remove"}
+                  Remove
                 </button>
               </div>
             ) : null}
