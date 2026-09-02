@@ -4,6 +4,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { Loader } from "@/components/common/Loader";
 import { defaultSettings, saveSettings, subscribeToSettings } from "@/services/settingsService";
 import { uploadWeddingFile, validateFile } from "@/services/storageService";
+import { fileToCompressedDataUrl } from "@/utils/image";
 import { friendlyError } from "@/utils/format";
 
 export const Route = createFileRoute("/admin/settings")({
@@ -37,6 +38,16 @@ function Field({ label, htmlFor, children }) {
       {children}
     </div>
   );
+}
+
+// The compressed base64 copy for an image field like "invitationImageUrl"
+// must be stored as "invitationImageData" — NOT "invitationImageUrlData" —
+// because that's the exact field name pdf.js reads via
+// resolveImage(settings.invitationImageData, settings.invitationImageUrl, ...).
+// Naively appending "Data" to the URL key (`${key}Data`) produces the wrong
+// field name and silently breaks the CORS-free PDF embed.
+function dataKeyFor(urlKey) {
+  return urlKey.endsWith("Url") ? `${urlKey.slice(0, -3)}Data` : `${urlKey}Data`;
 }
 
 function SettingsPage() {
@@ -78,6 +89,19 @@ function SettingsPage() {
       const folder = kind === "pdf" ? "invitation" : "images";
       const url = await uploadWeddingFile(file, folder, kind);
       update(key, url);
+
+      // For images, also stash a compressed base64 copy alongside the URL,
+      // under the correctly-derived field name. The PDF generator embeds
+      // this directly, sidestepping any CORS restrictions on the storage
+      // bucket when it later tries to fetch the remote URL.
+      if (kind === "image") {
+        try {
+          const dataUrl = await fileToCompressedDataUrl(file);
+          update(dataKeyFor(key), dataUrl);
+        } catch {
+          // Non-fatal — PDF generation falls back to the stored URL.
+        }
+      }
     } catch (err) {
       setError(friendlyError(err, "We couldn't upload that file."));
     } finally {
@@ -146,6 +170,38 @@ function SettingsPage() {
             />
           </Field>
         </div>
+        <div className="mt-4">
+          <Field label="Dress code image (optional)">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => e.target.files[0] && handleUpload("dressCodeImageUrl", e.target.files[0], "image")}
+              disabled={uploadingKey === "dressCodeImageUrl"}
+              className="text-sm"
+            />
+            {uploadingKey === "dressCodeImageUrl" ? (
+              <p className="mt-2 text-xs text-muted-foreground">Uploading…</p>
+            ) : values.dressCodeImageUrl ? (
+              <div className="mt-2 flex items-center gap-3">
+                <img
+                  src={values.dressCodeImageUrl}
+                  alt=""
+                  className="h-20 w-20 rounded-full border border-border object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    update("dressCodeImageUrl", "");
+                    update(dataKeyFor("dressCodeImageUrl"), "");
+                  }}
+                  className="text-xs text-destructive underline underline-offset-4"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : null}
+          </Field>
+        </div>
       </section>
 
       <section className="rounded-xl border border-border bg-card p-6">
@@ -170,8 +226,22 @@ function SettingsPage() {
               disabled={uploadingKey === "invitationImageUrl"}
               className="text-sm"
             />
-            {values.invitationImageUrl ? (
-              <img src={values.invitationImageUrl} alt="" className="mt-2 h-24 rounded-md object-cover" />
+            {uploadingKey === "invitationImageUrl" ? (
+              <p className="mt-2 text-xs text-muted-foreground">Uploading…</p>
+            ) : values.invitationImageUrl ? (
+              <div className="mt-2 flex items-center gap-3">
+                <img src={values.invitationImageUrl} alt="" className="h-24 w-24 rounded-md object-cover" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    update("invitationImageUrl", "");
+                    update(dataKeyFor("invitationImageUrl"), "");
+                  }}
+                  className="text-xs text-destructive underline underline-offset-4"
+                >
+                  Remove
+                </button>
+              </div>
             ) : null}
           </Field>
           <Field label="Background image">
@@ -182,8 +252,22 @@ function SettingsPage() {
               disabled={uploadingKey === "backgroundImageUrl"}
               className="text-sm"
             />
-            {values.backgroundImageUrl ? (
-              <img src={values.backgroundImageUrl} alt="" className="mt-2 h-24 rounded-md object-cover" />
+            {uploadingKey === "backgroundImageUrl" ? (
+              <p className="mt-2 text-xs text-muted-foreground">Uploading…</p>
+            ) : values.backgroundImageUrl ? (
+              <div className="mt-2 flex items-center gap-3">
+                <img src={values.backgroundImageUrl} alt="" className="h-24 w-24 rounded-md object-cover" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    update("backgroundImageUrl", "");
+                    update(dataKeyFor("backgroundImageUrl"), "");
+                  }}
+                  className="text-xs text-destructive underline underline-offset-4"
+                >
+                  Remove
+                </button>
+              </div>
             ) : null}
           </Field>
           <Field label="Invitation PDF (optional)">
@@ -194,15 +278,26 @@ function SettingsPage() {
               disabled={uploadingKey === "invitationPdfUrl"}
               className="text-sm"
             />
-            {values.invitationPdfUrl ? (
-              
-              <a  href={values.invitationPdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 block text-xs text-primary underline underline-offset-4"
-              >
-                View current PDF
-              </a>
+            {uploadingKey === "invitationPdfUrl" ? (
+              <p className="mt-2 text-xs text-muted-foreground">Uploading…</p>
+            ) : values.invitationPdfUrl ? (
+              <div className="mt-2 flex items-center gap-3">
+                
+                 <a href={values.invitationPdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-primary underline underline-offset-4"
+                >
+                  View current PDF
+                </a>
+                <button
+                  type="button"
+                  onClick={() => update("invitationPdfUrl", "")}
+                  className="text-xs text-destructive underline underline-offset-4"
+                >
+                  Remove
+                </button>
+              </div>
             ) : null}
           </Field>
         </div>
