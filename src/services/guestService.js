@@ -34,6 +34,7 @@ function guestPayload(input) {
     plusOneAllowed: Boolean(input.plusOneAllowed),
     plusOneName: (input.plusOneName || "").trim(),
     numberOfSeats: Math.max(1, Number(input.numberOfSeats) || 1),
+    tableNumber: String(input.tableNumber ?? "").trim(),
     notes: (input.notes || "").trim(),
   };
 }
@@ -84,6 +85,7 @@ function publicGuest(id, data) {
     surname: data.surname,
     invitationType: data.invitationType,
     numberOfSeats: data.numberOfSeats ?? 1,
+    tableNumber: data.tableNumber || "",
     plusOneAllowed: Boolean(data.plusOneAllowed),
     plusOneName: data.plusOneName || "",
     rsvpStatus: data.rsvpStatus || "pending",
