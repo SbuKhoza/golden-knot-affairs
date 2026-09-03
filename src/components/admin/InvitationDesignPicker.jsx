@@ -1,81 +1,64 @@
 import { PDF_COLOR_SCHEMES, PDF_TEMPLATES } from "@/utils/pdfThemes";
 
-// Tiny live mock-ups of each jsPDF layout, built purely in CSS so the couple
+// Tiny live mock-ups of each PDF layout, built purely in CSS so the couple
 // can actually see the difference between templates before generating a
 // PDF, rather than choosing from a plain list of labels.
 
-function ClassicPreview({ accent, surface }) {
+function KeepsakePreview({ accent, surface }) {
   return (
-    <div
-      className="relative flex h-full w-full flex-col items-center justify-center gap-2 p-3"
-      style={{ background: surface, border: `2px solid ${accent}`, boxShadow: `inset 0 0 0 3px ${surface}, inset 0 0 0 4px ${accent}55` }}
-    >
-      {["tl", "tr", "bl", "br"].map((c) => (
-        <span
-          key={c}
-          className="absolute h-3 w-3 border-t border-l"
-          style={{
-            borderColor: accent,
-            top: c.includes("t") ? 3 : "auto",
-            bottom: c.includes("b") ? 3 : "auto",
-            left: c.includes("l") ? 3 : "auto",
-            right: c.includes("r") ? 3 : "auto",
-            transform: c === "tr" ? "rotate(90deg)" : c === "br" ? "rotate(180deg)" : c === "bl" ? "rotate(270deg)" : "none",
-          }}
-        />
-      ))}
-      <div className="h-8 w-8 rounded-full border" style={{ borderColor: accent }} />
-      <p className="font-script text-base leading-none" style={{ color: accent }}>
-        Charles &amp; Nicolle
-      </p>
-      <div className="h-px w-10" style={{ background: accent }} />
-      <p className="text-[6px] uppercase tracking-[0.2em] text-muted-foreground">Together with their families</p>
-    </div>
-  );
-}
-
-function ModernPreview({ accent, surface }) {
-  return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-3" style={{ background: surface }}>
-      <p className="text-[6px] uppercase tracking-[0.35em] text-muted-foreground">We're getting married</p>
-      <p className="font-display text-lg font-light" style={{ color: accent }}>
-        Luis &amp; Lany
-      </p>
-      <div className="h-px w-14" style={{ background: accent }} />
-      <p className="text-[6px] uppercase tracking-[0.2em] text-muted-foreground">10 · 11 · 2050</p>
-    </div>
-  );
-}
-
-function BotanicalPreview({ accent, surface }) {
-  return (
-    <div className="flex h-full w-full flex-col overflow-hidden" style={{ background: surface }}>
-      <div className="flex items-center justify-center py-2.5" style={{ background: accent }}>
-        <p className="font-script text-base leading-none text-white">Amara &amp; Kea</p>
+    <div className="flex h-full w-full items-center justify-center p-2" style={{ background: surface }}>
+      <div
+        className="flex h-full w-full flex-col items-center gap-1.5 p-2"
+        style={{ background: "#fff", border: `1px solid ${accent}` }}
+      >
+        <div className="h-8 w-full rounded-[2px]" style={{ background: `${accent}33` }} />
+        <p className="text-[5px] uppercase tracking-[0.2em] text-muted-foreground">Dear Guest</p>
+        <div className="h-px w-8" style={{ background: accent }} />
+        <p className="font-script text-sm leading-none" style={{ color: accent }}>
+          Charles
+        </p>
+        <p className="font-script text-sm leading-none" style={{ color: accent }}>
+          Nicolle
+        </p>
+        <p className="text-[5px] uppercase tracking-[0.15em] text-muted-foreground">17 December 2026</p>
+        <div className="mt-auto w-full rounded-[2px] border py-1 text-center" style={{ borderColor: accent }}>
+          <p className="text-[5px] uppercase tracking-[0.15em] text-muted-foreground">Reserved for</p>
+        </div>
       </div>
-      <div className="flex flex-1 items-center justify-center gap-3 px-2">
-        <div className="flex-1 border-r pr-2 text-center" style={{ borderColor: `${accent}55` }}>
-          <p className="text-[5px] uppercase tracking-[0.15em] text-muted-foreground">Ceremony</p>
-          <p className="text-[6px] font-semibold" style={{ color: accent }}>
-            2:00 PM
-          </p>
+    </div>
+  );
+}
+
+function EditorialPreview({ accent, surface }) {
+  return (
+    <div className="relative h-full w-full p-2" style={{ background: surface }}>
+      <div className="absolute inset-1.5 border" style={{ borderColor: `${accent}88` }} />
+      <div className="relative flex h-full w-full flex-col items-center gap-1.5 px-2 py-2.5">
+        <div
+          className="flex h-5 w-5 items-center justify-center rounded-full border text-[5px]"
+          style={{ borderColor: accent, color: accent }}
+        >
+          CN
         </div>
-        <div className="flex-1 pl-2 text-center">
-          <p className="text-[5px] uppercase tracking-[0.15em] text-muted-foreground">Reception</p>
-          <p className="text-[6px] font-semibold" style={{ color: accent }}>
-            5:00 PM
-          </p>
-        </div>
+        <p className="font-script text-sm leading-none" style={{ color: accent }}>
+          Charles
+        </p>
+        <p className="font-script text-sm leading-none" style={{ color: accent }}>
+          Nicolle
+        </p>
+        <div className="h-px w-10" style={{ background: accent }} />
+        <div className="h-8 w-full border" style={{ background: `${accent}22`, borderColor: `${accent}55` }} />
+        <p className="text-[5px] uppercase tracking-[0.15em] text-muted-foreground">Ceremony · Reception</p>
       </div>
     </div>
   );
 }
 
 const PREVIEWS = {
-  classic: ClassicPreview,
-  modern: ModernPreview,
-  botanical: BotanicalPreview,
+  keepsake: KeepsakePreview,
+  editorial: EditorialPreview,
 };
+
 
 export function InvitationDesignPicker({ templateId, colorSchemeId, onTemplateChange, onColorSchemeChange }) {
   const accent = PDF_COLOR_SCHEMES.find((s) => s.id === colorSchemeId)?.hex.accent || PDF_COLOR_SCHEMES[0].hex.accent;
@@ -85,7 +68,7 @@ export function InvitationDesignPicker({ templateId, colorSchemeId, onTemplateCh
     <div className="space-y-6">
       <div>
         <p className="mb-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">Layout</p>
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           {PDF_TEMPLATES.map((template) => {
             const Preview = PREVIEWS[template.id];
             const active = templateId === template.id;

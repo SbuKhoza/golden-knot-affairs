@@ -683,605 +683,516 @@ function heroImage({
 }
 
 /* -------------------------------------------------------------------------- */
-/* CLASSIC — NEW HERO DESIGN                                                  */
+/* Shared building blocks for the two invitation designs                      */
 /* -------------------------------------------------------------------------- */
+/*
+ * NOTE ON LAYOUT
+ *
+ * These pages are rasterized with html2canvas. Flexbox `gap`, baseline
+ * alignment and stacked absolutely-positioned text blocks are unreliable
+ * there and were the cause of the overlapping text in earlier versions.
+ *
+ * Everything below therefore uses plain document flow (block elements with
+ * margins) and <table> for columns, which html2canvas reproduces exactly.
+ */
 
-export function classicInvitationHtml(
-  settings,
-  guest,
-  palette,
-) {
-  const c = palCss(palette);
+function scriptDuo(bride, groom, c, size) {
+  return `
+    <div style="text-align:center;line-height:1.06;">
+      <div
+        style="
+          font-family:${FONT_SCRIPT};
+          font-size:${size}px;
+          color:${c.ink};
+          line-height:1.16;
+          padding:0 20px;
+        "
+      >${esc(bride || "Bride")}</div>
 
-  const photo =
-    settings.invitationImageData ||
-    settings.invitationImageUrl;
+      <div
+        style="
+          font-family:${FONT_DISPLAY};
+          font-style:italic;
+          font-size:${Math.round(size * 0.34)}px;
+          color:${c.gold};
+          line-height:1.4;
+        "
+      >&amp;</div>
 
-  const date = dateLine(settings);
-
-  const body = `
-
-    <!-- ================================================================ -->
-    <!-- HERO PHOTOGRAPH                                                  -->
-    <!-- ================================================================ -->
-
-    ${heroImage({
-      photo,
-      c,
-      height: 735,
-    })}
-
-
-    <!-- ================================================================ -->
-    <!-- FINE BOTANICAL CORNERS                                           -->
-    <!-- ================================================================ -->
-
-    <div
-      style="
-        position:absolute;
-        top:-18px;
-        left:-18px;
-      "
-    >
-      ${ornamentalCorner(c.ink, {
-        width:280,
-        height:280,
-        opacity:0.58,
-      })}
+      <div
+        style="
+          font-family:${FONT_SCRIPT};
+          font-size:${size}px;
+          color:${c.ink};
+          line-height:1.16;
+          padding:0 20px;
+        "
+      >${esc(groom || "Groom")}</div>
     </div>
+  `;
+}
 
+function capsLine(text, c, { size = 16, spacing = 6, color, top = 0 } = {}) {
+  if (!text) return "";
+  return `
     <div
       style="
-        position:absolute;
-        top:-18px;
-        right:-18px;
-      "
-    >
-      ${ornamentalCorner(c.ink, {
-        width:280,
-        height:280,
-        mirrorX:true,
-        opacity:0.58,
-      })}
-    </div>
-
-    <div
-      style="
-        position:absolute;
-        bottom:-25px;
-        left:-18px;
-      "
-    >
-      ${ornamentalCorner(c.ink, {
-        width:280,
-        height:280,
-        mirrorY:true,
-        opacity:0.48,
-      })}
-    </div>
-
-    <div
-      style="
-        position:absolute;
-        bottom:-25px;
-        right:-18px;
-      "
-    >
-      ${ornamentalCorner(c.ink, {
-        width:280,
-        height:280,
-        mirrorX:true,
-        mirrorY:true,
-        opacity:0.48,
-      })}
-    </div>
-
-
-    <!-- ================================================================ -->
-    <!-- HERO TEXT — deliberately overlaps the photograph                 -->
-    <!-- ================================================================ -->
-
-    <div
-      style="
-        position:absolute;
-        top:510px;
-        left:0;
-        width:100%;
+        font-family:${FONT_BODY};
+        font-weight:600;
+        font-size:${size}px;
+        letter-spacing:${spacing}px;
+        text-transform:uppercase;
+        color:${color || c.gold};
         text-align:center;
+        margin-top:${top}px;
       "
-    >
+    >${esc(text)}</div>
+  `;
+}
 
-      ${eyebrow("Together with their families", c)}
+function ruleWithDiamond(c, width = 300, top = 0) {
+  return `
+    <div style="text-align:center;margin-top:${top}px;line-height:0;">
+      <span style="display:inline-block;width:${width}px;height:1px;background:${c.gold};opacity:0.55;vertical-align:middle;"></span>
+      <span style="display:inline-block;width:7px;height:7px;background:${c.gold};opacity:0.8;transform:rotate(45deg);margin:0 12px;vertical-align:middle;"></span>
+      <span style="display:inline-block;width:${width}px;height:1px;background:${c.gold};opacity:0.55;vertical-align:middle;"></span>
+    </div>
+  `;
+}
 
-      <div style="margin-top:15px;">
-        ${scriptNames(
-          settings.brideName,
-          settings.groomName,
-          c,
-          122,
-        )}
-      </div>
+function venueCell(
+  { title, time, name, address, mapUrl },
+  c,
+  { compact = false } = {},
+) {
+  if (!time && !name && !address) return "";
 
-      <div style="margin-top:18px;">
-        ${delicateDivider(c.gold, 320)}
-      </div>
+  return `
+    <div style="text-align:center;">
+      ${capsLine(title, c, { size: compact ? 14 : 15, spacing: 4 })}
 
       ${
-        date
-          ? `
-            <div
-              style="
-                font-family:${FONT_DISPLAY};
-                font-size:27px;
-                font-weight:500;
-                letter-spacing:0.4px;
-                color:${c.ink};
-                margin-top:10px;
-              "
-            >
-              ${esc(date)}
-            </div>
-          `
+        time
+          ? `<div style="font-family:${FONT_BODY};font-style:italic;font-size:${
+              compact ? 24 : 26
+            }px;color:${c.ink};margin-top:10px;line-height:1.3;">${esc(time)}</div>`
           : ""
       }
 
+      ${
+        name
+          ? `<div style="font-family:${FONT_DISPLAY};font-weight:600;font-size:${
+              compact ? 22 : 24
+            }px;color:${c.ink};margin-top:8px;line-height:1.35;">${esc(name)}</div>`
+          : ""
+      }
+
+      ${
+        address
+          ? `<div style="font-family:${FONT_BODY};font-size:${
+              compact ? 19 : 20
+            }px;color:${c.inkSoft};margin-top:6px;line-height:1.45;">${esc(address)}</div>`
+          : ""
+      }
+
+      ${
+        mapUrl
+          ? `<div data-pdf-link="${esc(mapUrl)}" style="font-family:${FONT_BODY};font-style:italic;font-size:17px;color:${c.gold};margin-top:8px;">View on map</div>`
+          : ""
+      }
     </div>
+  `;
+}
 
+function twoColumn(left, right, { divider = "", gutter = 60 } = {}) {
+  if (!left && !right) return "";
 
-    <!-- ================================================================ -->
-    <!-- LOWER INFORMATION                                                -->
-    <!-- ================================================================ -->
+  if (!left || !right) {
+    return `<div style="width:100%;">${left || right}</div>`;
+  }
+
+  return `
+    <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+      <tr>
+        <td style="vertical-align:top;padding-right:${gutter / 2}px;">${left}</td>
+        ${
+          divider
+            ? `<td style="width:1px;padding:0;"><div style="width:1px;height:120px;background:${divider};opacity:0.3;margin:0 auto;"></div></td>`
+            : ""
+        }
+        <td style="vertical-align:top;padding-left:${gutter / 2}px;">${right}</td>
+      </tr>
+    </table>
+  `;
+}
+
+function dressCodeInline(settings, c) {
+  if (!settings.dressCode) return "";
+
+  const img = settings.dressCodeImageData || settings.dressCodeImageUrl;
+
+  return `
+    <div style="text-align:center;">
+      ${capsLine("Dress Code", c, { size: 14, spacing: 4 })}
+      <div style="font-family:${FONT_BODY};font-style:italic;font-size:25px;color:${c.ink};margin-top:9px;">
+        ${esc(settings.dressCode)}
+      </div>
+      ${
+        img
+          ? `<div style="width:104px;height:104px;border-radius:52px;overflow:hidden;margin:14px auto 0;">
+               ${photoTag(img, 104, 104)}
+             </div>`
+          : ""
+      }
+    </div>
+  `;
+}
+
+function rsvpLine(settings, c) {
+  if (settings.rsvpEnabled === false) return "";
+
+  const deadline = settings.rsvpDeadline
+    ? formatWeddingDate(settings.rsvpDeadline)
+    : "";
+
+  return `
+    <div style="font-family:${FONT_BODY};font-style:italic;font-size:22px;color:${c.inkSoft};text-align:center;line-height:1.4;">
+      ${
+        deadline
+          ? `Kindly RSVP by ${esc(deadline)}`
+          : "Kindly RSVP at your earliest convenience"
+      }
+    </div>
+  `;
+}
+
+function reservedPanel(guest, c, { filled = false } = {}) {
+  if (!guest) return "";
+
+  const seats = Number(guest.numberOfSeats) || 1;
+  const chips = [`${seats} seat${seats === 1 ? "" : "s"}`];
+
+  if (guest.tableNumber) chips.push(`Table ${esc(guest.tableNumber)}`);
+  if (guest.plusOneAllowed && guest.plusOneName) {
+    chips.push(`Plus one: ${esc(guest.plusOneName)}`);
+  }
+
+  return `
+    <div
+      style="
+        text-align:center;
+        padding:24px 30px;
+        border:1px solid ${c.gold};
+        ${filled ? `background:${c.creamDeep};` : ""}
+        border-radius:4px;
+      "
+    >
+      ${capsLine("Reserved For", c, { size: 13, spacing: 4 })}
+      <div style="font-family:${FONT_DISPLAY};font-weight:600;font-size:30px;color:${c.ink};margin-top:9px;line-height:1.25;">
+        ${esc(guest.firstName)} ${esc(guest.surname)}
+      </div>
+      <div style="font-family:${FONT_BODY};font-style:italic;font-size:20px;color:${c.inkSoft};margin-top:7px;">
+        ${chips.join(" &nbsp;·&nbsp; ")}
+      </div>
+    </div>
+  `;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 1. KEEPSAKE — mirrors the on-screen invitation                             */
+/* -------------------------------------------------------------------------- */
+
+export function keepsakeInvitationHtml(settings, guest, palette) {
+  const c = palCss(palette);
+
+  const photo = settings.invitationImageData || settings.invitationImageUrl;
+  const background =
+    settings.backgroundImageData || settings.backgroundImageUrl;
+
+  const date = formatWeddingDate(settings.weddingDate);
+
+  const venues = twoColumn(
+    venueCell(
+      {
+        title: "Ceremony",
+        time: settings.ceremonyTime,
+        name: settings.ceremonyVenueName,
+        address: settings.ceremonyVenueAddress,
+        mapUrl: settings.ceremonyVenueMapUrl,
+      },
+      c,
+    ),
+    venueCell(
+      {
+        title: "Reception",
+        time: settings.receptionTime,
+        name: settings.receptionVenueName,
+        address: settings.receptionVenueAddress,
+        mapUrl: settings.receptionVenueMapUrl,
+      },
+      c,
+    ),
+    { divider: c.gold, gutter: 70 },
+  );
+
+  const body = `
+    <!-- Background photograph, softened so the card stays legible -->
+    ${
+      background
+        ? `<div style="position:absolute;inset:0;overflow:hidden;">
+             ${photoTag(background, PAGE_WIDTH, PAGE_HEIGHT)}
+             <div style="position:absolute;inset:0;background:rgba(251,250,247,0.72);"></div>
+           </div>`
+        : `<div style="position:absolute;inset:0;background:${c.cream};"></div>`
+    }
+
+    <!-- The invitation card -->
+    <div
+      style="
+        position:absolute;
+        top:56px;
+        left:56px;
+        right:56px;
+        bottom:56px;
+        background:#ffffff;
+        border:1px solid ${c.gold};
+        box-sizing:border-box;
+        padding:10px;
+      "
+    >
+      <div
+        style="
+          width:100%;
+          height:100%;
+          box-sizing:border-box;
+          border:1px solid ${c.goldFaint};
+          padding:54px 78px;
+        "
+      >
+
+        ${
+          photo
+            ? `<div style="width:100%;height:400px;overflow:hidden;border-radius:3px;">
+                 ${photoTag(photo, PAGE_WIDTH - 292, 400)}
+               </div>`
+            : `<div style="text-align:center;font-family:${FONT_DISPLAY};font-style:italic;font-size:96px;color:${c.gold};line-height:1.2;">
+                 ${initials(settings.brideName, settings.groomName)}
+               </div>`
+        }
+
+        ${
+          guest
+            ? capsLine(
+                `Dear ${guest.firstName} ${guest.surname}`,
+                c,
+                { size: 15, spacing: 5, color: c.inkSoft, top: 40 },
+              )
+            : ""
+        }
+
+        ${ruleWithDiamond(c, 190, 26)}
+
+        <div style="margin-top:26px;">
+          ${scriptDuo(settings.brideName, settings.groomName, c, 104)}
+        </div>
+
+        ${capsLine("Request the pleasure of your company", c, {
+          size: 14,
+          spacing: 5,
+          color: c.inkSoft,
+          top: 26,
+        })}
+
+        ${
+          date
+            ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:34px;color:${c.ink};text-align:center;margin-top:18px;">
+                 ${esc(date)}
+               </div>`
+            : ""
+        }
+
+        ${
+          settings.weddingMessage
+            ? `<div style="margin-top:24px;">${messageBlock(
+                settings.weddingMessage,
+                c,
+                720,
+              )}</div>`
+            : ""
+        }
+
+        ${ruleWithDiamond(c, 190, 34)}
+
+        <div style="margin-top:34px;">${venues}</div>
+
+        ${
+          settings.dressCode
+            ? `<div style="margin-top:36px;">${dressCodeInline(settings, c)}</div>`
+            : ""
+        }
+
+        <div style="margin-top:34px;">${rsvpLine(settings, c)}</div>
+
+        <div style="margin-top:26px;">${reservedPanel(guest, c, { filled: true })}</div>
+
+      </div>
+    </div>
+  `;
+
+  return pageShell({
+    palette,
+    background: "#fbfaf7",
+    children: body,
+  });
+}
+
+/* -------------------------------------------------------------------------- */
+/* 2. GOLDEN EDITORIAL — a designed, gallery-style keepsake                   */
+/* -------------------------------------------------------------------------- */
+
+export function editorialInvitationHtml(settings, guest, palette) {
+  const c = palCss(palette);
+
+  const photo = settings.invitationImageData || settings.invitationImageUrl;
+  const date = formatWeddingDate(settings.weddingDate);
+
+  const venues = twoColumn(
+    venueCell(
+      {
+        title: "Ceremony",
+        time: settings.ceremonyTime,
+        name: settings.ceremonyVenueName,
+        address: settings.ceremonyVenueAddress,
+        mapUrl: settings.ceremonyVenueMapUrl,
+      },
+      c,
+      { compact: true },
+    ),
+    venueCell(
+      {
+        title: "Reception",
+        time: settings.receptionTime,
+        name: settings.receptionVenueName,
+        address: settings.receptionVenueAddress,
+        mapUrl: settings.receptionVenueMapUrl,
+      },
+      c,
+      { compact: true },
+    ),
+    { divider: c.gold, gutter: 56 },
+  );
+
+  const body = `
+    <!-- Deep colour band behind the top third -->
+    <div style="position:absolute;top:0;left:0;width:100%;height:620px;background:${c.creamDeep};"></div>
+
+    <!-- Fine engraved frame -->
+    <div style="position:absolute;top:34px;left:34px;right:34px;bottom:34px;border:1px solid ${c.gold};opacity:0.55;"></div>
+    <div style="position:absolute;top:44px;left:44px;right:44px;bottom:44px;border:1px solid ${c.goldFaint};"></div>
+
+    <div style="position:absolute;top:16px;left:16px;">
+      ${ornamentalCorner(c.gold, { width: 230, height: 230, opacity: 0.5 })}
+    </div>
+    <div style="position:absolute;bottom:16px;right:16px;">
+      ${ornamentalCorner(c.gold, {
+        width: 230,
+        height: 230,
+        mirrorX: true,
+        mirrorY: true,
+        opacity: 0.5,
+      })}
+    </div>
 
     <div
       style="
         position:absolute;
-        left:90px;
-        right:90px;
-        top:805px;
-        bottom:70px;
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        justify-content:flex-start;
-        gap:24px;
+        top:44px;
+        left:44px;
+        right:44px;
+        bottom:44px;
+        box-sizing:border-box;
+        padding:64px 96px 56px;
       "
     >
 
-      ${messageBlock(
-        settings.weddingMessage,
-        c,
-        850,
-      )}
-
-      <!-- Event information -->
-      <div
-        style="
-          display:flex;
-          align-items:flex-start;
-          justify-content:center;
-          gap:72px;
-          width:100%;
-          margin-top:6px;
-        "
-      >
-
-        ${venueBlockHtml(
-          {
-            title:"Ceremony",
-            time:settings.ceremonyTime,
-            name:settings.ceremonyVenueName,
-            address:settings.ceremonyVenueAddress,
-            mapUrl:settings.ceremonyVenueMapUrl,
-          },
-          c,
-        )}
-
+      <!-- Monogram medallion -->
+      <div style="text-align:center;">
         <div
           style="
-            width:1px;
-            height:110px;
-            background:${c.gold};
-            opacity:0.25;
-            margin-top:10px;
+            display:inline-block;
+            width:104px;
+            height:104px;
+            border:1px solid ${c.gold};
+            border-radius:52px;
+            box-sizing:border-box;
+            font-family:${FONT_DISPLAY};
+            font-style:italic;
+            font-size:40px;
+            line-height:102px;
+            color:${c.gold};
+            letter-spacing:2px;
           "
-        ></div>
-
-        ${venueBlockHtml(
-          {
-            title:"Reception",
-            time:settings.receptionTime,
-            name:settings.receptionVenueName,
-            address:settings.receptionVenueAddress,
-            mapUrl:settings.receptionVenueMapUrl,
-          },
-          c,
-        )}
-
+        >${initials(settings.brideName, settings.groomName)}</div>
       </div>
 
-
-      ${dressCodeHtml(settings, c)}
-
-      ${rsvpHtml(settings, c)}
-
-      ${guestTicketHtml(guest, c)}
-
-    </div>
-
-
-    <!-- Small botanical accent -->
-    <div
-      style="
-        position:absolute;
-        left:475px;
-        bottom:8px;
-        opacity:0.45;
-      "
-    >
-      ${lineRose(c.gold, 75)}
-    </div>
-
-  `;
-
-  return pageShell({
-    palette,
-    background:"#fbfaf7",
-    children:body,
-  });
-}
-
-/* -------------------------------------------------------------------------- */
-/* MODERN                                                                     */
-/* -------------------------------------------------------------------------- */
-
-export function modernInvitationHtml(
-  settings,
-  guest,
-  palette,
-) {
-  const c = palCss(palette);
-
-  const photo =
-    settings.invitationImageData ||
-    settings.invitationImageUrl;
-
-  const date = dateLine(settings);
-
-  const body = `
-
-    ${heroImage({
-      photo,
-      c,
-      height:610,
-    })}
-
-    <!-- Minimal engraved botanical linework -->
-    <div
-      style="
-        position:absolute;
-        top:-15px;
-        right:-30px;
-      "
-    >
-      ${botanicalBranch(c.gold, {
-        width:330,
-        height:270,
-        opacity:0.55,
+      ${capsLine("Together with their families", c, {
+        size: 14,
+        spacing: 6,
+        color: c.inkSoft,
+        top: 26,
       })}
-    </div>
 
-    <div
-      style="
-        position:absolute;
-        bottom:-20px;
-        left:-25px;
-        transform:rotate(180deg);
-      "
-    >
-      ${botanicalBranch(c.gold, {
-        width:300,
-        height:240,
-        opacity:0.4,
-      })}
-    </div>
-
-    <div
-      style="
-        position:absolute;
-        top:425px;
-        left:80px;
-        right:80px;
-        text-align:center;
-      "
-    >
-
-      ${eyebrow("We are getting married", c)}
-
-      <div style="margin-top:13px;">
-        ${serifNames(
-          settings.brideName,
-          settings.groomName,
-          c,
-        )}
+      <div style="margin-top:20px;">
+        ${scriptDuo(settings.brideName, settings.groomName, c, 108)}
       </div>
 
-      <div style="margin-top:13px;">
-        ${delicateDivider(c.gold, 280)}
-      </div>
+      ${ruleWithDiamond(c, 210, 26)}
 
       ${
         date
-          ? `
-            <div
-              style="
-                font-family:${FONT_BODY};
-                font-style:italic;
-                font-size:27px;
-                color:${c.ink};
-                margin-top:7px;
-              "
-            >
-              ${esc(date)}
-            </div>
-          `
+          ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:32px;letter-spacing:1px;color:${c.ink};text-align:center;margin-top:22px;">
+               ${esc(date)}
+             </div>`
           : ""
       }
-
-    </div>
-
-
-    <div
-      style="
-        position:absolute;
-        top:735px;
-        left:100px;
-        right:100px;
-        bottom:60px;
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        gap:25px;
-      "
-    >
-
-      ${messageBlock(
-        settings.weddingMessage,
-        c,
-        800,
-      )}
-
-      <div
-        style="
-          display:flex;
-          justify-content:center;
-          gap:65px;
-          width:100%;
-        "
-      >
-
-        ${venueBlockHtml(
-          {
-            title:"Ceremony",
-            time:settings.ceremonyTime,
-            name:settings.ceremonyVenueName,
-            address:settings.ceremonyVenueAddress,
-            mapUrl:settings.ceremonyVenueMapUrl,
-          },
-          c,
-        )}
-
-        ${venueBlockHtml(
-          {
-            title:"Reception",
-            time:settings.receptionTime,
-            name:settings.receptionVenueName,
-            address:settings.receptionVenueAddress,
-            mapUrl:settings.receptionVenueMapUrl,
-          },
-          c,
-        )}
-
-      </div>
-
-      ${dressCodeHtml(settings, c)}
-
-      ${rsvpHtml(settings, c)}
-
-      ${guestTicketHtml(guest, c)}
-
-    </div>
-
-  `;
-
-  return pageShell({
-    palette,
-    background:"#ffffff",
-    children:body,
-  });
-}
-
-/* -------------------------------------------------------------------------- */
-/* BOTANICAL                                                                  */
-/* -------------------------------------------------------------------------- */
-
-export function botanicalInvitationHtml(
-  settings,
-  guest,
-  palette,
-) {
-  const c = palCss(palette);
-
-  const photo =
-    settings.invitationImageData ||
-    settings.invitationImageUrl;
-
-  const date = dateLine(settings);
-
-  const body = `
-
-    ${heroImage({
-      photo,
-      c,
-      height:760,
-    })}
-
-    <!-- Hand drawn foliage -->
-    <div
-      style="
-        position:absolute;
-        top:-15px;
-        left:-25px;
-      "
-    >
-      ${botanicalBranch(c.ink, {
-        width:340,
-        height:280,
-        opacity:0.55,
-      })}
-    </div>
-
-    <div
-      style="
-        position:absolute;
-        top:-15px;
-        right:-25px;
-        transform:scaleX(-1);
-      "
-    >
-      ${botanicalBranch(c.ink, {
-        width:340,
-        height:280,
-        opacity:0.55,
-      })}
-    </div>
-
-
-    <!-- Text over the photograph -->
-    <div
-      style="
-        position:absolute;
-        top:535px;
-        left:65px;
-        right:65px;
-        text-align:center;
-      "
-    >
-
-      ${eyebrow("We're getting married", c)}
-
-      <div style="margin-top:8px;">
-        ${scriptNames(
-          settings.brideName,
-          settings.groomName,
-          c,
-          126,
-        )}
-      </div>
-
-      <div style="margin-top:13px;">
-        ${delicateDivider(c.gold, 310)}
-      </div>
 
       ${
-        date
-          ? `
-            <div
-              style="
-                font-family:${FONT_DISPLAY};
-                font-size:28px;
-                font-weight:500;
-                color:${c.ink};
-                margin-top:7px;
-              "
-            >
-              ${esc(date)}
-            </div>
-          `
+        photo
+          ? `<div style="width:100%;height:392px;overflow:hidden;margin-top:34px;border:1px solid ${c.goldFaint};box-sizing:border-box;">
+               ${photoTag(photo, PAGE_WIDTH - 280, 390)}
+             </div>`
           : ""
       }
 
-    </div>
+      ${
+        settings.weddingMessage
+          ? `<div style="margin-top:32px;">${messageBlock(
+              settings.weddingMessage,
+              c,
+              700,
+            )}</div>`
+          : ""
+      }
 
+      <div style="margin-top:${photo ? 34 : 48}px;">${venues}</div>
 
-    <div
-      style="
-        position:absolute;
-        top:825px;
-        left:85px;
-        right:85px;
-        bottom:55px;
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        gap:23px;
-      "
-    >
+      ${
+        settings.dressCode
+          ? `<div style="margin-top:32px;">${dressCodeInline(settings, c)}</div>`
+          : ""
+      }
 
-      ${messageBlock(
-        settings.weddingMessage,
-        c,
-        850,
-      )}
+      <div style="margin-top:30px;">${rsvpLine(settings, c)}</div>
 
-      <div
-        style="
-          display:flex;
-          align-items:flex-start;
-          justify-content:center;
-          gap:65px;
-          width:100%;
-        "
-      >
-
-        ${venueBlockHtml(
-          {
-            title:"Ceremony",
-            time:settings.ceremonyTime,
-            name:settings.ceremonyVenueName,
-            address:settings.ceremonyVenueAddress,
-            mapUrl:settings.ceremonyVenueMapUrl,
-          },
-          c,
-        )}
-
-        ${venueBlockHtml(
-          {
-            title:"Reception",
-            time:settings.receptionTime,
-            name:settings.receptionVenueName,
-            address:settings.receptionVenueAddress,
-            mapUrl:settings.receptionVenueMapUrl,
-          },
-          c,
-        )}
-
-      </div>
-
-      ${dressCodeHtml(settings, c)}
-
-      ${rsvpHtml(settings, c)}
-
-      ${guestTicketHtml(guest, c)}
+      <div style="margin-top:26px;">${reservedPanel(guest, c)}</div>
 
     </div>
-
-    <div
-      style="
-        position:absolute;
-        right:18px;
-        bottom:12px;
-        opacity:0.35;
-      "
-    >
-      ${lineRose(c.gold, 90)}
-    </div>
-
   `;
 
   return pageShell({
     palette,
-    background:"#fbfaf7",
-    children:body,
+    background: "#fbfaf7",
+    children: body,
   });
 }
 
@@ -1290,27 +1201,20 @@ export function botanicalInvitationHtml(
 /* -------------------------------------------------------------------------- */
 
 const INVITATION_BUILDERS = {
-  classic: classicInvitationHtml,
-  modern: modernInvitationHtml,
-  botanical: botanicalInvitationHtml,
+  keepsake: keepsakeInvitationHtml,
+  editorial: editorialInvitationHtml,
+  // Legacy ids stored on existing settings documents.
+  classic: keepsakeInvitationHtml,
+  modern: editorialInvitationHtml,
+  botanical: editorialInvitationHtml,
 };
 
-export function buildInvitationHtml(
-  templateId,
-  settings,
-  guest,
-  palette,
-) {
-  const build =
-    INVITATION_BUILDERS[templateId] ||
-    classicInvitationHtml;
+export function buildInvitationHtml(templateId, settings, guest, palette) {
+  const build = INVITATION_BUILDERS[templateId] || keepsakeInvitationHtml;
 
-  return build(
-    settings,
-    guest,
-    palette,
-  );
+  return build(settings, guest, palette);
 }
+
 
 /* -------------------------------------------------------------------------- */
 /* PROGRAM                                                                    */

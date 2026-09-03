@@ -199,6 +199,7 @@ async function withSafeImages(
   const [
     invitationImageData,
     dressCodeImageData,
+    backgroundImageData,
   ] = await Promise.all([
     toDataUrl(
       settings.invitationImageData ||
@@ -208,6 +209,11 @@ async function withSafeImages(
     toDataUrl(
       settings.dressCodeImageData ||
         settings.dressCodeImageUrl,
+    ),
+
+    toDataUrl(
+      settings.backgroundImageData ||
+        settings.backgroundImageUrl,
     ),
   ]);
 
@@ -221,6 +227,10 @@ async function withSafeImages(
     dressCodeImageData,
 
     dressCodeImageUrl:"",
+
+    backgroundImageData,
+
+    backgroundImageUrl:"",
   };
 }
 
