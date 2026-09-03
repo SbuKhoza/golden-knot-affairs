@@ -33,7 +33,8 @@ function ProgramPage({ guest, settings, signOut }) {
     try {
       if (settings.programPdfUrl) window.open(settings.programPdfUrl, "_blank", "noopener");
       else await downloadProgramPdf(settings);
-    } catch {
+    } catch (err) {
+      console.error("Program PDF download failed:", err);
       setError("We couldn't prepare that download. Please try again.");
     } finally {
       setBusy(false);

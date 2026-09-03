@@ -8,23 +8,17 @@ const DOC_PATH = ["weddingSettings", "main"];
 export const defaultSettings = {
   brideName: "",
   groomName: "",
+  templateId: DEFAULT_TEMPLATE_ID,
+  colorSchemeId: DEFAULT_COLOR_SCHEME_ID,
   weddingDate: "",
   ceremonyTime: "",
+  ceremonyVenueName: "",
+  ceremonyVenueAddress: "",
+  ceremonyVenueMapUrl: "",
   receptionTime: "",
-  venueName: "",
-  venueAddress: "",
-  // Optional map pin for the ceremony venue. When both are present, the
-  // address becomes clickable and opens the device's maps app; otherwise
-  // it's shown as plain, non-interactive text.
-  venueLat: "",
-  venueLng: "",
-  // Reception is treated as its own venue, since it's very often a
-  // different address from the ceremony (or the couple wants it called
-  // out separately even when it's the same place).
   receptionVenueName: "",
   receptionVenueAddress: "",
-  receptionVenueLat: "",
-  receptionVenueLng: "",
+  receptionVenueMapUrl: "",
   dressCode: "",
   weddingMessage: "",
   invitationImageUrl: "",
@@ -40,9 +34,6 @@ export const defaultSettings = {
   rsvpEnabled: true,
   programPublished: false,
   programItems: [],
-  // Admin-selectable look for the generated (non-uploaded) invitation PDF.
-  pdfTemplate: DEFAULT_TEMPLATE_ID,
-  pdfColorScheme: DEFAULT_COLOR_SCHEME_ID,
 };
 
 export async function getSettings({ asGuest = false } = {}) {
