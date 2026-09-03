@@ -75,25 +75,32 @@ export function getColorScheme(id) {
 
 export const PDF_TEMPLATES = [
   {
-    id: "classic",
-    label: "Classic Ornamental",
+    id: "keepsake",
+    label: "Website Keepsake",
     description:
-      "Framed border, corner flourishes, and a circular portrait — the original Golden Knot look.",
+      "An exact print version of the on-screen invitation — background photo, invitation artwork and all.",
   },
   {
-    id: "modern",
-    label: "Modern Minimal",
-    description: "Clean lines, generous type, a single rule — no border or corner ornaments.",
-  },
-  {
-    id: "botanical",
-    label: "Botanical Panel",
+    id: "editorial",
+    label: "Golden Editorial",
     description:
-      "A soft banded header panel with a compact two-column details layout to fit more on one page.",
+      "An engraved gallery card: monogram medallion, double gold frame and a framed portrait.",
   },
 ];
 
-export const DEFAULT_TEMPLATE_ID = "classic";
+export const DEFAULT_TEMPLATE_ID = "keepsake";
+
+const LEGACY_TEMPLATE_IDS = {
+  classic: "keepsake",
+  modern: "editorial",
+  botanical: "editorial",
+};
+
+export function resolveTemplateId(id) {
+  if (PDF_TEMPLATES.some((t) => t.id === id)) return id;
+  return LEGACY_TEMPLATE_IDS[id] || DEFAULT_TEMPLATE_ID;
+}
+
 
 export function getTemplateMeta(id) {
   return PDF_TEMPLATES.find((t) => t.id === id) || PDF_TEMPLATES[0];
