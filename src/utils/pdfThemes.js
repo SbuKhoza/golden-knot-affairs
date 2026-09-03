@@ -103,5 +103,6 @@ export function resolveTemplateId(id) {
 
 
 export function getTemplateMeta(id) {
-  return PDF_TEMPLATES.find((t) => t.id === id) || PDF_TEMPLATES[0];
+  const resolved = resolveTemplateId(id);
+  return PDF_TEMPLATES.find((t) => t.id === resolved) || PDF_TEMPLATES[0];
 }
