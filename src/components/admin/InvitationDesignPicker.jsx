@@ -68,7 +68,7 @@ export function InvitationDesignPicker({ templateId, colorSchemeId, onTemplateCh
     <div className="space-y-6">
       <div>
         <p className="mb-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">Layout</p>
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           {PDF_TEMPLATES.map((template) => {
             const Preview = PREVIEWS[template.id];
             const active = templateId === template.id;
