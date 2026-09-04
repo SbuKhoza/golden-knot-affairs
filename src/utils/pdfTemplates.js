@@ -966,14 +966,14 @@ export function keepsakeInvitationHtml(settings, guest, palette) {
           height:100%;
           box-sizing:border-box;
           border:1px solid ${c.goldFaint};
-          padding:54px 78px;
+          padding:40px 74px;
         "
       >
 
         ${
           photo
-            ? `<div style="width:100%;height:400px;overflow:hidden;border-radius:3px;">
-                 ${photoTag(photo, PAGE_WIDTH - 292, 400)}
+            ? `<div style="width:100%;height:330px;overflow:hidden;border-radius:3px;">
+                 ${photoTag(photo, PAGE_WIDTH - 292, 330)}
                </div>`
             : `<div style="text-align:center;font-family:${FONT_DISPLAY};font-style:italic;font-size:96px;color:${c.gold};line-height:1.2;">
                  ${initials(settings.brideName, settings.groomName)}
@@ -985,27 +985,27 @@ export function keepsakeInvitationHtml(settings, guest, palette) {
             ? capsLine(
                 `Dear ${guest.firstName} ${guest.surname}`,
                 c,
-                { size: 15, spacing: 5, color: c.inkSoft, top: 40 },
+                { size: 15, spacing: 5, color: c.inkSoft, top: 32 },
               )
             : ""
         }
 
-        ${ruleWithDiamond(c, 190, 26)}
+        ${ruleWithDiamond(c, 190, 22)}
 
-        <div style="margin-top:26px;">
-          ${scriptDuo(settings.brideName, settings.groomName, c, 104)}
+        <div style="margin-top:20px;">
+          ${scriptDuo(settings.brideName, settings.groomName, c, 96)}
         </div>
 
         ${capsLine("Request the pleasure of your company", c, {
           size: 14,
           spacing: 5,
           color: c.inkSoft,
-          top: 26,
+          top: 22,
         })}
 
         ${
           date
-            ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:34px;color:${c.ink};text-align:center;margin-top:18px;">
+            ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:32px;color:${c.ink};text-align:center;margin-top:16px;">
                  ${esc(date)}
                </div>`
             : ""
@@ -1013,7 +1013,7 @@ export function keepsakeInvitationHtml(settings, guest, palette) {
 
         ${
           settings.weddingMessage
-            ? `<div style="margin-top:24px;">${messageBlock(
+            ? `<div style="margin-top:20px;">${messageBlock(
                 settings.weddingMessage,
                 c,
                 720,
@@ -1021,19 +1021,19 @@ export function keepsakeInvitationHtml(settings, guest, palette) {
             : ""
         }
 
-        ${ruleWithDiamond(c, 190, 34)}
+        ${ruleWithDiamond(c, 190, 26)}
 
-        <div style="margin-top:34px;">${venues}</div>
+        <div style="margin-top:28px;">${venues}</div>
 
         ${
           settings.dressCode
-            ? `<div style="margin-top:36px;">${dressCodeInline(settings, c)}</div>`
+            ? `<div style="margin-top:26px;">${dressCodeInline(settings, c)}</div>`
             : ""
         }
 
-        <div style="margin-top:34px;">${rsvpLine(settings, c)}</div>
+        <div style="margin-top:26px;">${rsvpLine(settings, c)}</div>
 
-        <div style="margin-top:26px;">${reservedPanel(guest, c, { filled: true })}</div>
+        <div style="margin-top:22px;">${reservedPanel(guest, c, { filled: true })}</div>
 
       </div>
     </div>
@@ -1111,7 +1111,7 @@ export function editorialInvitationHtml(settings, guest, palette) {
         right:44px;
         bottom:44px;
         box-sizing:border-box;
-        padding:64px 96px 56px;
+        padding:48px 88px 40px;
       "
     >
 
@@ -1120,15 +1120,15 @@ export function editorialInvitationHtml(settings, guest, palette) {
         <div
           style="
             display:inline-block;
-            width:104px;
-            height:104px;
+            width:92px;
+            height:92px;
             border:1px solid ${c.gold};
-            border-radius:52px;
+            border-radius:46px;
             box-sizing:border-box;
             font-family:${FONT_DISPLAY};
             font-style:italic;
-            font-size:40px;
-            line-height:102px;
+            font-size:36px;
+            line-height:90px;
             color:${c.gold};
             letter-spacing:2px;
           "
@@ -1139,18 +1139,18 @@ export function editorialInvitationHtml(settings, guest, palette) {
         size: 14,
         spacing: 6,
         color: c.inkSoft,
-        top: 26,
+        top: 22,
       })}
 
-      <div style="margin-top:20px;">
-        ${scriptDuo(settings.brideName, settings.groomName, c, 108)}
+      <div style="margin-top:16px;">
+        ${scriptDuo(settings.brideName, settings.groomName, c, 98)}
       </div>
 
-      ${ruleWithDiamond(c, 210, 26)}
+      ${ruleWithDiamond(c, 210, 22)}
 
       ${
         date
-          ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:32px;letter-spacing:1px;color:${c.ink};text-align:center;margin-top:22px;">
+          ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:30px;letter-spacing:1px;color:${c.ink};text-align:center;margin-top:18px;">
                ${esc(date)}
              </div>`
           : ""
@@ -1158,15 +1158,15 @@ export function editorialInvitationHtml(settings, guest, palette) {
 
       ${
         photo
-          ? `<div style="width:100%;height:392px;overflow:hidden;margin-top:34px;border:1px solid ${c.goldFaint};box-sizing:border-box;">
-               ${photoTag(photo, PAGE_WIDTH - 280, 390)}
+          ? `<div style="width:100%;height:330px;overflow:hidden;margin-top:26px;border:1px solid ${c.goldFaint};box-sizing:border-box;">
+               ${photoTag(photo, PAGE_WIDTH - 280, 328)}
              </div>`
           : ""
       }
 
       ${
         settings.weddingMessage
-          ? `<div style="margin-top:32px;">${messageBlock(
+          ? `<div style="margin-top:24px;">${messageBlock(
               settings.weddingMessage,
               c,
               700,
@@ -1174,17 +1174,17 @@ export function editorialInvitationHtml(settings, guest, palette) {
           : ""
       }
 
-      <div style="margin-top:${photo ? 34 : 48}px;">${venues}</div>
+      <div style="margin-top:${photo ? 26 : 48}px;">${venues}</div>
 
       ${
         settings.dressCode
-          ? `<div style="margin-top:32px;">${dressCodeInline(settings, c)}</div>`
+          ? `<div style="margin-top:24px;">${dressCodeInline(settings, c)}</div>`
           : ""
       }
 
-      <div style="margin-top:30px;">${rsvpLine(settings, c)}</div>
+      <div style="margin-top:24px;">${rsvpLine(settings, c)}</div>
 
-      <div style="margin-top:26px;">${reservedPanel(guest, c)}</div>
+      <div style="margin-top:22px;">${reservedPanel(guest, c)}</div>
 
     </div>
   `;
