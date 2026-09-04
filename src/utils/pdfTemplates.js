@@ -88,6 +88,46 @@ function photoTag(
   `;
 }
 
+/**
+ * Hero image with a true, proportional "object-cover" crop.
+ *
+ * html2canvas does not honour `object-fit`, so relying on it squashes the
+ * source 3:4 portrait into whatever box we give it. Instead we let the image
+ * keep its natural ratio (width:100%; height:auto) inside an overflow-hidden
+ * window of a fixed height. Because the scaled image is taller than the
+ * window, the excess is cropped from the bottom and the top of the photo —
+ * where faces usually are — stays intact. No border is drawn.
+ */
+function heroPhoto(src, boxWidth, boxHeight) {
+  if (!src) return "";
+
+  return `
+    <div
+      style="
+        width:${boxWidth}px;
+        height:${boxHeight}px;
+        overflow:hidden;
+        position:relative;
+        border-radius:3px;
+        margin:0 auto;
+      "
+    >
+      <img
+        src="${esc(src)}"
+        style="
+          position:absolute;
+          top:0;
+          left:0;
+          width:${boxWidth}px;
+          height:auto;
+          display:block;
+        "
+      />
+    </div>
+  `;
+}
+
+
 function initials(bride, groom) {
   const b = (bride || "B").trim()[0] || "B";
   const g = (groom || "G").trim()[0] || "G";
