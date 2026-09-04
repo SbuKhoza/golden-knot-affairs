@@ -906,7 +906,24 @@ function rsvpLine(settings, c) {
   `;
 }
 
-function reservedPanel(guest, c, { filled = false } = {}) {
+/** Guest full name with an explicit, guaranteed space between the parts. */
+function fullName(guest) {
+  return [guest?.firstName, guest?.surname]
+    .map((part) => String(part ?? "").trim())
+    .filter(Boolean)
+    .join(" ");
+}
+
+/** Long names step down in size instead of colliding with their neighbours. */
+function nameSize(name, base) {
+  const len = name.length;
+  if (len <= 18) return base;
+  if (len <= 26) return Math.round(base * 0.86);
+  if (len <= 34) return Math.round(base * 0.74);
+  return Math.round(base * 0.64);
+}
+
+function reservedPanel(guest, c) {
   if (!guest) return "";
 
   const seats = Number(guest.numberOfSeats) || 1;
@@ -917,24 +934,23 @@ function reservedPanel(guest, c, { filled = false } = {}) {
     chips.push(`Plus one: ${esc(guest.plusOneName)}`);
   }
 
+  const name = fullName(guest);
+
   return `
-    <div
-      style="
-        text-align:center;
-        padding:24px 30px;
-        border:1px solid ${c.gold};
-        ${filled ? `background:${c.creamDeep};` : ""}
-        border-radius:4px;
-      "
-    >
-      ${capsLine("Reserved For", c, { size: 13, spacing: 4 })}
-      <div style="font-family:${FONT_DISPLAY};font-weight:600;font-size:30px;color:${c.ink};margin-top:9px;line-height:1.25;">
-        ${esc(guest.firstName)} ${esc(guest.surname)}
+    <div style="text-align:center;padding:0 40px;">
+      ${ruleWithDiamond(c, 150, 0)}
+      ${capsLine("Reserved For", c, { size: 13, spacing: 4, top: 18 })}
+      <div style="font-family:${FONT_DISPLAY};font-weight:600;font-size:${nameSize(
+        name,
+        30,
+      )}px;color:${c.ink};margin-top:12px;line-height:1.35;word-break:break-word;">
+        ${esc(name)}
       </div>
-      <div style="font-family:${FONT_BODY};font-style:italic;font-size:20px;color:${c.inkSoft};margin-top:7px;">
+      <div style="font-family:${FONT_BODY};font-style:italic;font-size:20px;color:${c.inkSoft};margin-top:12px;line-height:1.5;">
         ${chips.join(" &nbsp;·&nbsp; ")}
       </div>
     </div>
+
   `;
 }
 
