@@ -88,6 +88,46 @@ function photoTag(
   `;
 }
 
+/**
+ * Hero image with a true, proportional "object-cover" crop.
+ *
+ * html2canvas does not honour `object-fit`, so relying on it squashes the
+ * source 3:4 portrait into whatever box we give it. Instead we let the image
+ * keep its natural ratio (width:100%; height:auto) inside an overflow-hidden
+ * window of a fixed height. Because the scaled image is taller than the
+ * window, the excess is cropped from the bottom and the top of the photo —
+ * where faces usually are — stays intact. No border is drawn.
+ */
+function heroPhoto(src, boxWidth, boxHeight) {
+  if (!src) return "";
+
+  return `
+    <div
+      style="
+        width:${boxWidth}px;
+        height:${boxHeight}px;
+        overflow:hidden;
+        position:relative;
+        border-radius:3px;
+        margin:0 auto;
+      "
+    >
+      <img
+        src="${esc(src)}"
+        style="
+          position:absolute;
+          top:0;
+          left:0;
+          width:${boxWidth}px;
+          height:auto;
+          display:block;
+        "
+      />
+    </div>
+  `;
+}
+
+
 function initials(bride, groom) {
   const b = (bride || "B").trim()[0] || "B";
   const g = (groom || "G").trim()[0] || "G";
@@ -527,7 +567,7 @@ function guestTicketHtml(guest, c) {
           margin-top:4px;
         "
       >
-        ${esc(guest.firstName)} ${esc(guest.surname)}
+        ${esc(fullName(guest))}
       </div>
 
       <div
@@ -866,7 +906,24 @@ function rsvpLine(settings, c) {
   `;
 }
 
-function reservedPanel(guest, c, { filled = false } = {}) {
+/** Guest full name with an explicit, guaranteed space between the parts. */
+function fullName(guest) {
+  return [guest?.firstName, guest?.surname]
+    .map((part) => String(part ?? "").trim())
+    .filter(Boolean)
+    .join(" ");
+}
+
+/** Long names step down in size instead of colliding with their neighbours. */
+function nameSize(name, base) {
+  const len = name.length;
+  if (len <= 18) return base;
+  if (len <= 26) return Math.round(base * 0.86);
+  if (len <= 34) return Math.round(base * 0.74);
+  return Math.round(base * 0.64);
+}
+
+function reservedPanel(guest, c) {
   if (!guest) return "";
 
   const seats = Number(guest.numberOfSeats) || 1;
@@ -877,24 +934,23 @@ function reservedPanel(guest, c, { filled = false } = {}) {
     chips.push(`Plus one: ${esc(guest.plusOneName)}`);
   }
 
+  const name = fullName(guest);
+
   return `
-    <div
-      style="
-        text-align:center;
-        padding:24px 30px;
-        border:1px solid ${c.gold};
-        ${filled ? `background:${c.creamDeep};` : ""}
-        border-radius:4px;
-      "
-    >
-      ${capsLine("Reserved For", c, { size: 13, spacing: 4 })}
-      <div style="font-family:${FONT_DISPLAY};font-weight:600;font-size:30px;color:${c.ink};margin-top:9px;line-height:1.25;">
-        ${esc(guest.firstName)} ${esc(guest.surname)}
+    <div style="text-align:center;padding:0 40px;">
+      ${ruleWithDiamond(c, 150, 0)}
+      ${capsLine("Reserved For", c, { size: 13, spacing: 4, top: 18 })}
+      <div style="font-family:${FONT_DISPLAY};font-weight:600;font-size:${nameSize(
+        name,
+        30,
+      )}px;color:${c.ink};margin-top:12px;line-height:1.35;word-break:break-word;">
+        ${esc(name)}
       </div>
-      <div style="font-family:${FONT_BODY};font-style:italic;font-size:20px;color:${c.inkSoft};margin-top:7px;">
+      <div style="font-family:${FONT_BODY};font-style:italic;font-size:20px;color:${c.inkSoft};margin-top:12px;line-height:1.5;">
         ${chips.join(" &nbsp;·&nbsp; ")}
       </div>
     </div>
+
   `;
 }
 
@@ -972,9 +1028,7 @@ export function keepsakeInvitationHtml(settings, guest, palette) {
 
         ${
           photo
-            ? `<div style="width:100%;height:330px;overflow:hidden;border-radius:3px;">
-                 ${photoTag(photo, PAGE_WIDTH - 292, 330)}
-               </div>`
+            ? heroPhoto(photo, 950, 340)
             : `<div style="text-align:center;font-family:${FONT_DISPLAY};font-style:italic;font-size:96px;color:${c.gold};line-height:1.2;">
                  ${initials(settings.brideName, settings.groomName)}
                </div>`
@@ -982,30 +1036,31 @@ export function keepsakeInvitationHtml(settings, guest, palette) {
 
         ${
           guest
-            ? capsLine(
-                `Dear ${guest.firstName} ${guest.surname}`,
-                c,
-                { size: 15, spacing: 5, color: c.inkSoft, top: 32 },
-              )
+            ? capsLine(`Dear ${fullName(guest)}`, c, {
+                size: 15,
+                spacing: 5,
+                color: c.inkSoft,
+                top: 34,
+              })
             : ""
         }
 
-        ${ruleWithDiamond(c, 190, 22)}
+        ${ruleWithDiamond(c, 190, 26)}
 
-        <div style="margin-top:20px;">
-          ${scriptDuo(settings.brideName, settings.groomName, c, 96)}
+        <div style="margin-top:24px;">
+          ${scriptDuo(settings.brideName, settings.groomName, c, 84)}
         </div>
 
         ${capsLine("Request the pleasure of your company", c, {
           size: 14,
           spacing: 5,
           color: c.inkSoft,
-          top: 22,
+          top: 26,
         })}
 
         ${
           date
-            ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:32px;color:${c.ink};text-align:center;margin-top:16px;">
+            ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:30px;color:${c.ink};text-align:center;margin-top:18px;line-height:1.4;">
                  ${esc(date)}
                </div>`
             : ""
@@ -1013,7 +1068,7 @@ export function keepsakeInvitationHtml(settings, guest, palette) {
 
         ${
           settings.weddingMessage
-            ? `<div style="margin-top:20px;">${messageBlock(
+            ? `<div style="margin-top:22px;">${messageBlock(
                 settings.weddingMessage,
                 c,
                 720,
@@ -1033,7 +1088,8 @@ export function keepsakeInvitationHtml(settings, guest, palette) {
 
         <div style="margin-top:26px;">${rsvpLine(settings, c)}</div>
 
-        <div style="margin-top:22px;">${reservedPanel(guest, c, { filled: true })}</div>
+        <div style="margin-top:26px;">${reservedPanel(guest, c)}</div>
+
 
       </div>
     </div>
@@ -1139,18 +1195,18 @@ export function editorialInvitationHtml(settings, guest, palette) {
         size: 14,
         spacing: 6,
         color: c.inkSoft,
-        top: 22,
+        top: 24,
       })}
 
-      <div style="margin-top:16px;">
-        ${scriptDuo(settings.brideName, settings.groomName, c, 98)}
+      <div style="margin-top:20px;">
+        ${scriptDuo(settings.brideName, settings.groomName, c, 86)}
       </div>
 
-      ${ruleWithDiamond(c, 210, 22)}
+      ${ruleWithDiamond(c, 210, 24)}
 
       ${
         date
-          ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:30px;letter-spacing:1px;color:${c.ink};text-align:center;margin-top:18px;">
+          ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:30px;letter-spacing:1px;color:${c.ink};text-align:center;margin-top:20px;line-height:1.4;">
                ${esc(date)}
              </div>`
           : ""
@@ -1158,9 +1214,18 @@ export function editorialInvitationHtml(settings, guest, palette) {
 
       ${
         photo
-          ? `<div style="width:100%;height:330px;overflow:hidden;margin-top:26px;border:1px solid ${c.goldFaint};box-sizing:border-box;">
-               ${photoTag(photo, PAGE_WIDTH - 280, 328)}
-             </div>`
+          ? `<div style="margin-top:26px;">${heroPhoto(photo, 920, 330)}</div>`
+          : ""
+      }
+
+      ${
+        guest
+          ? capsLine(`Dear ${fullName(guest)}`, c, {
+              size: 14,
+              spacing: 5,
+              color: c.inkSoft,
+              top: 26,
+            })
           : ""
       }
 
@@ -1174,17 +1239,18 @@ export function editorialInvitationHtml(settings, guest, palette) {
           : ""
       }
 
-      <div style="margin-top:${photo ? 26 : 48}px;">${venues}</div>
+      <div style="margin-top:${photo ? 28 : 48}px;">${venues}</div>
 
       ${
         settings.dressCode
-          ? `<div style="margin-top:24px;">${dressCodeInline(settings, c)}</div>`
+          ? `<div style="margin-top:26px;">${dressCodeInline(settings, c)}</div>`
           : ""
       }
 
-      <div style="margin-top:24px;">${rsvpLine(settings, c)}</div>
+      <div style="margin-top:26px;">${rsvpLine(settings, c)}</div>
 
-      <div style="margin-top:22px;">${reservedPanel(guest, c)}</div>
+      <div style="margin-top:26px;">${reservedPanel(guest, c)}</div>
+
 
     </div>
   `;
