@@ -1195,18 +1195,18 @@ export function editorialInvitationHtml(settings, guest, palette) {
         size: 14,
         spacing: 6,
         color: c.inkSoft,
-        top: 22,
+        top: 24,
       })}
 
-      <div style="margin-top:16px;">
-        ${scriptDuo(settings.brideName, settings.groomName, c, 98)}
+      <div style="margin-top:20px;">
+        ${scriptDuo(settings.brideName, settings.groomName, c, 86)}
       </div>
 
-      ${ruleWithDiamond(c, 210, 22)}
+      ${ruleWithDiamond(c, 210, 24)}
 
       ${
         date
-          ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:30px;letter-spacing:1px;color:${c.ink};text-align:center;margin-top:18px;">
+          ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:30px;letter-spacing:1px;color:${c.ink};text-align:center;margin-top:20px;line-height:1.4;">
                ${esc(date)}
              </div>`
           : ""
@@ -1214,9 +1214,18 @@ export function editorialInvitationHtml(settings, guest, palette) {
 
       ${
         photo
-          ? `<div style="width:100%;height:330px;overflow:hidden;margin-top:26px;border:1px solid ${c.goldFaint};box-sizing:border-box;">
-               ${photoTag(photo, PAGE_WIDTH - 280, 328)}
-             </div>`
+          ? `<div style="margin-top:26px;">${heroPhoto(photo, 920, 330)}</div>`
+          : ""
+      }
+
+      ${
+        guest
+          ? capsLine(`Dear ${fullName(guest)}`, c, {
+              size: 14,
+              spacing: 5,
+              color: c.inkSoft,
+              top: 26,
+            })
           : ""
       }
 
@@ -1230,17 +1239,18 @@ export function editorialInvitationHtml(settings, guest, palette) {
           : ""
       }
 
-      <div style="margin-top:${photo ? 26 : 48}px;">${venues}</div>
+      <div style="margin-top:${photo ? 28 : 48}px;">${venues}</div>
 
       ${
         settings.dressCode
-          ? `<div style="margin-top:24px;">${dressCodeInline(settings, c)}</div>`
+          ? `<div style="margin-top:26px;">${dressCodeInline(settings, c)}</div>`
           : ""
       }
 
-      <div style="margin-top:24px;">${rsvpLine(settings, c)}</div>
+      <div style="margin-top:26px;">${rsvpLine(settings, c)}</div>
 
-      <div style="margin-top:22px;">${reservedPanel(guest, c)}</div>
+      <div style="margin-top:26px;">${reservedPanel(guest, c)}</div>
+
 
     </div>
   `;
