@@ -1028,9 +1028,7 @@ export function keepsakeInvitationHtml(settings, guest, palette) {
 
         ${
           photo
-            ? `<div style="width:100%;height:330px;overflow:hidden;border-radius:3px;">
-                 ${photoTag(photo, PAGE_WIDTH - 292, 330)}
-               </div>`
+            ? heroPhoto(photo, 950, 340)
             : `<div style="text-align:center;font-family:${FONT_DISPLAY};font-style:italic;font-size:96px;color:${c.gold};line-height:1.2;">
                  ${initials(settings.brideName, settings.groomName)}
                </div>`
@@ -1038,30 +1036,31 @@ export function keepsakeInvitationHtml(settings, guest, palette) {
 
         ${
           guest
-            ? capsLine(
-                `Dear ${guest.firstName} ${guest.surname}`,
-                c,
-                { size: 15, spacing: 5, color: c.inkSoft, top: 32 },
-              )
+            ? capsLine(`Dear ${fullName(guest)}`, c, {
+                size: 15,
+                spacing: 5,
+                color: c.inkSoft,
+                top: 34,
+              })
             : ""
         }
 
-        ${ruleWithDiamond(c, 190, 22)}
+        ${ruleWithDiamond(c, 190, 26)}
 
-        <div style="margin-top:20px;">
-          ${scriptDuo(settings.brideName, settings.groomName, c, 96)}
+        <div style="margin-top:24px;">
+          ${scriptDuo(settings.brideName, settings.groomName, c, 84)}
         </div>
 
         ${capsLine("Request the pleasure of your company", c, {
           size: 14,
           spacing: 5,
           color: c.inkSoft,
-          top: 22,
+          top: 26,
         })}
 
         ${
           date
-            ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:32px;color:${c.ink};text-align:center;margin-top:16px;">
+            ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:30px;color:${c.ink};text-align:center;margin-top:18px;line-height:1.4;">
                  ${esc(date)}
                </div>`
             : ""
@@ -1069,7 +1068,7 @@ export function keepsakeInvitationHtml(settings, guest, palette) {
 
         ${
           settings.weddingMessage
-            ? `<div style="margin-top:20px;">${messageBlock(
+            ? `<div style="margin-top:22px;">${messageBlock(
                 settings.weddingMessage,
                 c,
                 720,
@@ -1089,7 +1088,8 @@ export function keepsakeInvitationHtml(settings, guest, palette) {
 
         <div style="margin-top:26px;">${rsvpLine(settings, c)}</div>
 
-        <div style="margin-top:22px;">${reservedPanel(guest, c, { filled: true })}</div>
+        <div style="margin-top:26px;">${reservedPanel(guest, c)}</div>
+
 
       </div>
     </div>
