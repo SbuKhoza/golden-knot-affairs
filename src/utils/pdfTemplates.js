@@ -567,7 +567,7 @@ function guestTicketHtml(guest, c) {
           margin-top:4px;
         "
       >
-        ${esc(guest.firstName)} ${esc(guest.surname)}
+        ${esc(fullName(guest))}
       </div>
 
       <div
