@@ -18,6 +18,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminGuestsRouteImport } from './routes/admin.guests'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
+import { Route as AdminProgramRouteImport } from './routes/admin.program'
 import { Route as AdminRsvpsRouteImport } from './routes/admin.rsvps'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 
@@ -66,6 +67,11 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminProgramRoute = AdminProgramRouteImport.update({
+  id: '/admin/program',
+  path: '/admin/program',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRsvpsRoute = AdminRsvpsRouteImport.update({
   id: '/admin/rsvps',
   path: '/admin/rsvps',
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/program': typeof AdminProgramRoute
   '/admin/rsvps': typeof AdminRsvpsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/': typeof AdminIndexRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/program': typeof AdminProgramRoute
   '/admin/rsvps': typeof AdminRsvpsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin': typeof AdminIndexRoute
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/program': typeof AdminProgramRoute
   '/admin/rsvps': typeof AdminRsvpsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/': typeof AdminIndexRoute
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/guests'
     | '/admin/login'
+    | '/admin/program'
     | '/admin/rsvps'
     | '/admin/settings'
     | '/admin/'
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/guests'
     | '/admin/login'
+    | '/admin/program'
     | '/admin/rsvps'
     | '/admin/settings'
     | '/admin'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/guests'
     | '/admin/login'
+    | '/admin/program'
     | '/admin/rsvps'
     | '/admin/settings'
     | '/admin/'
@@ -168,6 +180,7 @@ export interface RootRouteChildren {
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminGuestsRoute: typeof AdminGuestsRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminProgramRoute: typeof AdminProgramRoute
   AdminRsvpsRoute: typeof AdminRsvpsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -238,6 +251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/program': {
+      id: '/admin/program'
+      path: '/admin/program'
+      fullPath: '/admin/program'
+      preLoaderRoute: typeof AdminProgramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/rsvps': {
       id: '/admin/rsvps'
       path: '/admin/rsvps'
@@ -264,6 +284,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminDashboardRoute: AdminDashboardRoute,
   AdminGuestsRoute: AdminGuestsRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminProgramRoute: AdminProgramRoute,
   AdminRsvpsRoute: AdminRsvpsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminIndexRoute: AdminIndexRoute,
