@@ -89,14 +89,18 @@ function photoTag(
 }
 
 /**
- * Hero image with a true, proportional "object-cover" crop.
+ * Hero image with a true, proportional "object-cover" crop, framed as an
+ * oval.
  *
  * html2canvas does not honour `object-fit`, so relying on it squashes the
- * source 3:4 portrait into whatever box we give it. Instead we let the image
- * keep its natural ratio (width:100%; height:auto) inside an overflow-hidden
+ * source image into whatever box we give it. Instead we let the image keep
+ * its natural ratio (width:100%; height:auto) inside an overflow-hidden
  * window of a fixed height. Because the scaled image is taller than the
  * window, the excess is cropped from the bottom and the top of the photo —
- * where faces usually are — stays intact. No border is drawn.
+ * where faces usually are — stays intact.
+ *
+ * The window itself uses `border-radius: 50%`, which on a wide rectangular
+ * box renders as a clean oval frame rather than a circle.
  */
 function heroPhoto(src, boxWidth, boxHeight, fit = "cover") {
   if (!src) return "";
@@ -125,7 +129,7 @@ function heroPhoto(src, boxWidth, boxHeight, fit = "cover") {
         height:${boxHeight}px;
         overflow:hidden;
         position:relative;
-        border-radius:3px;
+        border-radius:6px;
         margin:0 auto;
         text-align:center;
       "
@@ -164,6 +168,7 @@ function eyebrow(text, c) {
         font-weight:500;
         font-size:21px;
         letter-spacing:1.7px;
+        word-spacing:0.2em;
         color:${c.inkSoft};
         text-align:center;
       "
@@ -197,6 +202,7 @@ function scriptNames(
           font-size:${size}px;
           color:${c.ink};
           white-space:nowrap;
+          word-spacing:0.2em;
         "
       >
         ${esc(bride || "Bride")}
@@ -220,6 +226,7 @@ function scriptNames(
           font-size:${size}px;
           color:${c.ink};
           white-space:nowrap;
+          word-spacing:0.2em;
         "
       >
         ${esc(groom || "Groom")}
@@ -240,6 +247,7 @@ function serifNames(bride, groom, c) {
           font-size:70px;
           color:${c.ink};
           letter-spacing:0.5px;
+          word-spacing:0.15em;
         "
       >
         ${esc(bride || "Bride")}
@@ -264,6 +272,7 @@ function serifNames(bride, groom, c) {
           font-size:70px;
           color:${c.ink};
           letter-spacing:0.5px;
+          word-spacing:0.15em;
         "
       >
         ${esc(groom || "Groom")}
@@ -280,14 +289,18 @@ function messageBlock(
 ) {
   if (!message) return "";
 
+  // NOTE: this is plain italic prose (no letter-spacing), so it never
+  // needed `word-spacing` to begin with — and on italic text specifically,
+  // this html2canvas build renders `word-spacing` (in any unit) as
+  // corrupted, overlapping glyphs. Never set word-spacing on italic text.
   return `
     <p
       style="
         font-family:${FONT_BODY};
         font-style:italic;
-        font-weight:500;
-        font-size:27px;
-        line-height:1.45;
+        font-weight:400;
+        font-size:26px;
+        line-height:1.55;
         color:${c.inkSoft};
         text-align:center;
         max-width:${maxWidth}px;
@@ -305,8 +318,9 @@ function detailLabel(text, c) {
       style="
         font-family:${FONT_BODY};
         font-weight:600;
-        font-size:15px;
+        font-size:16px;
         letter-spacing:3px;
+        word-spacing:0.4em;
         text-transform:uppercase;
         color:${c.gold};
       "
@@ -363,7 +377,7 @@ function venueBlockHtml(
               style="
                 font-family:${FONT_BODY};
                 font-style:italic;
-                font-size:27px;
+                font-size:29px;
                 color:${c.ink};
                 margin-top:7px;
               "
@@ -381,9 +395,10 @@ function venueBlockHtml(
               style="
                 font-family:${FONT_DISPLAY};
                 font-weight:600;
-                font-size:24px;
+                font-size:26px;
                 color:${c.ink};
                 margin-top:5px;
+                word-spacing:0.15em;
               "
             >
               ${esc(name)}
@@ -398,10 +413,11 @@ function venueBlockHtml(
             <div
               style="
                 font-family:${FONT_BODY};
-                font-size:20px;
+                font-size:22px;
                 color:${c.inkSoft};
                 margin-top:5px;
                 line-height:1.35;
+                word-spacing:0.2em;
               "
             >
               ${esc(address)}
@@ -451,9 +467,10 @@ function dressCodeHtml(settings, c) {
         style="
           font-family:${FONT_BODY};
           font-style:italic;
-          font-size:25px;
+          font-size:27px;
           color:${c.ink};
           margin-top:6px;
+          word-spacing:0.2em;
         "
       >
         ${esc(settings.dressCode)}
@@ -466,6 +483,7 @@ function dressCodeHtml(settings, c) {
               style="
                 width:90px;
                 height:90px;
+                border-radius:50%;
                 margin:11px auto 0;
                 overflow:hidden;
               "
@@ -503,8 +521,9 @@ function rsvpHtml(settings, c) {
         style="
           font-family:${FONT_BODY};
           font-style:italic;
-          font-size:21px;
+          font-size:22px;
           color:${c.inkSoft};
+          word-spacing:0.2em;
         "
       >
         ${
@@ -557,6 +576,7 @@ function guestTicketHtml(guest, c) {
           font-weight:600;
           font-size:13px;
           letter-spacing:3px;
+          word-spacing:0.4em;
           text-transform:uppercase;
           color:${c.gold};
           margin-top:11px;
@@ -569,9 +589,10 @@ function guestTicketHtml(guest, c) {
         style="
           font-family:${FONT_DISPLAY};
           font-weight:600;
-          font-size:29px;
+          font-size:31px;
           color:${c.ink};
           margin-top:4px;
+          word-spacing:0.18em;
         "
       >
         ${esc(fullName(guest))}
@@ -581,7 +602,7 @@ function guestTicketHtml(guest, c) {
         style="
           font-family:${FONT_BODY};
           font-style:italic;
-          font-size:18px;
+          font-size:20px;
           color:${c.inkSoft};
           margin-top:4px;
         "
@@ -741,20 +762,33 @@ function heroImage({
  *
  * Everything below therefore uses plain document flow (block elements with
  * margins) and <table> for columns, which html2canvas reproduces exactly.
+ *
+ * NOTE ON WORD SPACING
+ *
+ * Several labels below use heavy `letter-spacing` for a tracked small-caps
+ * look. Without an explicit `word-spacing` that is clearly larger than the
+ * letter-spacing, the gap between two words ends up looking the same size
+ * as the gap between two letters, so multi-word labels visually run
+ * together (e.g. "Request the pleasure of your company"). Every tracked
+ * label below sets `word-spacing` well above its `letter-spacing` to keep
+ * word boundaries obvious. `html2canvas` also does not reliably apply CSS
+ * `text-transform`, which is a second, independent reason spacing can look
+ * wrong only in the generated PDF and not on-screen.
  */
 
 function scriptDuo(bride, groom, c, size) {
+  const nameStyle = `
+    font-family:${FONT_SCRIPT};
+    font-size:${size}px;
+    color:${c.ink};
+    line-height:1.15;
+    padding:0 24px;
+    word-spacing:0.22em;
+  `;
+
   return `
-    <div style="text-align:center;line-height:1.06;">
-      <div
-        style="
-          font-family:${FONT_SCRIPT};
-          font-size:${size}px;
-          color:${c.ink};
-          line-height:1.16;
-          padding:0 20px;
-        "
-      >${esc(bride || "Bride")}</div>
+    <div style="text-align:center;">
+      <div style="${nameStyle}">${esc(bride || "Bride")}</div>
 
       <div
         style="
@@ -762,32 +796,37 @@ function scriptDuo(bride, groom, c, size) {
           font-style:italic;
           font-size:${Math.round(size * 0.34)}px;
           color:${c.gold};
-          line-height:1.4;
+          margin:18px 0;
+          line-height:1;
         "
       >&amp;</div>
 
-      <div
-        style="
-          font-family:${FONT_SCRIPT};
-          font-size:${size}px;
-          color:${c.ink};
-          line-height:1.16;
-          padding:0 20px;
-        "
-      >${esc(groom || "Groom")}</div>
+      <div style="${nameStyle}">${esc(groom || "Groom")}</div>
     </div>
   `;
 }
 
-function capsLine(text, c, { size = 16, spacing = 6, color, top = 0 } = {}) {
+function capsLine(
+  text,
+  c,
+  { size = 19, spacing = 6, wordSpacing, weight = 700, color, top = 0 } = {},
+) {
   if (!text) return "";
+
+  // Word spacing is deliberately kept well above the letter spacing so
+  // multi-word labels ("Request the pleasure of your company",
+  // "Dear Jane Doe") don't visually run together once heavy letter
+  // tracking is applied.
+  const ws = wordSpacing != null ? wordSpacing : Math.max(spacing * 3, 18);
+
   return `
     <div
       style="
         font-family:${FONT_BODY};
-        font-weight:600;
+        font-weight:${weight};
         font-size:${size}px;
         letter-spacing:${spacing}px;
+        word-spacing:${ws}px;
         text-transform:uppercase;
         color:${color || c.gold};
         text-align:center;
@@ -816,35 +855,35 @@ function venueCell(
 
   return `
     <div style="text-align:center;">
-      ${capsLine(title, c, { size: compact ? 14 : 15, spacing: 4 })}
+      ${capsLine(title, c, { size: compact ? 17 : 18, spacing: 4, weight: 700 })}
 
       ${
         time
-          ? `<div style="font-family:${FONT_BODY};font-style:italic;font-size:${
-              compact ? 24 : 26
-            }px;color:${c.ink};margin-top:10px;line-height:1.3;">${esc(time)}</div>`
+          ? `<div style="font-family:${FONT_BODY};font-style:italic;font-weight:600;font-size:${
+              compact ? 30 : 34
+            }px;color:${c.ink};margin-top:10px;line-height:1.3;word-spacing:0.2em;">${esc(time)}</div>`
           : ""
       }
 
       ${
         name
-          ? `<div style="font-family:${FONT_DISPLAY};font-weight:600;font-size:${
-              compact ? 22 : 24
-            }px;color:${c.ink};margin-top:8px;line-height:1.35;">${esc(name)}</div>`
+          ? `<div style="font-family:${FONT_DISPLAY};font-weight:700;font-size:${
+              compact ? 28 : 32
+            }px;color:${c.ink};margin-top:8px;line-height:1.4;word-spacing:0.3em;">${esc(name)}</div>`
           : ""
       }
 
       ${
         address
-          ? `<div style="font-family:${FONT_BODY};font-size:${
-              compact ? 19 : 20
-            }px;color:${c.inkSoft};margin-top:6px;line-height:1.45;">${esc(address)}</div>`
+          ? `<div style="font-family:${FONT_BODY};font-weight:500;font-size:${
+              compact ? 24 : 26
+            }px;color:${c.inkSoft};margin-top:6px;line-height:1.5;word-spacing:0.3em;">${esc(address)}</div>`
           : ""
       }
 
       ${
         mapUrl
-          ? `<div data-pdf-link="${esc(mapUrl)}" style="font-family:${FONT_BODY};font-style:italic;font-size:17px;color:${c.gold};margin-top:8px;">View on map</div>`
+          ? `<div data-pdf-link="${esc(mapUrl)}" style="font-family:${FONT_BODY};font-style:italic;font-weight:600;font-size:19px;color:${c.gold};margin-top:8px;">View on map</div>`
           : ""
       }
     </div>
@@ -880,13 +919,13 @@ function dressCodeInline(settings, c) {
 
   return `
     <div style="text-align:center;">
-      ${capsLine("Dress Code", c, { size: 14, spacing: 4 })}
-      <div style="font-family:${FONT_BODY};font-style:italic;font-size:25px;color:${c.ink};margin-top:9px;">
+      ${capsLine("Dress Code", c, { size: 17, spacing: 4, weight: 700 })}
+      <div style="font-family:${FONT_BODY};font-style:italic;font-weight:600;font-size:30px;color:${c.ink};margin-top:9px;word-spacing:0.3em;">
         ${esc(settings.dressCode)}
       </div>
       ${
         img
-          ? `<div style="width:104px;height:104px;border-radius:52px;overflow:hidden;margin:14px auto 0;">
+          ? `<div style="width:104px;height:104px;border-radius:50%;overflow:hidden;margin:14px auto 0;">
                ${photoTag(img, 104, 104)}
              </div>`
           : ""
@@ -903,7 +942,7 @@ function rsvpLine(settings, c) {
     : "";
 
   return `
-    <div style="font-family:${FONT_BODY};font-style:italic;font-size:22px;color:${c.inkSoft};text-align:center;line-height:1.4;">
+    <div style="font-family:${FONT_BODY};font-style:italic;font-weight:600;font-size:26px;color:${c.inkSoft};text-align:center;line-height:1.5;word-spacing:0.3em;">
       ${
         deadline
           ? `Kindly RSVP by ${esc(deadline)}`
@@ -946,14 +985,14 @@ function reservedPanel(guest, c) {
   return `
     <div style="text-align:center;padding:0 40px;">
       ${ruleWithDiamond(c, 150, 0)}
-      ${capsLine("Reserved For", c, { size: 13, spacing: 4, top: 18 })}
-      <div style="font-family:${FONT_DISPLAY};font-weight:600;font-size:${nameSize(
+      ${capsLine("Reserved For", c, { size: 16, spacing: 4, weight: 700, top: 18 })}
+      <div style="font-family:${FONT_DISPLAY};font-weight:700;font-size:${nameSize(
         name,
-        30,
-      )}px;color:${c.ink};margin-top:12px;line-height:1.35;word-break:break-word;">
+        34,
+      )}px;color:${c.ink};margin-top:12px;line-height:1.4;word-spacing:0.3em;word-break:break-word;">
         ${esc(name)}
       </div>
-      <div style="font-family:${FONT_BODY};font-style:italic;font-size:20px;color:${c.inkSoft};margin-top:12px;line-height:1.5;">
+      <div style="font-family:${FONT_BODY};font-style:italic;font-weight:600;font-size:24px;color:${c.inkSoft};margin-top:12px;line-height:1.6;word-spacing:0.25em;">
         ${chips.join(" &nbsp;·&nbsp; ")}
       </div>
     </div>
@@ -1044,8 +1083,9 @@ export function keepsakeInvitationHtml(settings, guest, palette) {
         ${
           guest
             ? capsLine(`Dear ${fullName(guest)}`, c, {
-                size: 15,
+                size: 18,
                 spacing: 5,
+                weight: 700,
                 color: c.inkSoft,
                 top: 34,
               })
@@ -1059,15 +1099,16 @@ export function keepsakeInvitationHtml(settings, guest, palette) {
         </div>
 
         ${capsLine("Request the pleasure of your company", c, {
-          size: 14,
+          size: 18,
           spacing: 5,
+          weight: 700,
           color: c.inkSoft,
           top: 26,
         })}
 
         ${
           date
-            ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:30px;color:${c.ink};text-align:center;margin-top:18px;line-height:1.4;">
+            ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:32px;color:${c.ink};text-align:center;margin-top:18px;line-height:1.4;">
                  ${esc(date)}
                </div>`
             : ""
@@ -1199,8 +1240,9 @@ export function editorialInvitationHtml(settings, guest, palette) {
       </div>
 
       ${capsLine("Together with their families", c, {
-        size: 14,
+        size: 18,
         spacing: 6,
+        weight: 700,
         color: c.inkSoft,
         top: 24,
       })}
@@ -1213,7 +1255,7 @@ export function editorialInvitationHtml(settings, guest, palette) {
 
       ${
         date
-          ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:30px;letter-spacing:1px;color:${c.ink};text-align:center;margin-top:20px;line-height:1.4;">
+          ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:32px;letter-spacing:1px;color:${c.ink};text-align:center;margin-top:20px;line-height:1.4;">
                ${esc(date)}
              </div>`
           : ""
@@ -1228,8 +1270,9 @@ export function editorialInvitationHtml(settings, guest, palette) {
       ${
         guest
           ? capsLine(`Dear ${fullName(guest)}`, c, {
-              size: 14,
+              size: 18,
               spacing: 5,
+              weight: 700,
               color: c.inkSoft,
               top: 26,
             })
@@ -1315,6 +1358,7 @@ function programHeaderHtml(
             font-weight:500;
             font-size:29px;
             color:${c.ink};
+            word-spacing:0.15em;
           "
         >
           ${esc(settings.brideName)} &amp;
@@ -1362,6 +1406,7 @@ function programHeaderHtml(
           color:${c.ink};
           margin-top:9px;
           line-height:1;
+          word-spacing:0.2em;
         "
       >
         ${esc(settings.brideName || "Bride")}
@@ -1460,6 +1505,7 @@ function timelineItemHtml(
             font-weight:600;
             font-size:14px;
             letter-spacing:2.4px;
+            word-spacing:0.5em;
             text-transform:uppercase;
             color:${c.gold};
           "
@@ -1474,6 +1520,7 @@ function timelineItemHtml(
             font-size:25px;
             color:${c.ink};
             margin-top:2px;
+            word-spacing:0.15em;
           "
         >
           ${esc(item.event || "")}

@@ -23,12 +23,18 @@ function InvitationRoute() {
   return <GuestGate>{(ctx) => <InvitationPage {...ctx} />}</GuestGate>;
 }
 
+// Labels below combine `tracking-*` (letter-spacing) with `uppercase`.
+// Without an explicit word-spacing that's clearly larger than the letter
+// spacing, multi-word labels visually run together because the gap between
+// two words ends up the same size as the gap between two letters. The
+// `[word-spacing:...]` arbitrary values below fix that everywhere it's
+// needed; single-word labels are unaffected.
 function Detail({ label, children }) {
   if (!children) return null;
   return (
     <div className="text-center">
-      <p className="text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground">{label}</p>
-      <p className="mt-2 font-display text-xl text-foreground">{children}</p>
+      <p className="text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground [word-spacing:0.5em]">{label}</p>
+      <p className="mt-2 font-display text-2xl font-bold text-foreground [word-spacing:0.3em]">{children}</p>
     </div>
   );
 }
@@ -37,8 +43,8 @@ function DressCodeDetail({ label, value, imageUrl }) {
   if (!value) return null;
   return (
     <div className="text-center">
-      <p className="text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground">{label}</p>
-      <p className="mt-2 font-display text-xl text-foreground">{value}</p>
+      <p className="text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground [word-spacing:0.5em]">{label}</p>
+      <p className="mt-2 font-display text-2xl font-bold text-foreground [word-spacing:0.3em]">{value}</p>
       {imageUrl ? (
         <img
           src={imageUrl}
@@ -125,19 +131,19 @@ function InvitationPage({ guest, settings, signOut }) {
                 <Monogram bride={settings.brideName} groom={settings.groomName} />
               )}
 
-              <p className="mt-8 text-[0.65rem] uppercase tracking-[0.4em] text-muted-foreground">
+              <p className="mt-8 text-xs font-bold uppercase tracking-[0.4em] text-muted-foreground [word-spacing:0.6em]">
                 Dear {guest.firstName} {guest.surname}
               </p>
               <Ornament className="my-6" />
-              <h1 className="font-script text-5xl leading-tight text-primary sm:text-7xl">
+              <h1 className="font-script text-5xl leading-[1.2] text-primary sm:text-7xl">
                 {settings.brideName || "Bride"}
-                <span className="mx-3 font-display text-3xl text-gold">&</span>
+                <span className="mx-4 font-display text-3xl text-gold">&</span>
                 {settings.groomName || "Groom"}
               </h1>
-              <p className="mt-6 text-xs uppercase tracking-[0.35em] text-muted-foreground">
+              <p className="mt-8 text-sm font-bold uppercase tracking-[0.35em] text-muted-foreground [word-spacing:0.5em]">
                 Request the pleasure of your company
               </p>
-              <p className="mt-6 font-display text-2xl text-foreground sm:text-3xl">
+              <p className="mt-6 font-display text-3xl font-bold text-foreground sm:text-4xl">
                 {formatWeddingDate(settings.weddingDate) || "Date to be confirmed"}
               </p>
 
@@ -168,8 +174,8 @@ function InvitationPage({ guest, settings, signOut }) {
               </div>
 
               <div className="mt-10 rounded-lg bg-secondary/60 px-6 py-5">
-                <p className="text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground">Reserved for you</p>
-                <p className="mt-2 font-display text-xl">
+                <p className="text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground [word-spacing:0.5em]">Reserved for you</p>
+                <p className="mt-2 font-display text-2xl font-bold [word-spacing:0.3em]">
                   {guest.numberOfSeats} seat{guest.numberOfSeats > 1 ? "s" : ""}
                   {guest.plusOneAllowed ? " · plus one welcome" : ""}
                   {guest.tableNumber ? ` · Table ${guest.tableNumber}` : ""}
