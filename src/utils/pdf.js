@@ -12,8 +12,15 @@ import {
   PAGE_WIDTH,
 } from "@/utils/pdfTemplates";
 
+/*
+ * The invitation is deliberately NOT a plain A4 sheet: the page is kept at
+ * A4 width but made taller so the full invitation breathes on one page with
+ * no cramped or overlapping type. The millimetre height is derived from the
+ * pixel canvas so the proportions always match exactly.
+ */
 const A4_WIDTH_MM = 210;
-const A4_HEIGHT_MM = 297;
+const A4_HEIGHT_MM =
+  (A4_WIDTH_MM * PAGE_HEIGHT) / PAGE_WIDTH;
 
 const FONT_HREF =
   "https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500;1,600&display=swap";
@@ -462,7 +469,10 @@ async function pdfFromPages(
   const pdf =
     new JsPDF({
       unit:"mm",
-      format:"a4",
+      format:[
+        A4_WIDTH_MM,
+        A4_HEIGHT_MM,
+      ],
       orientation:"portrait",
       compress:true,
     });

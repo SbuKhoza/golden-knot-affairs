@@ -339,7 +339,35 @@ function SettingsPage() {
                 </button>
               </div>
             ) : null}
+            <div className="mt-4">
+              <span className={labelClass}>How the image fills the invitation</span>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: "cover", label: "Cover", hint: "Fills the space, crops the edges" },
+                  { id: "contain", label: "Contain", hint: "Shows the whole picture" },
+                  { id: "fill", label: "Fill", hint: "Stretches to fit exactly" },
+                ].map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    title={option.hint}
+                    onClick={() => update("invitationImageFit", option.id)}
+                    className={`rounded-full border px-4 py-1.5 text-xs transition ${
+                      (values.invitationImageFit || "cover") === option.id
+                        ? "border-gold ring-2 ring-gold/40 text-foreground"
+                        : "border-border text-muted-foreground hover:border-gold/60"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Cover keeps the picture in proportion and trims the bottom. Contain shows everything. Fill stretches it.
+              </p>
+            </div>
           </Field>
+
           <Field label="Background image">
             <input
               type="file"

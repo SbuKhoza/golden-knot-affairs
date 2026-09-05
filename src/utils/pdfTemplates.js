@@ -17,7 +17,7 @@ import {
 // A4 render box.
 // html2canvas rasterizes this exact size.
 export const PAGE_WIDTH = 1240;
-export const PAGE_HEIGHT = 1754;
+export const PAGE_HEIGHT = 1960;
 
 const FONT_DISPLAY = "'Playfair Display', Georgia, serif";
 const FONT_SCRIPT = "'Great Vibes', cursive";
@@ -98,8 +98,25 @@ function photoTag(
  * window, the excess is cropped from the bottom and the top of the photo —
  * where faces usually are — stays intact. No border is drawn.
  */
-function heroPhoto(src, boxWidth, boxHeight) {
+function heroPhoto(src, boxWidth, boxHeight, fit = "cover") {
   if (!src) return "";
+
+  const mode = ["cover", "contain", "fill"].includes(fit) ? fit : "cover";
+
+  // html2canvas ignores `object-fit`, so each mode is expressed with plain
+  // geometry instead.
+  let imgStyle;
+  if (mode === "fill") {
+    // Explicitly stretch — only when the couple asks for it.
+    imgStyle = `width:${boxWidth}px;height:${boxHeight}px;`;
+  } else if (mode === "contain") {
+    // Whole picture visible, ratio kept, letterboxed inside the window.
+    imgStyle = `max-width:${boxWidth}px;max-height:${boxHeight}px;width:auto;height:${boxHeight}px;margin:0 auto;`;
+  } else {
+    // Cover: scale to the window width, keep the ratio, crop the overflow
+    // from the bottom so the top of the photo stays intact.
+    imgStyle = `width:${boxWidth}px;height:auto;position:absolute;top:0;left:0;`;
+  }
 
   return `
     <div
@@ -110,23 +127,13 @@ function heroPhoto(src, boxWidth, boxHeight) {
         position:relative;
         border-radius:3px;
         margin:0 auto;
+        text-align:center;
       "
     >
-      <img
-        src="${esc(src)}"
-        style="
-          position:absolute;
-          top:0;
-          left:0;
-          width:${boxWidth}px;
-          height:auto;
-          display:block;
-        "
-      />
+      <img src="${esc(src)}" style="display:block;${imgStyle}" />
     </div>
   `;
 }
-
 
 function initials(bride, groom) {
   const b = (bride || "B").trim()[0] || "B";
@@ -1028,7 +1035,7 @@ export function keepsakeInvitationHtml(settings, guest, palette) {
 
         ${
           photo
-            ? heroPhoto(photo, 950, 340)
+            ? heroPhoto(photo, 950, 560, settings.invitationImageFit)
             : `<div style="text-align:center;font-family:${FONT_DISPLAY};font-style:italic;font-size:96px;color:${c.gold};line-height:1.2;">
                  ${initials(settings.brideName, settings.groomName)}
                </div>`
@@ -1140,7 +1147,7 @@ export function editorialInvitationHtml(settings, guest, palette) {
 
   const body = `
     <!-- Deep colour band behind the top third -->
-    <div style="position:absolute;top:0;left:0;width:100%;height:620px;background:${c.creamDeep};"></div>
+    <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:${c.creamDeep};"></div>
 
     <!-- Fine engraved frame -->
     <div style="position:absolute;top:34px;left:34px;right:34px;bottom:34px;border:1px solid ${c.gold};opacity:0.55;"></div>
@@ -1214,7 +1221,7 @@ export function editorialInvitationHtml(settings, guest, palette) {
 
       ${
         photo
-          ? `<div style="margin-top:26px;">${heroPhoto(photo, 920, 330)}</div>`
+          ? `<div style="margin-top:26px;">${heroPhoto(photo, 920, 520, settings.invitationImageFit)}</div>`
           : ""
       }
 
