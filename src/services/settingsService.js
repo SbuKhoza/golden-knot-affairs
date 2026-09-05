@@ -22,6 +22,7 @@ export const defaultSettings = {
   dressCode: "",
   weddingMessage: "",
   invitationImageUrl: "",
+  invitationImageFit: "cover",
   invitationImageData: "",
   dressCodeImageUrl: "",
   dressCodeImageData: "",
