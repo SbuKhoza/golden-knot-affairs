@@ -17,7 +17,7 @@ import {
 // A4 render box.
 // html2canvas rasterizes this exact size.
 export const PAGE_WIDTH = 1240;
-export const PAGE_HEIGHT = 2100;
+export const PAGE_HEIGHT = 1960;
 
 const FONT_DISPLAY = "'Playfair Display', Georgia, serif";
 const FONT_SCRIPT = "'Great Vibes', cursive";
@@ -1035,7 +1035,7 @@ export function keepsakeInvitationHtml(settings, guest, palette) {
 
         ${
           photo
-            ? heroPhoto(photo, 950, 470, settings.invitationImageFit)
+            ? heroPhoto(photo, 950, 560, settings.invitationImageFit)
             : `<div style="text-align:center;font-family:${FONT_DISPLAY};font-style:italic;font-size:96px;color:${c.gold};line-height:1.2;">
                  ${initials(settings.brideName, settings.groomName)}
                </div>`
@@ -1147,7 +1147,7 @@ export function editorialInvitationHtml(settings, guest, palette) {
 
   const body = `
     <!-- Deep colour band behind the top third -->
-    <div style="position:absolute;top:0;left:0;width:100%;height:620px;background:${c.creamDeep};"></div>
+    <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:${c.creamDeep};"></div>
 
     <!-- Fine engraved frame -->
     <div style="position:absolute;top:34px;left:34px;right:34px;bottom:34px;border:1px solid ${c.gold};opacity:0.55;"></div>
@@ -1221,7 +1221,7 @@ export function editorialInvitationHtml(settings, guest, palette) {
 
       ${
         photo
-          ? `<div style="margin-top:26px;">${heroPhoto(photo, 920, 460, settings.invitationImageFit)}</div>`
+          ? `<div style="margin-top:26px;">${heroPhoto(photo, 920, 520, settings.invitationImageFit)}</div>`
           : ""
       }
 
