@@ -21,6 +21,7 @@ import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminProgramRouteImport } from './routes/admin.program'
 import { Route as AdminRsvpsRouteImport } from './routes/admin.rsvps'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as ApiPublicInvitationTemplateRouteImport } from './routes/api/public/invitation-template'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,6 +83,12 @@ const AdminSettingsRoute = AdminSettingsRouteImport.update({
   path: '/admin/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicInvitationTemplateRoute =
+  ApiPublicInvitationTemplateRouteImport.update({
+    id: '/api/public/invitation-template',
+    path: '/api/public/invitation-template',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/admin/rsvps': typeof AdminRsvpsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/': typeof AdminIndexRoute
+  '/api/public/invitation-template': typeof ApiPublicInvitationTemplateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -110,6 +118,7 @@ export interface FileRoutesByTo {
   '/admin/rsvps': typeof AdminRsvpsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin': typeof AdminIndexRoute
+  '/api/public/invitation-template': typeof ApiPublicInvitationTemplateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -125,6 +134,7 @@ export interface FileRoutesById {
   '/admin/rsvps': typeof AdminRsvpsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/': typeof AdminIndexRoute
+  '/api/public/invitation-template': typeof ApiPublicInvitationTemplateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/admin/rsvps'
     | '/admin/settings'
     | '/admin/'
+    | '/api/public/invitation-template'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -155,6 +166,7 @@ export interface FileRouteTypes {
     | '/admin/rsvps'
     | '/admin/settings'
     | '/admin'
+    | '/api/public/invitation-template'
   id:
     | '__root__'
     | '/'
@@ -169,6 +181,7 @@ export interface FileRouteTypes {
     | '/admin/rsvps'
     | '/admin/settings'
     | '/admin/'
+    | '/api/public/invitation-template'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -184,6 +197,7 @@ export interface RootRouteChildren {
   AdminRsvpsRoute: typeof AdminRsvpsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  ApiPublicInvitationTemplateRoute: typeof ApiPublicInvitationTemplateRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -272,6 +286,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/invitation-template': {
+      id: '/api/public/invitation-template'
+      path: '/api/public/invitation-template'
+      fullPath: '/api/public/invitation-template'
+      preLoaderRoute: typeof ApiPublicInvitationTemplateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -288,6 +309,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRsvpsRoute: AdminRsvpsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminIndexRoute: AdminIndexRoute,
+  ApiPublicInvitationTemplateRoute: ApiPublicInvitationTemplateRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
