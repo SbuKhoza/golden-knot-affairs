@@ -4,6 +4,7 @@ import { GuestGate } from "@/components/wedding/GuestGate";
 import { GuestNav } from "@/components/wedding/GuestNav";
 import { Ornament, Monogram } from "@/components/wedding/Ornament";
 import { downloadInvitationPdf } from "@/utils/pdf";
+import { downloadFilledInvitationTemplate } from "@/utils/pdfFormFill";
 import { formatWeddingDate, isPastDeadline } from "@/utils/format";
 
 export const Route = createFileRoute("/invitation")({
@@ -82,12 +83,21 @@ function InvitationPage({ guest, settings, signOut }) {
     setError("");
     setDownloading("invitation");
     try {
-      // Always generate the invitation PDF client-side: it's the only path
-      // that embeds the uploaded invitation image and this guest's seat/
-      // table details. A separately admin-uploaded PDF (settings.invitationPdfUrl)
-      // is a generic file with no guest-specific content or guaranteed
-      // image, so it's no longer used for this download.
-      await downloadInvitationPdf(settings, guest);
+      // If the admin has uploaded a fillable AcroForm invitation template
+      // (fields placed over a decorative design in Acrobat or similar),
+      // fill it with this guest's details and download that instead — it's
+      // the couple's actual designed invitation, not the generated one.
+      // `downloadFilledInvitationTemplate` returns false when there's no
+      // template, or when the uploaded PDF isn't actually a fillable form,
+      // so this falls back to the HTML-rendered invitation either way.
+      const filledTemplate = await downloadFilledInvitationTemplate(settings, guest).catch((err) => {
+        console.error("Filling invitation template failed, falling back:", err);
+        return false;
+      });
+
+      if (!filledTemplate) {
+        await downloadInvitationPdf(settings, guest);
+      }
     } catch (err) {
       console.error("Invitation PDF download failed:", err);
       setError("We couldn't prepare that download. Please try again.");

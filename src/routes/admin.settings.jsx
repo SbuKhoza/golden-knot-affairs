@@ -290,13 +290,11 @@ function SettingsPage() {
       <section className="rounded-xl border border-border bg-card p-6">
         <h2 className="font-display text-xl">Invitation design</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Choose the layout and palette used when guests' invitation and program PDFs are generated.
+          Choose the palette used when guests' invitation and program PDFs are generated.
         </p>
         <div className="mt-5">
           <InvitationDesignPicker
-            templateId={values.templateId}
             colorSchemeId={values.colorSchemeId}
-            onTemplateChange={(id) => update("templateId", id)}
             onColorSchemeChange={(id) => update("colorSchemeId", id)}
           />
         </div>
@@ -392,7 +390,18 @@ function SettingsPage() {
               </div>
             ) : null}
           </Field>
-          <Field label="Invitation PDF (optional)">
+          <Field label="Fillable invitation template (optional)">
+            <p className="mb-2 text-xs leading-relaxed text-muted-foreground">
+              Upload a PDF with real AcroForm text fields (e.g. designed in Canva, then given fillable fields in
+              Adobe Acrobat or a similar tool). When a guest downloads their invitation, this template is filled
+              in with their details and downloaded instead of the generated design below — the couple's own
+              artwork, not a substitute. Recognised field names: <code>username</code>, <code>ceremonyVenueName</code>,{" "}
+              <code>receptionVenueName</code>, <code>ceremonyTime</code>, <code>receptionTime</code>,{" "}
+              <code>weddingMonth</code>, <code>weddingDay</code>, <code>weddingYear</code>, <code>tableNumber</code>,{" "}
+              <code>additionalMessage</code>, <code>ceremonyVenueMapUrl</code>, <code>receptionVenueMapUrl</code>.
+              If the uploaded PDF has no fillable fields at all, guests automatically get the generated invitation
+              below instead.
+            </p>
             <input
               type="file"
               accept="application/pdf"
@@ -410,7 +419,7 @@ function SettingsPage() {
                   rel="noopener noreferrer"
                   className="text-xs text-primary underline underline-offset-4"
                 >
-                  View current PDF
+                  View current template
                 </a>
                 <button
                   type="button"

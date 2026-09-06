@@ -19,6 +19,10 @@ import {
 export const PAGE_WIDTH = 1240;
 export const PAGE_HEIGHT = 1960;
 
+// A4 landscape render box — wedding invitation.
+export const INVITATION_PAGE_WIDTH = 1400;
+export const INVITATION_PAGE_HEIGHT = 990;
+
 const FONT_DISPLAY = "'Playfair Display', Georgia, serif";
 const FONT_SCRIPT = "'Great Vibes', cursive";
 const FONT_BODY = "'Cormorant Garamond', Georgia, serif";

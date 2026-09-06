@@ -10,20 +10,30 @@ import {
   buildProgramPages,
   PAGE_HEIGHT,
   PAGE_WIDTH,
+  INVITATION_PAGE_HEIGHT,
+  INVITATION_PAGE_WIDTH,
 } from "@/utils/pdfTemplates";
 
 /*
- * The invitation is deliberately NOT a plain A4 sheet: the page is kept at
- * A4 width but made taller so the full invitation breathes on one page with
- * no cramped or overlapping type. The millimetre height is derived from the
- * pixel canvas so the proportions always match exactly.
+ * The wedding-program pages are a plain, tall A4 portrait sheet. The
+ * millimetre height is derived from the pixel canvas so the proportions
+ * always match exactly.
  */
 const A4_WIDTH_MM = 210;
 const A4_HEIGHT_MM =
   (A4_WIDTH_MM * PAGE_HEIGHT) / PAGE_WIDTH;
 
+/*
+ * The invitation renders landscape — true A4 landscape (297 x 210mm) — so a
+ * printed page reads left/right the way the two-column layout is designed,
+ * rather than needing to be a tall single column.
+ */
+const INVITATION_WIDTH_MM = 297;
+const INVITATION_HEIGHT_MM =
+  (INVITATION_WIDTH_MM * INVITATION_PAGE_HEIGHT) / INVITATION_PAGE_WIDTH;
+
 const FONT_HREF =
-  "https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500;1,600&display=swap";
+  "https://fonts.googleapis.com/css2?family=Great+Vibes&family=Karla:ital,wght@0,400;0,500;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500;1,600&display=swap";
 
 /* -------------------------------------------------------------------------- */
 /* Libraries                                                                  */
@@ -49,7 +59,7 @@ async function loadHtml2Canvas() {
 /* Isolated rendering iframe                                                  */
 /* -------------------------------------------------------------------------- */
 
-function createRenderFrame() {
+function createRenderFrame(widthPx, heightPx) {
   return new Promise((resolve) => {
     const iframe =
       document.createElement("iframe");
@@ -59,10 +69,10 @@ function createRenderFrame() {
     iframe.style.left = "-99999px";
 
     iframe.style.width =
-      `${PAGE_WIDTH}px`;
+      `${widthPx}px`;
 
     iframe.style.height =
-      `${PAGE_HEIGHT}px`;
+      `${heightPx}px`;
 
     iframe.style.border = "0";
 
@@ -262,12 +272,13 @@ function pxToMm(
 
 async function rasterizeHtml(
   html,
+  { widthPx, heightPx, widthMm, heightMm },
 ) {
   const html2canvas =
     await loadHtml2Canvas();
 
   const iframe =
-    await createRenderFrame();
+    await createRenderFrame(widthPx, heightPx);
 
   const idoc =
     iframe.contentDocument;
@@ -279,10 +290,10 @@ async function rasterizeHtml(
       idoc.createElement("div");
 
     container.style.width =
-      `${PAGE_WIDTH}px`;
+      `${widthPx}px`;
 
     container.style.height =
-      `${PAGE_HEIGHT}px`;
+      `${heightPx}px`;
 
     container.style.position =
       "relative";
@@ -368,30 +379,30 @@ async function rasterizeHtml(
             pxToMm(
               r.left -
                 containerRect.left,
-              PAGE_WIDTH,
-              A4_WIDTH_MM,
+              widthPx,
+              widthMm,
             ),
 
           yMm:
             pxToMm(
               r.top -
                 containerRect.top,
-              PAGE_HEIGHT,
-              A4_HEIGHT_MM,
+              heightPx,
+              heightMm,
             ),
 
           wMm:
             pxToMm(
               r.width,
-              PAGE_WIDTH,
-              A4_WIDTH_MM,
+              widthPx,
+              widthMm,
             ),
 
           hMm:
             pxToMm(
               r.height,
-              PAGE_HEIGHT,
-              A4_HEIGHT_MM,
+              heightPx,
+              heightMm,
             ),
         };
       });
@@ -405,14 +416,13 @@ async function rasterizeHtml(
         container,
         {
           width:
-            PAGE_WIDTH,
+            widthPx,
 
           height:
-            PAGE_HEIGHT,
+            heightPx,
 
           /*
-           * 2.5 is a good compromise for A4.
-           * The source itself is already 1240x1754.
+           * 2.5 is a good compromise for A4 at this pixel density.
            */
           scale:2.5,
 
@@ -462,6 +472,13 @@ async function rasterizeHtml(
 
 async function pdfFromPages(
   pageHtmls,
+  {
+    widthPx,
+    heightPx,
+    widthMm,
+    heightMm,
+    orientation = "portrait",
+  } = {},
 ) {
   const JsPDF =
     await loadJsPdf();
@@ -470,10 +487,10 @@ async function pdfFromPages(
     new JsPDF({
       unit:"mm",
       format:[
-        A4_WIDTH_MM,
-        A4_HEIGHT_MM,
+        widthMm,
+        heightMm,
       ],
-      orientation:"portrait",
+      orientation,
       compress:true,
     });
 
@@ -494,6 +511,7 @@ async function pdfFromPages(
     } =
       await rasterizeHtml(
         pageHtmls[i],
+        { widthPx, heightPx, widthMm, heightMm },
       );
 
     if (i > 0) {
@@ -567,9 +585,16 @@ export async function generateInvitationPdf(
         palette,
       );
 
-    return await pdfFromPages([
-      html,
-    ]);
+    return await pdfFromPages(
+      [html],
+      {
+        widthPx: INVITATION_PAGE_WIDTH,
+        heightPx: INVITATION_PAGE_HEIGHT,
+        widthMm: INVITATION_WIDTH_MM,
+        heightMm: INVITATION_HEIGHT_MM,
+        orientation: "landscape",
+      },
+    );
   } catch (err) {
     console.error(
       "[pdf] Failed to generate invitation PDF:",
@@ -578,6 +603,24 @@ export async function generateInvitationPdf(
 
     throw err;
   }
+}
+
+/**
+ * Triggers a browser download for an arbitrary Blob — shared by the
+ * jsPDF-rendered invitation/program above and by the AcroForm template
+ * filler in `pdfFormFill.js`, which produces a Blob directly from pdf-lib
+ * rather than through jsPDF.
+ */
+export function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  // Give the browser a tick to pick up the click before revoking.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export async function downloadInvitationPdf(
@@ -632,6 +675,13 @@ export async function generateProgramPdf(
 
     return await pdfFromPages(
       pages,
+      {
+        widthPx: PAGE_WIDTH,
+        heightPx: PAGE_HEIGHT,
+        widthMm: A4_WIDTH_MM,
+        heightMm: A4_HEIGHT_MM,
+        orientation: "portrait",
+      },
     );
   } catch (err) {
     console.error(

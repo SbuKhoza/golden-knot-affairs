@@ -1,0 +1,2381 @@
+diff --git a/package-lock.json b/package-lock.json
+index b4052a6..02f857a 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -49,6 +49,7 @@
+         "jspdf": "^4.2.1",
+         "jspdf-autotable": "^5.0.8",
+         "lucide-react": "^0.575.0",
++        "pdf-lib": "^1.17.1",
+         "react": "^19.2.0",
+         "react-day-picker": "^9.14.0",
+         "react-dom": "^19.2.0",
+@@ -1720,9 +1721,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1740,9 +1738,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1760,9 +1755,6 @@
+         "ppc64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1780,9 +1772,6 @@
+         "riscv64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1800,9 +1789,6 @@
+         "riscv64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1820,9 +1806,6 @@
+         "s390x"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1840,9 +1823,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1860,9 +1840,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1967,6 +1944,36 @@
+         "url": "https://github.com/sponsors/Boshen"
+       }
+     },
++    "node_modules/@pdf-lib/standard-fonts": {
++      "version": "1.0.0",
++      "resolved": "https://registry.npmjs.org/@pdf-lib/standard-fonts/-/standard-fonts-1.0.0.tgz",
++      "integrity": "sha512-hU30BK9IUN/su0Mn9VdlVKsWBS6GyhVfqjwl1FjZN4TxP6cCw0jP2w7V3Hf5uX7M0AZJ16vey9yE0ny7Sa59ZA==",
++      "license": "MIT",
++      "dependencies": {
++        "pako": "^1.0.6"
++      }
++    },
++    "node_modules/@pdf-lib/standard-fonts/node_modules/pako": {
++      "version": "1.0.11",
++      "resolved": "https://registry.npmjs.org/pako/-/pako-1.0.11.tgz",
++      "integrity": "sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==",
++      "license": "(MIT AND Zlib)"
++    },
++    "node_modules/@pdf-lib/upng": {
++      "version": "1.0.1",
++      "resolved": "https://registry.npmjs.org/@pdf-lib/upng/-/upng-1.0.1.tgz",
++      "integrity": "sha512-dQK2FUMQtowVP00mtIksrlZhdFXQZPC+taih1q4CvPZ5vqdxR/LKBaFg0oAfzd1GlHZXXSPdQfzQnt+ViGvEIQ==",
++      "license": "MIT",
++      "dependencies": {
++        "pako": "^1.0.10"
++      }
++    },
++    "node_modules/@pdf-lib/upng/node_modules/pako": {
++      "version": "1.0.11",
++      "resolved": "https://registry.npmjs.org/pako/-/pako-1.0.11.tgz",
++      "integrity": "sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==",
++      "license": "(MIT AND Zlib)"
++    },
+     "node_modules/@pkgr/core": {
+       "version": "0.3.6",
+       "resolved": "https://registry.npmjs.org/@pkgr/core/-/core-0.3.6.tgz",
+@@ -3424,9 +3431,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -3443,9 +3447,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -3462,9 +3463,6 @@
+       "cpu": [
+         "ppc64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -3481,9 +3479,6 @@
+       "cpu": [
+         "s390x"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -3500,9 +3495,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -3519,9 +3511,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -3798,9 +3787,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MPL-2.0",
+       "optional": true,
+       "os": [
+@@ -3821,9 +3807,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MPL-2.0",
+       "optional": true,
+       "os": [
+@@ -3844,9 +3827,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MPL-2.0",
+       "optional": true,
+       "os": [
+@@ -3867,9 +3847,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MPL-2.0",
+       "optional": true,
+       "os": [
+@@ -4033,9 +4010,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -4052,9 +4026,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -4071,9 +4042,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -4090,9 +4058,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -7064,9 +7029,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MPL-2.0",
+       "optional": true,
+       "os": [
+@@ -7087,9 +7049,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MPL-2.0",
+       "optional": true,
+       "os": [
+@@ -7110,9 +7069,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MPL-2.0",
+       "optional": true,
+       "os": [
+@@ -7133,9 +7089,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MPL-2.0",
+       "optional": true,
+       "os": [
+@@ -7570,6 +7523,30 @@
+       "integrity": "sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==",
+       "license": "MIT"
+     },
++    "node_modules/pdf-lib": {
++      "version": "1.17.1",
++      "resolved": "https://registry.npmjs.org/pdf-lib/-/pdf-lib-1.17.1.tgz",
++      "integrity": "sha512-V/mpyJAoTsN4cnP31vc0wfNA1+p20evqqnap0KLoRUN0Yk/p3wN52DOEsL4oBFcLdb76hlpKPtzJIgo67j/XLw==",
++      "license": "MIT",
++      "dependencies": {
++        "@pdf-lib/standard-fonts": "^1.0.0",
++        "@pdf-lib/upng": "^1.0.1",
++        "pako": "^1.0.11",
++        "tslib": "^1.11.1"
++      }
++    },
++    "node_modules/pdf-lib/node_modules/pako": {
++      "version": "1.0.11",
++      "resolved": "https://registry.npmjs.org/pako/-/pako-1.0.11.tgz",
++      "integrity": "sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==",
++      "license": "(MIT AND Zlib)"
++    },
++    "node_modules/pdf-lib/node_modules/tslib": {
++      "version": "1.14.1",
++      "resolved": "https://registry.npmjs.org/tslib/-/tslib-1.14.1.tgz",
++      "integrity": "sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==",
++      "license": "0BSD"
++    },
+     "node_modules/performance-now": {
+       "version": "2.1.0",
+       "resolved": "https://registry.npmjs.org/performance-now/-/performance-now-2.1.0.tgz",
+diff --git a/package.json b/package.json
+index b866da1..82aa811 100644
+--- a/package.json
++++ b/package.json
+@@ -58,6 +58,7 @@
+     "jspdf": "^4.2.1",
+     "jspdf-autotable": "^5.0.8",
+     "lucide-react": "^0.575.0",
++    "pdf-lib": "^1.17.1",
+     "react": "^19.2.0",
+     "react-day-picker": "^9.14.0",
+     "react-dom": "^19.2.0",
+diff --git a/src/components/admin/InvitationDesignPicker.jsx b/src/components/admin/InvitationDesignPicker.jsx
+index 2f373ba..82ca426 100644
+--- a/src/components/admin/InvitationDesignPicker.jsx
++++ b/src/components/admin/InvitationDesignPicker.jsx
+@@ -1,104 +1,57 @@
+-import { PDF_COLOR_SCHEMES, PDF_TEMPLATES } from "@/utils/pdfThemes";
+-
+-// Tiny live mock-ups of each PDF layout, built purely in CSS so the couple
+-// can actually see the difference between templates before generating a
+-// PDF, rather than choosing from a plain list of labels.
++import { PDF_COLOR_SCHEMES } from "@/utils/pdfThemes";
+ 
++// A tiny live mock-up of the invitation PDF layout, built purely in CSS, so
++// the couple can see roughly how their chosen palette will look before
++// generating a PDF. There is only one invitation layout now ("Golden
++// Editorial" was removed since it never matched the on-screen invitation),
++// so this component no longer offers a layout choice — just the palette.
+ function KeepsakePreview({ accent, surface }) {
+   return (
+     <div className="flex h-full w-full items-center justify-center p-2" style={{ background: surface }}>
+       <div
+-        className="flex h-full w-full flex-col items-center gap-1.5 p-2"
++        className="grid h-full w-full grid-cols-2 gap-1.5 p-2"
+         style={{ background: "#fff", border: `1px solid ${accent}` }}
+       >
+-        <div className="h-8 w-full rounded-[2px]" style={{ background: `${accent}33` }} />
+-        <p className="text-[5px] uppercase tracking-[0.2em] text-muted-foreground">Dear Guest</p>
+-        <div className="h-px w-8" style={{ background: accent }} />
+-        <p className="font-script text-sm leading-none" style={{ color: accent }}>
+-          Charles
+-        </p>
+-        <p className="font-script text-sm leading-none" style={{ color: accent }}>
+-          Nicolle
+-        </p>
+-        <p className="text-[5px] uppercase tracking-[0.15em] text-muted-foreground">17 December 2026</p>
+-        <div className="mt-auto w-full rounded-[2px] border py-1 text-center" style={{ borderColor: accent }}>
+-          <p className="text-[5px] uppercase tracking-[0.15em] text-muted-foreground">Reserved for</p>
++        <div className="flex flex-col items-center justify-center gap-1">
++          <div className="h-8 w-full rounded-[2px]" style={{ background: `${accent}33` }} />
++          <p className="font-script text-sm leading-none" style={{ color: accent }}>
++            Charles
++          </p>
++          <p className="font-script text-sm leading-none" style={{ color: accent }}>
++            Nicolle
++          </p>
++          <p className="text-[5px] uppercase tracking-[0.15em] text-muted-foreground">17 December 2026</p>
+         </div>
+-      </div>
+-    </div>
+-  );
+-}
+-
+-function EditorialPreview({ accent, surface }) {
+-  return (
+-    <div className="relative h-full w-full p-2" style={{ background: surface }}>
+-      <div className="absolute inset-1.5 border" style={{ borderColor: `${accent}88` }} />
+-      <div className="relative flex h-full w-full flex-col items-center gap-1.5 px-2 py-2.5">
+-        <div
+-          className="flex h-5 w-5 items-center justify-center rounded-full border text-[5px]"
+-          style={{ borderColor: accent, color: accent }}
+-        >
+-          CN
++        <div className="flex flex-col items-center justify-center gap-1 border-l pl-1.5" style={{ borderColor: `${accent}55` }}>
++          <p className="text-[5px] uppercase tracking-[0.2em] text-muted-foreground">Dear Guest</p>
++          <div className="h-px w-8" style={{ background: accent }} />
++          <p className="text-[5px] uppercase tracking-[0.15em] text-muted-foreground">Ceremony · Reception</p>
++          <div className="mt-auto w-full rounded-[2px] border py-1 text-center" style={{ borderColor: accent }}>
++            <p className="text-[5px] uppercase tracking-[0.15em] text-muted-foreground">Reserved for you</p>
++          </div>
+         </div>
+-        <p className="font-script text-sm leading-none" style={{ color: accent }}>
+-          Charles
+-        </p>
+-        <p className="font-script text-sm leading-none" style={{ color: accent }}>
+-          Nicolle
+-        </p>
+-        <div className="h-px w-10" style={{ background: accent }} />
+-        <div className="h-8 w-full border" style={{ background: `${accent}22`, borderColor: `${accent}55` }} />
+-        <p className="text-[5px] uppercase tracking-[0.15em] text-muted-foreground">Ceremony · Reception</p>
+       </div>
+     </div>
+   );
+ }
+ 
+-const PREVIEWS = {
+-  keepsake: KeepsakePreview,
+-  editorial: EditorialPreview,
+-};
+-
+-
+-export function InvitationDesignPicker({ templateId, colorSchemeId, onTemplateChange, onColorSchemeChange }) {
++export function InvitationDesignPicker({ colorSchemeId, onColorSchemeChange }) {
+   const accent = PDF_COLOR_SCHEMES.find((s) => s.id === colorSchemeId)?.hex.accent || PDF_COLOR_SCHEMES[0].hex.accent;
+   const surface = PDF_COLOR_SCHEMES.find((s) => s.id === colorSchemeId)?.hex.surface || PDF_COLOR_SCHEMES[0].hex.surface;
+ 
+   return (
+     <div className="space-y-6">
+       <div>
+-        <p className="mb-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">Layout</p>
+-        <div className="grid gap-4 sm:grid-cols-2">
+-          {PDF_TEMPLATES.map((template) => {
+-            const Preview = PREVIEWS[template.id];
+-            const active = templateId === template.id;
+-            return (
+-              <button
+-                key={template.id}
+-                type="button"
+-                onClick={() => onTemplateChange(template.id)}
+-                className={`group overflow-hidden rounded-xl border bg-card text-left shadow-sm transition ${
+-                  active ? "border-gold ring-2 ring-gold/50" : "border-border hover:border-gold/60"
+-                }`}
+-              >
+-                <div className="aspect-[3/4] w-full">
+-                  <Preview accent={accent} surface={surface} />
+-                </div>
+-                <div className="border-t border-border p-3">
+-                  <div className="flex items-center justify-between gap-2">
+-                    <p className="font-display text-sm text-foreground">{template.label}</p>
+-                    {active ? (
+-                      <span className="rounded-full bg-gold/20 px-2 py-0.5 text-[10px] uppercase tracking-wide text-foreground">
+-                        Selected
+-                      </span>
+-                    ) : null}
+-                  </div>
+-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{template.description}</p>
+-                </div>
+-              </button>
+-            );
+-          })}
++        <p className="mb-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">Preview</p>
++        <div className="w-full max-w-xs overflow-hidden rounded-xl border border-border shadow-sm">
++          <div className="aspect-[3/2] w-full">
++            <KeepsakePreview accent={accent} surface={surface} />
++          </div>
+         </div>
++        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
++          The invitation PDF mirrors this page's on-screen invitation exactly — same fonts, spacing and artwork
++          treatment, laid out landscape.
++        </p>
+       </div>
+ 
+       <div>
+@@ -127,4 +80,4 @@ export function InvitationDesignPicker({ templateId, colorSchemeId, onTemplateCh
+       </div>
+     </div>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/src/routes/admin.settings.jsx b/src/routes/admin.settings.jsx
+index f61ab2c..7c1c517 100644
+--- a/src/routes/admin.settings.jsx
++++ b/src/routes/admin.settings.jsx
+@@ -290,13 +290,11 @@ function SettingsPage() {
+       <section className="rounded-xl border border-border bg-card p-6">
+         <h2 className="font-display text-xl">Invitation design</h2>
+         <p className="mt-1 text-sm text-muted-foreground">
+-          Choose the layout and palette used when guests' invitation and program PDFs are generated.
++          Choose the palette used when guests' invitation and program PDFs are generated.
+         </p>
+         <div className="mt-5">
+           <InvitationDesignPicker
+-            templateId={values.templateId}
+             colorSchemeId={values.colorSchemeId}
+-            onTemplateChange={(id) => update("templateId", id)}
+             onColorSchemeChange={(id) => update("colorSchemeId", id)}
+           />
+         </div>
+@@ -392,7 +390,18 @@ function SettingsPage() {
+               </div>
+             ) : null}
+           </Field>
+-          <Field label="Invitation PDF (optional)">
++          <Field label="Fillable invitation template (optional)">
++            <p className="mb-2 text-xs leading-relaxed text-muted-foreground">
++              Upload a PDF with real AcroForm text fields (e.g. designed in Canva, then given fillable fields in
++              Adobe Acrobat or a similar tool). When a guest downloads their invitation, this template is filled
++              in with their details and downloaded instead of the generated design below — the couple's own
++              artwork, not a substitute. Recognised field names: <code>username</code>, <code>ceremonyVenueName</code>,{" "}
++              <code>receptionVenueName</code>, <code>ceremonyTime</code>, <code>receptionTime</code>,{" "}
++              <code>weddingMonth</code>, <code>weddingDay</code>, <code>weddingYear</code>, <code>tableNumber</code>,{" "}
++              <code>additionalMessage</code>, <code>ceremonyVenueMapUrl</code>, <code>receptionVenueMapUrl</code>.
++              If the uploaded PDF has no fillable fields at all, guests automatically get the generated invitation
++              below instead.
++            </p>
+             <input
+               type="file"
+               accept="application/pdf"
+@@ -410,7 +419,7 @@ function SettingsPage() {
+                   rel="noopener noreferrer"
+                   className="text-xs text-primary underline underline-offset-4"
+                 >
+-                  View current PDF
++                  View current template
+                 </a>
+                 <button
+                   type="button"
+diff --git a/src/routes/invitation.jsx b/src/routes/invitation.jsx
+index 4cc9488..3f37489 100644
+--- a/src/routes/invitation.jsx
++++ b/src/routes/invitation.jsx
+@@ -4,6 +4,7 @@ import { GuestGate } from "@/components/wedding/GuestGate";
+ import { GuestNav } from "@/components/wedding/GuestNav";
+ import { Ornament, Monogram } from "@/components/wedding/Ornament";
+ import { downloadInvitationPdf } from "@/utils/pdf";
++import { downloadFilledInvitationTemplate } from "@/utils/pdfFormFill";
+ import { formatWeddingDate, isPastDeadline } from "@/utils/format";
+ 
+ export const Route = createFileRoute("/invitation")({
+@@ -82,12 +83,21 @@ function InvitationPage({ guest, settings, signOut }) {
+     setError("");
+     setDownloading("invitation");
+     try {
+-      // Always generate the invitation PDF client-side: it's the only path
+-      // that embeds the uploaded invitation image and this guest's seat/
+-      // table details. A separately admin-uploaded PDF (settings.invitationPdfUrl)
+-      // is a generic file with no guest-specific content or guaranteed
+-      // image, so it's no longer used for this download.
+-      await downloadInvitationPdf(settings, guest);
++      // If the admin has uploaded a fillable AcroForm invitation template
++      // (fields placed over a decorative design in Acrobat or similar),
++      // fill it with this guest's details and download that instead — it's
++      // the couple's actual designed invitation, not the generated one.
++      // `downloadFilledInvitationTemplate` returns false when there's no
++      // template, or when the uploaded PDF isn't actually a fillable form,
++      // so this falls back to the HTML-rendered invitation either way.
++      const filledTemplate = await downloadFilledInvitationTemplate(settings, guest).catch((err) => {
++        console.error("Filling invitation template failed, falling back:", err);
++        return false;
++      });
++
++      if (!filledTemplate) {
++        await downloadInvitationPdf(settings, guest);
++      }
+     } catch (err) {
+       console.error("Invitation PDF download failed:", err);
+       setError("We couldn't prepare that download. Please try again.");
+diff --git a/src/utils/pdf.js b/src/utils/pdf.js
+index 69d7615..e27b9b0 100644
+--- a/src/utils/pdf.js
++++ b/src/utils/pdf.js
+@@ -10,20 +10,30 @@ import {
+   buildProgramPages,
+   PAGE_HEIGHT,
+   PAGE_WIDTH,
++  INVITATION_PAGE_HEIGHT,
++  INVITATION_PAGE_WIDTH,
+ } from "@/utils/pdfTemplates";
+ 
+ /*
+- * The invitation is deliberately NOT a plain A4 sheet: the page is kept at
+- * A4 width but made taller so the full invitation breathes on one page with
+- * no cramped or overlapping type. The millimetre height is derived from the
+- * pixel canvas so the proportions always match exactly.
++ * The wedding-program pages are a plain, tall A4 portrait sheet. The
++ * millimetre height is derived from the pixel canvas so the proportions
++ * always match exactly.
+  */
+ const A4_WIDTH_MM = 210;
+ const A4_HEIGHT_MM =
+   (A4_WIDTH_MM * PAGE_HEIGHT) / PAGE_WIDTH;
+ 
++/*
++ * The invitation renders landscape — true A4 landscape (297 x 210mm) — so a
++ * printed page reads left/right the way the two-column layout is designed,
++ * rather than needing to be a tall single column.
++ */
++const INVITATION_WIDTH_MM = 297;
++const INVITATION_HEIGHT_MM =
++  (INVITATION_WIDTH_MM * INVITATION_PAGE_HEIGHT) / INVITATION_PAGE_WIDTH;
++
+ const FONT_HREF =
+-  "https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500;1,600&display=swap";
++  "https://fonts.googleapis.com/css2?family=Great+Vibes&family=Karla:ital,wght@0,400;0,500;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500;1,600&display=swap";
+ 
+ /* -------------------------------------------------------------------------- */
+ /* Libraries                                                                  */
+@@ -49,7 +59,7 @@ async function loadHtml2Canvas() {
+ /* Isolated rendering iframe                                                  */
+ /* -------------------------------------------------------------------------- */
+ 
+-function createRenderFrame() {
++function createRenderFrame(widthPx, heightPx) {
+   return new Promise((resolve) => {
+     const iframe =
+       document.createElement("iframe");
+@@ -59,10 +69,10 @@ function createRenderFrame() {
+     iframe.style.left = "-99999px";
+ 
+     iframe.style.width =
+-      `${PAGE_WIDTH}px`;
++      `${widthPx}px`;
+ 
+     iframe.style.height =
+-      `${PAGE_HEIGHT}px`;
++      `${heightPx}px`;
+ 
+     iframe.style.border = "0";
+ 
+@@ -262,12 +272,13 @@ function pxToMm(
+ 
+ async function rasterizeHtml(
+   html,
++  { widthPx, heightPx, widthMm, heightMm },
+ ) {
+   const html2canvas =
+     await loadHtml2Canvas();
+ 
+   const iframe =
+-    await createRenderFrame();
++    await createRenderFrame(widthPx, heightPx);
+ 
+   const idoc =
+     iframe.contentDocument;
+@@ -279,10 +290,10 @@ async function rasterizeHtml(
+       idoc.createElement("div");
+ 
+     container.style.width =
+-      `${PAGE_WIDTH}px`;
++      `${widthPx}px`;
+ 
+     container.style.height =
+-      `${PAGE_HEIGHT}px`;
++      `${heightPx}px`;
+ 
+     container.style.position =
+       "relative";
+@@ -368,30 +379,30 @@ async function rasterizeHtml(
+             pxToMm(
+               r.left -
+                 containerRect.left,
+-              PAGE_WIDTH,
+-              A4_WIDTH_MM,
++              widthPx,
++              widthMm,
+             ),
+ 
+           yMm:
+             pxToMm(
+               r.top -
+                 containerRect.top,
+-              PAGE_HEIGHT,
+-              A4_HEIGHT_MM,
++              heightPx,
++              heightMm,
+             ),
+ 
+           wMm:
+             pxToMm(
+               r.width,
+-              PAGE_WIDTH,
+-              A4_WIDTH_MM,
++              widthPx,
++              widthMm,
+             ),
+ 
+           hMm:
+             pxToMm(
+               r.height,
+-              PAGE_HEIGHT,
+-              A4_HEIGHT_MM,
++              heightPx,
++              heightMm,
+             ),
+         };
+       });
+@@ -405,14 +416,13 @@ async function rasterizeHtml(
+         container,
+         {
+           width:
+-            PAGE_WIDTH,
++            widthPx,
+ 
+           height:
+-            PAGE_HEIGHT,
++            heightPx,
+ 
+           /*
+-           * 2.5 is a good compromise for A4.
+-           * The source itself is already 1240x1754.
++           * 2.5 is a good compromise for A4 at this pixel density.
+            */
+           scale:2.5,
+ 
+@@ -462,6 +472,13 @@ async function rasterizeHtml(
+ 
+ async function pdfFromPages(
+   pageHtmls,
++  {
++    widthPx,
++    heightPx,
++    widthMm,
++    heightMm,
++    orientation = "portrait",
++  } = {},
+ ) {
+   const JsPDF =
+     await loadJsPdf();
+@@ -470,10 +487,10 @@ async function pdfFromPages(
+     new JsPDF({
+       unit:"mm",
+       format:[
+-        A4_WIDTH_MM,
+-        A4_HEIGHT_MM,
++        widthMm,
++        heightMm,
+       ],
+-      orientation:"portrait",
++      orientation,
+       compress:true,
+     });
+ 
+@@ -494,6 +511,7 @@ async function pdfFromPages(
+     } =
+       await rasterizeHtml(
+         pageHtmls[i],
++        { widthPx, heightPx, widthMm, heightMm },
+       );
+ 
+     if (i > 0) {
+@@ -567,9 +585,16 @@ export async function generateInvitationPdf(
+         palette,
+       );
+ 
+-    return await pdfFromPages([
+-      html,
+-    ]);
++    return await pdfFromPages(
++      [html],
++      {
++        widthPx: INVITATION_PAGE_WIDTH,
++        heightPx: INVITATION_PAGE_HEIGHT,
++        widthMm: INVITATION_WIDTH_MM,
++        heightMm: INVITATION_HEIGHT_MM,
++        orientation: "landscape",
++      },
++    );
+   } catch (err) {
+     console.error(
+       "[pdf] Failed to generate invitation PDF:",
+@@ -580,6 +605,24 @@ export async function generateInvitationPdf(
+   }
+ }
+ 
++/**
++ * Triggers a browser download for an arbitrary Blob — shared by the
++ * jsPDF-rendered invitation/program above and by the AcroForm template
++ * filler in `pdfFormFill.js`, which produces a Blob directly from pdf-lib
++ * rather than through jsPDF.
++ */
++export function downloadBlob(blob, filename) {
++  const url = URL.createObjectURL(blob);
++  const link = document.createElement("a");
++  link.href = url;
++  link.download = filename;
++  document.body.appendChild(link);
++  link.click();
++  document.body.removeChild(link);
++  // Give the browser a tick to pick up the click before revoking.
++  setTimeout(() => URL.revokeObjectURL(url), 1000);
++}
++
+ export async function downloadInvitationPdf(
+   settings,
+   guest,
+@@ -632,6 +675,13 @@ export async function generateProgramPdf(
+ 
+     return await pdfFromPages(
+       pages,
++      {
++        widthPx: PAGE_WIDTH,
++        heightPx: PAGE_HEIGHT,
++        widthMm: A4_WIDTH_MM,
++        heightMm: A4_HEIGHT_MM,
++        orientation: "portrait",
++      },
+     );
+   } catch (err) {
+     console.error(
+diff --git a/src/utils/pdfFormFill.js b/src/utils/pdfFormFill.js
+new file mode 100644
+index 0000000..0772965
+--- /dev/null
++++ b/src/utils/pdfFormFill.js
+@@ -0,0 +1,136 @@
++/*
++ * Fills the admin-uploaded fillable invitation PDF (a real AcroForm — text
++ * fields placed in a tool like Adobe Acrobat on top of a decorative design
++ * made in Canva or similar) with this guest's details, instead of building
++ * the invitation from scratch in HTML/CSS like `pdf.js` does.
++ *
++ * This only runs when `settings.invitationPdfUrl` points at a PDF that
++ * actually has AcroForm fields. If it doesn't (e.g. the admin uploaded a
++ * plain decorative PDF with no fields at all), `fillInvitationTemplate`
++ * returns `null` so the caller can fall back to the HTML-rendered
++ * invitation in `pdf.js`.
++ */
++
++import { downloadBlob } from "@/utils/pdf";
++
++// Every field name this app knows how to fill, and where its value comes
++// from. Unknown/missing fields in the uploaded template are simply skipped
++// — the template doesn't have to use every one of these, and older
++// templates without the newer fields still work.
++const MONTH_NAMES = [
++  "January", "February", "March", "April", "May", "June",
++  "July", "August", "September", "October", "November", "December",
++];
++
++function splitWeddingDate(value) {
++  if (!value) return { weddingMonth: "", weddingDay: "", weddingYear: "" };
++
++  // `settings.weddingDate` is a plain "YYYY-MM-DD" string from a date
++  // input. Parsing with `new Date(value)` and reading local getters can
++  // shift the day by one depending on the visitor's timezone offset, so
++  // this reads the UTC fields the ISO string was written in instead.
++  const date = new Date(value);
++  if (Number.isNaN(date.getTime())) return { weddingMonth: "", weddingDay: "", weddingYear: "" };
++
++  return {
++    weddingMonth: MONTH_NAMES[date.getUTCMonth()] || "",
++    weddingDay: String(date.getUTCDate()),
++    weddingYear: String(date.getUTCFullYear()),
++  };
++}
++
++function fullGuestName(guest) {
++  return [guest?.firstName, guest?.surname]
++    .map((part) => String(part ?? "").trim())
++    .filter(Boolean)
++    .join(" ");
++}
++
++function fieldValues(settings, guest) {
++  const { weddingMonth, weddingDay, weddingYear } = splitWeddingDate(settings.weddingDate);
++
++  return {
++    username: fullGuestName(guest),
++    ceremonyVenueName: settings.ceremonyVenueName || "",
++    receptionVenueName: settings.receptionVenueName || "",
++    weddingMonth,
++    weddingDay,
++    weddingYear,
++    ceremonyTime: settings.ceremonyTime || "",
++    receptionTime: settings.receptionTime || "",
++    tableNumber: guest?.tableNumber ? String(guest.tableNumber) : "",
++    additionalMessage: settings.weddingMessage || "",
++    // These two fields sit in a 1x1pt box on the template (invisible on
++    // the page) — they're filled with the plain URL as ordinary form data,
++    // not shown anywhere, per how the template was designed.
++    ceremonyVenueMapUrl: settings.ceremonyVenueMapUrl || "",
++    receptionVenueMapUrl: settings.receptionVenueMapUrl || "",
++  };
++}
++
++/**
++ * Fetches the admin-uploaded template, fills every field it recognises,
++ * flattens the form so the guest gets a normal (non-editable) PDF, and
++ * triggers a download.
++ *
++ * Returns `true` if it filled and downloaded a template PDF, or `false` if
++ * `settings.invitationPdfUrl` isn't set, isn't reachable, or isn't an
++ * AcroForm at all — the caller should fall back to the HTML-rendered
++ * invitation in that case.
++ */
++export async function downloadFilledInvitationTemplate(settings, guest) {
++  const templateUrl = settings.invitationPdfUrl;
++  if (!templateUrl) return false;
++
++  const { PDFDocument, StandardFonts } = await import("pdf-lib");
++
++  const response = await fetch(templateUrl);
++  if (!response.ok) {
++    throw new Error(`Couldn't fetch invitation template (${response.status})`);
++  }
++  const bytes = await response.arrayBuffer();
++
++  const pdfDoc = await PDFDocument.load(bytes);
++  const form = pdfDoc.getForm();
++  const fields = form.getFields();
++
++  // Not actually a fillable form — nothing to fill in, so let the caller
++  // fall back to the generated invitation instead of downloading a blank
++  // decorative PDF with the guest's name missing.
++  if (fields.length === 0) return false;
++
++  // pdf-lib doesn't read each field's own /DA font when it regenerates an
++  // appearance stream for flattening — left unset, it silently falls back
++  // to plain Helvetica, which looks out of place next to a template
++  // designed around an elegant serif. Every field on this template's own
++  // default appearance specifies Times Roman ("TiRo"), so that's embedded
++  // explicitly and applied to each field as it's filled.
++  const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
++
++  const values = fieldValues(settings, guest);
++
++  for (const [name, value] of Object.entries(values)) {
++    if (!value) continue;
++    try {
++      const field = form.getTextField(name);
++      field.setText(value);
++      field.updateAppearances(font);
++    } catch {
++      // Field doesn't exist on this template, or isn't a text field —
++      // skip it rather than failing the whole download.
++    }
++  }
++
++  // Bakes the entered text into the page content and removes the
++  // interactive form, so the guest downloads a normal finished PDF rather
++  // than one that still looks like an editable form.
++  form.flatten();
++
++  const filledBytes = await pdfDoc.save();
++  const blob = new Blob([filledBytes], { type: "application/pdf" });
++
++  const guestName = fullGuestName(guest) || "guest";
++  downloadBlob(blob, `invitation-${guestName.replace(/\s+/g, "-").toLowerCase()}.pdf`);
++
++  return true;
++}
+diff --git a/src/utils/pdfTemplates.js b/src/utils/pdfTemplates.js
+index 3d9b3b9..142058d 100644
+--- a/src/utils/pdfTemplates.js
++++ b/src/utils/pdfTemplates.js
+@@ -14,14 +14,30 @@ import {
+   weddingRings,
+ } from "@/utils/pdfIllustrations";
+ 
+-// A4 render box.
++// A4 render box (portrait) — used by the wedding-program pages.
+ // html2canvas rasterizes this exact size.
+ export const PAGE_WIDTH = 1240;
+ export const PAGE_HEIGHT = 1960;
+ 
+-const FONT_DISPLAY = "'Playfair Display', Georgia, serif";
++// A4 landscape render box — used by the invitation, so it can lay guests'
++// details out left/right the way the on-screen page suggests, instead of
++// stacking everything down a single tall column.
++// 1240px == 210mm on the program canvas above, so this keeps the exact same
++// px-per-mm scale (5.90476) at true A4 landscape proportions (297 x 210mm).
++export const INVITATION_PAGE_WIDTH = 1754;
++export const INVITATION_PAGE_HEIGHT = 1240;
++
++// These three match the on-screen invitation's actual type stack exactly
++// (see src/styles.css: --font-display, --font-script, --font-body). Earlier
++// versions of this file used Playfair Display for FONT_DISPLAY, which never
++// appears anywhere on the live site — that's why the PDF looked "off" next
++// to the web page. FONT_SANS is the couple/guest-facing label + body copy
++// font (Karla) and did not exist before; FONT_BODY (serif) is kept only for
++// the wedding-program pages, which intentionally keep a serif print voice.
++const FONT_DISPLAY = "'Cormorant Garamond', Georgia, serif";
+ const FONT_SCRIPT = "'Great Vibes', cursive";
+ const FONT_BODY = "'Cormorant Garamond', Georgia, serif";
++const FONT_SANS = "'Karla', ui-sans-serif, system-ui, -apple-system, sans-serif";
+ const FONT_LABEL = FONT_BODY;
+ 
+ function palCss(palette) {
+@@ -89,8 +105,10 @@ function photoTag(
+ }
+ 
+ /**
+- * Hero image with a true, proportional "object-cover" crop, framed as an
+- * oval.
++ * Hero image with a true, proportional "object-cover" crop, framed as a
++ * softly rounded rectangle — matching the on-screen invitation artwork
++ * exactly (`rounded-lg object-cover shadow-md`), not the oval/circle crop
++ * used elsewhere in this file for small avatar-style photos.
+  *
+  * html2canvas does not honour `object-fit`, so relying on it squashes the
+  * source image into whatever box we give it. Instead we let the image keep
+@@ -98,9 +116,6 @@ function photoTag(
+  * window of a fixed height. Because the scaled image is taller than the
+  * window, the excess is cropped from the bottom and the top of the photo —
+  * where faces usually are — stays intact.
+- *
+- * The window itself uses `border-radius: 50%`, which on a wide rectangular
+- * box renders as a clean oval frame rather than a circle.
+  */
+ function heroPhoto(src, boxWidth, boxHeight, fit = "cover") {
+   if (!src) return "";
+@@ -129,7 +144,8 @@ function heroPhoto(src, boxWidth, boxHeight, fit = "cover") {
+         height:${boxHeight}px;
+         overflow:hidden;
+         position:relative;
+-        border-radius:6px;
++        border-radius:10px;
++        box-shadow:0 8px 24px -10px rgba(40,32,20,0.35);
+         margin:0 auto;
+         text-align:center;
+       "
+@@ -146,15 +162,6 @@ function initials(bride, groom) {
+   return `${b}${g}`.toUpperCase();
+ }
+ 
+-function dateLine(settings) {
+-  return [
+-    formatWeddingDate(settings.weddingDate),
+-    settings.ceremonyTime,
+-  ]
+-    .filter(Boolean)
+-    .join("  ·  ");
+-}
+-
+ /* -------------------------------------------------------------------------- */
+ /* Typography                                                                 */
+ /* -------------------------------------------------------------------------- */
+@@ -178,110 +185,12 @@ function eyebrow(text, c) {
+   `;
+ }
+ 
+-function scriptNames(
+-  bride,
+-  groom,
+-  c,
+-  size = 120,
+-) {
+-  return `
+-    <div
+-      style="
+-        display:flex;
+-        align-items:baseline;
+-        justify-content:center;
+-        gap:28px;
+-        flex-wrap:wrap;
+-        line-height:0.95;
+-      "
+-    >
+-
+-      <span
+-        style="
+-          font-family:${FONT_SCRIPT};
+-          font-size:${size}px;
+-          color:${c.ink};
+-          white-space:nowrap;
+-          word-spacing:0.2em;
+-        "
+-      >
+-        ${esc(bride || "Bride")}
+-      </span>
+-
+-      <span
+-        style="
+-          font-family:${FONT_DISPLAY};
+-          font-style:italic;
+-          font-size:${Math.round(size * 0.32)}px;
+-          color:${c.gold};
+-          margin-top:15px;
+-        "
+-      >
+-        &amp;
+-      </span>
+-
+-      <span
+-        style="
+-          font-family:${FONT_SCRIPT};
+-          font-size:${size}px;
+-          color:${c.ink};
+-          white-space:nowrap;
+-          word-spacing:0.2em;
+-        "
+-      >
+-        ${esc(groom || "Groom")}
+-      </span>
+-
+-    </div>
+-  `;
+-}
+-
+-function serifNames(bride, groom, c) {
+-  return `
+-    <div style="text-align:center;">
+-
+-      <div
+-        style="
+-          font-family:${FONT_DISPLAY};
+-          font-weight:500;
+-          font-size:70px;
+-          color:${c.ink};
+-          letter-spacing:0.5px;
+-          word-spacing:0.15em;
+-        "
+-      >
+-        ${esc(bride || "Bride")}
+-      </div>
+-
+-      <div
+-        style="
+-          font-family:${FONT_DISPLAY};
+-          font-style:italic;
+-          font-size:30px;
+-          color:${c.gold};
+-          margin:7px 0;
+-        "
+-      >
+-        &amp;
+-      </div>
+-
+-      <div
+-        style="
+-          font-family:${FONT_DISPLAY};
+-          font-weight:500;
+-          font-size:70px;
+-          color:${c.ink};
+-          letter-spacing:0.5px;
+-          word-spacing:0.15em;
+-        "
+-      >
+-        ${esc(groom || "Groom")}
+-      </div>
+-
+-    </div>
+-  `;
+-}
+-
++/**
++ * Wedding-message paragraph. The on-screen invitation renders this in plain
++ * (non-italic) body copy — `text-sm leading-relaxed text-muted-foreground`,
++ * which is the Karla body font, not italic serif — so this mirrors that
++ * exactly instead of the "elegant italic" prose treatment used elsewhere.
++ */
+ function messageBlock(
+   message,
+   c,
+@@ -289,18 +198,18 @@ function messageBlock(
+ ) {
+   if (!message) return "";
+ 
+-  // NOTE: this is plain italic prose (no letter-spacing), so it never
+-  // needed `word-spacing` to begin with — and on italic text specifically,
++  // NOTE: this is plain prose (no letter-spacing), so it never needed
++  // `word-spacing` to begin with — and on italic text specifically,
+   // this html2canvas build renders `word-spacing` (in any unit) as
+   // corrupted, overlapping glyphs. Never set word-spacing on italic text.
+   return `
+     <p
+       style="
+-        font-family:${FONT_BODY};
+-        font-style:italic;
++        font-family:${FONT_SANS};
++        font-style:normal;
+         font-weight:400;
+         font-size:26px;
+-        line-height:1.55;
++        line-height:1.6;
+         color:${c.inkSoft};
+         text-align:center;
+         max-width:${maxWidth}px;
+@@ -312,312 +221,6 @@ function messageBlock(
+   `;
+ }
+ 
+-function detailLabel(text, c) {
+-  return `
+-    <div
+-      style="
+-        font-family:${FONT_BODY};
+-        font-weight:600;
+-        font-size:16px;
+-        letter-spacing:3px;
+-        word-spacing:0.4em;
+-        text-transform:uppercase;
+-        color:${c.gold};
+-      "
+-    >
+-      ${esc(text)}
+-    </div>
+-  `;
+-}
+-
+-function thinRule(c, width = 110) {
+-  return `
+-    <div
+-      style="
+-        width:${width}px;
+-        height:1px;
+-        background:${c.gold};
+-        opacity:0.48;
+-        margin:0 auto;
+-      "
+-    ></div>
+-  `;
+-}
+-
+-/* -------------------------------------------------------------------------- */
+-/* Details                                                                    */
+-/* -------------------------------------------------------------------------- */
+-
+-function venueBlockHtml(
+-  {
+-    title,
+-    time,
+-    name,
+-    address,
+-    mapUrl,
+-  },
+-  c,
+-) {
+-  if (!time && !name && !address) return "";
+-
+-  return `
+-    <div
+-      style="
+-        text-align:center;
+-        width:390px;
+-      "
+-    >
+-
+-      ${detailLabel(title, c)}
+-
+-      ${
+-        time
+-          ? `
+-            <div
+-              style="
+-                font-family:${FONT_BODY};
+-                font-style:italic;
+-                font-size:29px;
+-                color:${c.ink};
+-                margin-top:7px;
+-              "
+-            >
+-              ${esc(time)}
+-            </div>
+-          `
+-          : ""
+-      }
+-
+-      ${
+-        name
+-          ? `
+-            <div
+-              style="
+-                font-family:${FONT_DISPLAY};
+-                font-weight:600;
+-                font-size:26px;
+-                color:${c.ink};
+-                margin-top:5px;
+-                word-spacing:0.15em;
+-              "
+-            >
+-              ${esc(name)}
+-            </div>
+-          `
+-          : ""
+-      }
+-
+-      ${
+-        address
+-          ? `
+-            <div
+-              style="
+-                font-family:${FONT_BODY};
+-                font-size:22px;
+-                color:${c.inkSoft};
+-                margin-top:5px;
+-                line-height:1.35;
+-                word-spacing:0.2em;
+-              "
+-            >
+-              ${esc(address)}
+-            </div>
+-          `
+-          : ""
+-      }
+-
+-      ${
+-        mapUrl
+-          ? `
+-            <div
+-              data-pdf-link="${esc(mapUrl)}"
+-              style="
+-                display:inline-block;
+-                margin-top:7px;
+-                font-family:${FONT_BODY};
+-                font-style:italic;
+-                font-size:16px;
+-                color:${c.gold};
+-                text-decoration:underline;
+-              "
+-            >
+-              View on map ↗
+-            </div>
+-          `
+-          : ""
+-      }
+-
+-    </div>
+-  `;
+-}
+-
+-function dressCodeHtml(settings, c) {
+-  if (!settings.dressCode) return "";
+-
+-  const img =
+-    settings.dressCodeImageData ||
+-    settings.dressCodeImageUrl;
+-
+-  return `
+-    <div style="text-align:center;margin-top:2px;">
+-
+-      ${detailLabel("Dress Code", c)}
+-
+-      <div
+-        style="
+-          font-family:${FONT_BODY};
+-          font-style:italic;
+-          font-size:27px;
+-          color:${c.ink};
+-          margin-top:6px;
+-          word-spacing:0.2em;
+-        "
+-      >
+-        ${esc(settings.dressCode)}
+-      </div>
+-
+-      ${
+-        img
+-          ? `
+-            <div
+-              style="
+-                width:90px;
+-                height:90px;
+-                border-radius:50%;
+-                margin:11px auto 0;
+-                overflow:hidden;
+-              "
+-            >
+-              ${photoTag(img, 90, 90)}
+-            </div>
+-          `
+-          : ""
+-      }
+-
+-    </div>
+-  `;
+-}
+-
+-function rsvpHtml(settings, c) {
+-  if (!settings.rsvpEnabled) return "";
+-
+-  const deadline = settings.rsvpDeadline
+-    ? formatWeddingDate(settings.rsvpDeadline)
+-    : "";
+-
+-  return `
+-    <div
+-      style="
+-        display:flex;
+-        align-items:center;
+-        justify-content:center;
+-        gap:10px;
+-      "
+-    >
+-
+-      ${weddingRings(c.gold, 40)}
+-
+-      <span
+-        style="
+-          font-family:${FONT_BODY};
+-          font-style:italic;
+-          font-size:22px;
+-          color:${c.inkSoft};
+-          word-spacing:0.2em;
+-        "
+-      >
+-        ${
+-          deadline
+-            ? `Kindly RSVP by ${esc(deadline)}`
+-            : "Kindly RSVP at your earliest convenience"
+-        }
+-      </span>
+-
+-    </div>
+-  `;
+-}
+-
+-function guestTicketHtml(guest, c) {
+-  if (!guest) return "";
+-
+-  const seatWord =
+-    `${guest.numberOfSeats || 0} seat` +
+-    `${Number(guest.numberOfSeats) === 1 ? "" : "s"}`;
+-
+-  const chips = [seatWord];
+-
+-  if (guest.tableNumber) {
+-    chips.push(`Table ${esc(guest.tableNumber)}`);
+-  }
+-
+-  if (
+-    guest.plusOneAllowed &&
+-    guest.plusOneName
+-  ) {
+-    chips.push(
+-      `Plus one: ${esc(guest.plusOneName)}`,
+-    );
+-  }
+-
+-  return `
+-    <div
+-      style="
+-        width:100%;
+-        text-align:center;
+-        margin-top:2px;
+-      "
+-    >
+-
+-      ${thinRule(c, 130)}
+-
+-      <div
+-        style="
+-          font-family:${FONT_BODY};
+-          font-weight:600;
+-          font-size:13px;
+-          letter-spacing:3px;
+-          word-spacing:0.4em;
+-          text-transform:uppercase;
+-          color:${c.gold};
+-          margin-top:11px;
+-        "
+-      >
+-        Reserved For
+-      </div>
+-
+-      <div
+-        style="
+-          font-family:${FONT_DISPLAY};
+-          font-weight:600;
+-          font-size:31px;
+-          color:${c.ink};
+-          margin-top:4px;
+-          word-spacing:0.18em;
+-        "
+-      >
+-        ${esc(fullName(guest))}
+-      </div>
+-
+-      <div
+-        style="
+-          font-family:${FONT_BODY};
+-          font-style:italic;
+-          font-size:20px;
+-          color:${c.inkSoft};
+-          margin-top:4px;
+-        "
+-      >
+-        ${chips.join(" &nbsp;·&nbsp; ")}
+-      </div>
+-
+-      <div style="margin-top:11px;">
+-        ${thinRule(c, 130)}
+-      </div>
+-
+-    </div>
+-  `;
+-}
+-
+ /* -------------------------------------------------------------------------- */
+ /* Page shell                                                                 */
+ /* -------------------------------------------------------------------------- */
+@@ -626,12 +229,14 @@ function pageShell({
+   palette,
+   children,
+   background = "#fbfaf7",
++  width = PAGE_WIDTH,
++  height = PAGE_HEIGHT,
+ }) {
+   return `
+     <div
+       style="
+-        width:${PAGE_WIDTH}px;
+-        height:${PAGE_HEIGHT}px;
++        width:${width}px;
++        height:${height}px;
+         position:relative;
+         overflow:hidden;
+         background:${background};
+@@ -646,110 +251,6 @@ function pageShell({
+   `;
+ }
+ 
+-/* -------------------------------------------------------------------------- */
+-/* HERO IMAGE                                                                 */
+-/* -------------------------------------------------------------------------- */
+-
+-function heroImage({
+-  photo,
+-  c,
+-  height = 710,
+-}) {
+-  if (!photo) {
+-    return `
+-      <div
+-        style="
+-          position:absolute;
+-          top:0;
+-          left:0;
+-          width:100%;
+-          height:${height}px;
+-          background:${c.creamDeep};
+-        "
+-      >
+-        <div
+-          style="
+-            width:100%;
+-            height:100%;
+-            display:flex;
+-            align-items:center;
+-            justify-content:center;
+-          "
+-        >
+-          <div
+-            style="
+-              font-family:${FONT_DISPLAY};
+-              font-style:italic;
+-              font-size:90px;
+-              color:${c.gold};
+-              opacity:0.7;
+-            "
+-          >
+-            ${initials("", "")}
+-          </div>
+-        </div>
+-      </div>
+-    `;
+-  }
+-
+-  return `
+-    <div
+-      style="
+-        position:absolute;
+-        top:0;
+-        left:0;
+-        width:100%;
+-        height:${height}px;
+-        overflow:hidden;
+-      "
+-    >
+-
+-      ${photoTag(
+-        photo,
+-        PAGE_WIDTH,
+-        height,
+-        `
+-          object-position:center center;
+-        `,
+-      )}
+-
+-      <!-- Very subtle edge fade -->
+-      <div
+-        style="
+-          position:absolute;
+-          inset:0;
+-          background:
+-            linear-gradient(
+-              to bottom,
+-              rgba(251,250,247,0) 35%,
+-              rgba(251,250,247,0.04) 46%,
+-              rgba(251,250,247,0.35) 62%,
+-              rgba(251,250,247,0.82) 82%,
+-              rgba(251,250,247,1) 100%
+-            );
+-        "
+-      ></div>
+-
+-      <!-- Gentle side fade -->
+-      <div
+-        style="
+-          position:absolute;
+-          inset:0;
+-          background:
+-            linear-gradient(
+-              to right,
+-              rgba(251,250,247,0.18) 0%,
+-              rgba(251,250,247,0) 18%,
+-              rgba(251,250,247,0) 82%,
+-              rgba(251,250,247,0.18) 100%
+-            );
+-        "
+-      ></div>
+-
+-    </div>
+-  `;
+-}
+-
+ /* -------------------------------------------------------------------------- */
+ /* Shared building blocks for the two invitation designs                      */
+ /* -------------------------------------------------------------------------- */
+@@ -776,6 +277,14 @@ function heroImage({
+  * wrong only in the generated PDF and not on-screen.
+  */
+ 
++/**
++ * Bride & groom names. On screen this is a single `<h1>` in Great Vibes with
++ * a Cormorant Garamond "&" — `font-script text-5xl sm:text-7xl text-primary`
++ * plus `mx-4 font-display text-3xl text-gold` for the ampersand. The
++ * ampersand deliberately is NOT italic and is NOT bold: the site never adds
++ * either to it, it just inherits the light (300) weight Cormorant Garamond
++ * gets everywhere as a heading font.
++ */
+ function scriptDuo(bride, groom, c, size) {
+   const nameStyle = `
+     font-family:${FONT_SCRIPT};
+@@ -793,7 +302,8 @@ function scriptDuo(bride, groom, c, size) {
+       <div
+         style="
+           font-family:${FONT_DISPLAY};
+-          font-style:italic;
++          font-style:normal;
++          font-weight:300;
+           font-size:${Math.round(size * 0.34)}px;
+           color:${c.gold};
+           margin:18px 0;
+@@ -806,6 +316,15 @@ function scriptDuo(bride, groom, c, size) {
+   `;
+ }
+ 
++/**
++ * Small tracked caps label — mirrors every `text-xs font-bold uppercase
++ * tracking-[0.3em] text-muted-foreground` label on the on-screen invitation
++ * (Karla, bold, heavily tracked). Word spacing is kept well above the
++ * letter spacing so multi-word labels ("Request the pleasure of your
++ * company", "Dear Jane Doe") don't visually run together once heavy letter
++ * tracking is applied, and so `text-transform` (which html2canvas doesn't
++ * reliably honour) is never relied on either.
++ */
+ function capsLine(
+   text,
+   c,
+@@ -813,16 +332,12 @@ function capsLine(
+ ) {
+   if (!text) return "";
+ 
+-  // Word spacing is deliberately kept well above the letter spacing so
+-  // multi-word labels ("Request the pleasure of your company",
+-  // "Dear Jane Doe") don't visually run together once heavy letter
+-  // tracking is applied.
+   const ws = wordSpacing != null ? wordSpacing : Math.max(spacing * 3, 18);
+ 
+   return `
+     <div
+       style="
+-        font-family:${FONT_BODY};
++        font-family:${FONT_SANS};
+         font-weight:${weight};
+         font-size:${size}px;
+         letter-spacing:${spacing}px;
+@@ -846,6 +361,14 @@ function ruleWithDiamond(c, width = 300, top = 0) {
+   `;
+ }
+ 
++/**
++ * One "Detail" block — mirrors the on-screen `<Detail>` component exactly:
++ * a caps label, then a single `font-display font-bold text-2xl` value line
++ * combining the time and venue name (`{time} · {name}`). The full address
++ * and a map link are appended underneath in the plain label font, since the
++ * PDF is a standalone page and has no separate "Finding the ceremony"
++ * section to link out to like the website does.
++ */
+ function venueCell(
+   { title, time, name, address, mapUrl },
+   c,
+@@ -853,37 +376,31 @@ function venueCell(
+ ) {
+   if (!time && !name && !address) return "";
+ 
++  const valueLine = [time, name].filter(Boolean).join("  ·  ");
++
+   return `
+     <div style="text-align:center;">
+-      ${capsLine(title, c, { size: compact ? 17 : 18, spacing: 4, weight: 700 })}
++      ${capsLine(title, c, { size: compact ? 15 : 16, spacing: 4, weight: 700 })}
+ 
+       ${
+-        time
+-          ? `<div style="font-family:${FONT_BODY};font-style:italic;font-weight:600;font-size:${
+-              compact ? 30 : 34
+-            }px;color:${c.ink};margin-top:10px;line-height:1.3;word-spacing:0.2em;">${esc(time)}</div>`
+-          : ""
+-      }
+-
+-      ${
+-        name
++        valueLine
+           ? `<div style="font-family:${FONT_DISPLAY};font-weight:700;font-size:${
+-              compact ? 28 : 32
+-            }px;color:${c.ink};margin-top:8px;line-height:1.4;word-spacing:0.3em;">${esc(name)}</div>`
++              compact ? 30 : 34
++            }px;color:${c.ink};margin-top:10px;line-height:1.3;word-spacing:0.25em;">${esc(valueLine)}</div>`
+           : ""
+       }
+ 
+       ${
+         address
+-          ? `<div style="font-family:${FONT_BODY};font-weight:500;font-size:${
+-              compact ? 24 : 26
+-            }px;color:${c.inkSoft};margin-top:6px;line-height:1.5;word-spacing:0.3em;">${esc(address)}</div>`
++          ? `<div style="font-family:${FONT_SANS};font-weight:400;font-size:${
++              compact ? 17 : 18
++            }px;color:${c.inkSoft};margin-top:8px;line-height:1.5;">${esc(address)}</div>`
+           : ""
+       }
+ 
+       ${
+         mapUrl
+-          ? `<div data-pdf-link="${esc(mapUrl)}" style="font-family:${FONT_BODY};font-style:italic;font-weight:600;font-size:19px;color:${c.gold};margin-top:8px;">View on map</div>`
++          ? `<div data-pdf-link="${esc(mapUrl)}" style="font-family:${FONT_SANS};font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;color:${c.gold};margin-top:8px;">View on map</div>`
+           : ""
+       }
+     </div>
+@@ -898,12 +415,12 @@ function twoColumn(left, right, { divider = "", gutter = 60 } = {}) {
+   }
+ 
+   return `
+-    <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
++    <table style="width:100%;height:100%;border-collapse:collapse;table-layout:fixed;">
+       <tr>
+         <td style="vertical-align:top;padding-right:${gutter / 2}px;">${left}</td>
+         ${
+           divider
+-            ? `<td style="width:1px;padding:0;"><div style="width:1px;height:120px;background:${divider};opacity:0.3;margin:0 auto;"></div></td>`
++            ? `<td style="width:1px;padding:0;"><div style="width:1px;height:100%;background:${divider};opacity:0.3;margin:0 auto;"></div></td>`
+             : ""
+         }
+         <td style="vertical-align:top;padding-left:${gutter / 2}px;">${right}</td>
+@@ -912,6 +429,8 @@ function twoColumn(left, right, { divider = "", gutter = 60 } = {}) {
+   `;
+ }
+ 
++/** Mirrors the on-screen `<DressCodeDetail>`: caps label, bold display
++ * value, then the optional inspiration photo as a small round crop. */
+ function dressCodeInline(settings, c) {
+   if (!settings.dressCode) return "";
+ 
+@@ -919,14 +438,14 @@ function dressCodeInline(settings, c) {
+ 
+   return `
+     <div style="text-align:center;">
+-      ${capsLine("Dress Code", c, { size: 17, spacing: 4, weight: 700 })}
+-      <div style="font-family:${FONT_BODY};font-style:italic;font-weight:600;font-size:30px;color:${c.ink};margin-top:9px;word-spacing:0.3em;">
++      ${capsLine("Dress Code", c, { size: 15, spacing: 4, weight: 700 })}
++      <div style="font-family:${FONT_DISPLAY};font-weight:700;font-size:30px;color:${c.ink};margin-top:9px;word-spacing:0.3em;">
+         ${esc(settings.dressCode)}
+       </div>
+       ${
+         img
+-          ? `<div style="width:104px;height:104px;border-radius:50%;overflow:hidden;margin:14px auto 0;">
+-               ${photoTag(img, 104, 104)}
++          ? `<div style="width:100px;height:100px;border-radius:50%;overflow:hidden;margin:14px auto 0;border:1px solid ${c.goldSoft};">
++               ${photoTag(img, 100, 100)}
+              </div>`
+           : ""
+       }
+@@ -942,12 +461,15 @@ function rsvpLine(settings, c) {
+     : "";
+ 
+   return `
+-    <div style="font-family:${FONT_BODY};font-style:italic;font-weight:600;font-size:26px;color:${c.inkSoft};text-align:center;line-height:1.5;word-spacing:0.3em;">
+-      ${
+-        deadline
+-          ? `Kindly RSVP by ${esc(deadline)}`
+-          : "Kindly RSVP at your earliest convenience"
+-      }
++    <div style="text-align:center;">
++      ${capsLine("RSVP", c, { size: 15, spacing: 4, weight: 700 })}
++      <div style="font-family:${FONT_SANS};font-weight:400;font-size:22px;color:${c.inkSoft};margin-top:8px;line-height:1.5;">
++        ${
++          deadline
++            ? `Kindly respond by ${esc(deadline)}`
++            : "Kindly respond at your earliest convenience"
++        }
++      </div>
+     </div>
+   `;
+ }
+@@ -960,208 +482,92 @@ function fullName(guest) {
+     .join(" ");
+ }
+ 
+-/** Long names step down in size instead of colliding with their neighbours. */
+-function nameSize(name, base) {
+-  const len = name.length;
+-  if (len <= 18) return base;
+-  if (len <= 26) return Math.round(base * 0.86);
+-  if (len <= 34) return Math.round(base * 0.74);
+-  return Math.round(base * 0.64);
+-}
+-
++/**
++ * "Reserved for you" panel — mirrors the on-screen shaded box exactly
++ * (`rounded-lg bg-secondary/60 px-6 py-5`): a caps label then one bold
++ * display-font value line of seats / plus-one / table. The site doesn't
++ * repeat the guest's name here (it's already the "Dear ..." greeting up
++ * top), so this doesn't either.
++ */
+ function reservedPanel(guest, c) {
+   if (!guest) return "";
+ 
+   const seats = Number(guest.numberOfSeats) || 1;
+   const chips = [`${seats} seat${seats === 1 ? "" : "s"}`];
+ 
++  if (guest.plusOneAllowed) chips.push("plus one welcome");
+   if (guest.tableNumber) chips.push(`Table ${esc(guest.tableNumber)}`);
+-  if (guest.plusOneAllowed && guest.plusOneName) {
+-    chips.push(`Plus one: ${esc(guest.plusOneName)}`);
+-  }
+-
+-  const name = fullName(guest);
+ 
+   return `
+-    <div style="text-align:center;padding:0 40px;">
+-      ${ruleWithDiamond(c, 150, 0)}
+-      ${capsLine("Reserved For", c, { size: 16, spacing: 4, weight: 700, top: 18 })}
+-      <div style="font-family:${FONT_DISPLAY};font-weight:700;font-size:${nameSize(
+-        name,
+-        34,
+-      )}px;color:${c.ink};margin-top:12px;line-height:1.4;word-spacing:0.3em;word-break:break-word;">
+-        ${esc(name)}
+-      </div>
+-      <div style="font-family:${FONT_BODY};font-style:italic;font-weight:600;font-size:24px;color:${c.inkSoft};margin-top:12px;line-height:1.6;word-spacing:0.25em;">
++    <div style="text-align:center;padding:22px 30px;background:${c.creamDeep};border-radius:10px;">
++      ${capsLine("Reserved For You", c, { size: 15, spacing: 4, weight: 700 })}
++      <div style="font-family:${FONT_DISPLAY};font-weight:700;font-size:28px;color:${c.ink};margin-top:8px;line-height:1.4;word-spacing:0.3em;">
+         ${chips.join(" &nbsp;·&nbsp; ")}
+       </div>
+     </div>
+-
+   `;
+ }
+ 
+ /* -------------------------------------------------------------------------- */
+-/* 1. KEEPSAKE — mirrors the on-screen invitation                             */
++/* KEEPSAKE — mirrors the on-screen invitation, laid out landscape           */
+ /* -------------------------------------------------------------------------- */
++/*
++ * This is the only invitation layout ("Golden Editorial" was removed — it
++ * never matched the on-screen page and having two designs to keep in sync
++ * was how the drift happened in the first place). It is deliberately
++ * landscape rather than a tall A4 portrait sheet: the hero photo, names and
++ * date sit in a left column exactly the way the on-screen invitation stacks
++ * them top-to-bottom, and the greeting, venues, dress code, RSVP and
++ * reserved-seat panel sit in a right column, so a printed A4 landscape page
++ * reads left-to-right in one glance instead of needing to be scrolled.
++ */
+ 
+ export function keepsakeInvitationHtml(settings, guest, palette) {
+   const c = palCss(palette);
+ 
+   const photo = settings.invitationImageData || settings.invitationImageUrl;
+-  const background =
+-    settings.backgroundImageData || settings.backgroundImageUrl;
+-
+   const date = formatWeddingDate(settings.weddingDate);
+ 
+-  const venues = twoColumn(
+-    venueCell(
+-      {
+-        title: "Ceremony",
+-        time: settings.ceremonyTime,
+-        name: settings.ceremonyVenueName,
+-        address: settings.ceremonyVenueAddress,
+-        mapUrl: settings.ceremonyVenueMapUrl,
+-      },
+-      c,
+-    ),
+-    venueCell(
+-      {
+-        title: "Reception",
+-        time: settings.receptionTime,
+-        name: settings.receptionVenueName,
+-        address: settings.receptionVenueAddress,
+-        mapUrl: settings.receptionVenueMapUrl,
+-      },
+-      c,
+-    ),
+-    { divider: c.gold, gutter: 70 },
+-  );
+-
+-  const body = `
+-    <!-- Background photograph, softened so the card stays legible -->
+-    ${
+-      background
+-        ? `<div style="position:absolute;inset:0;overflow:hidden;">
+-             ${photoTag(background, PAGE_WIDTH, PAGE_HEIGHT)}
+-             <div style="position:absolute;inset:0;background:rgba(251,250,247,0.72);"></div>
+-           </div>`
+-        : `<div style="position:absolute;inset:0;background:${c.cream};"></div>`
+-    }
+-
+-    <!-- The invitation card -->
+-    <div
+-      style="
+-        position:absolute;
+-        top:56px;
+-        left:56px;
+-        right:56px;
+-        bottom:56px;
+-        background:#ffffff;
+-        border:1px solid ${c.gold};
+-        box-sizing:border-box;
+-        padding:10px;
+-      "
+-    >
+-      <div
+-        style="
+-          width:100%;
+-          height:100%;
+-          box-sizing:border-box;
+-          border:1px solid ${c.goldFaint};
+-          padding:40px 74px;
+-        "
+-      >
+-
+-        ${
+-          photo
+-            ? heroPhoto(photo, 950, 560, settings.invitationImageFit)
+-            : `<div style="text-align:center;font-family:${FONT_DISPLAY};font-style:italic;font-size:96px;color:${c.gold};line-height:1.2;">
+-                 ${initials(settings.brideName, settings.groomName)}
+-               </div>`
+-        }
+-
+-        ${
+-          guest
+-            ? capsLine(`Dear ${fullName(guest)}`, c, {
+-                size: 18,
+-                spacing: 5,
+-                weight: 700,
+-                color: c.inkSoft,
+-                top: 34,
+-              })
+-            : ""
+-        }
+-
+-        ${ruleWithDiamond(c, 190, 26)}
+-
+-        <div style="margin-top:24px;">
+-          ${scriptDuo(settings.brideName, settings.groomName, c, 84)}
+-        </div>
+-
+-        ${capsLine("Request the pleasure of your company", c, {
+-          size: 18,
+-          spacing: 5,
+-          weight: 700,
+-          color: c.inkSoft,
+-          top: 26,
+-        })}
+-
+-        ${
+-          date
+-            ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:32px;color:${c.ink};text-align:center;margin-top:18px;line-height:1.4;">
+-                 ${esc(date)}
+-               </div>`
+-            : ""
+-        }
+-
+-        ${
+-          settings.weddingMessage
+-            ? `<div style="margin-top:22px;">${messageBlock(
+-                settings.weddingMessage,
+-                c,
+-                720,
+-              )}</div>`
+-            : ""
+-        }
+-
+-        ${ruleWithDiamond(c, 190, 26)}
+-
+-        <div style="margin-top:28px;">${venues}</div>
++  // Left column: artwork + names + date — the part of the on-screen page
++  // that reads as "the invitation" itself.
++  const leftColumn = `
++    <div style="text-align:center;">
+ 
+-        ${
+-          settings.dressCode
+-            ? `<div style="margin-top:26px;">${dressCodeInline(settings, c)}</div>`
+-            : ""
+-        }
++      ${
++        photo
++          ? heroPhoto(photo, 620, 430, settings.invitationImageFit)
++          : `<div style="text-align:center;font-family:${FONT_DISPLAY};font-style:normal;font-weight:300;font-size:96px;color:${c.gold};line-height:1.2;">
++               ${initials(settings.brideName, settings.groomName)}
++             </div>`
++      }
+ 
+-        <div style="margin-top:26px;">${rsvpLine(settings, c)}</div>
++      <div style="margin-top:30px;">
++        ${scriptDuo(settings.brideName, settings.groomName, c, 92)}
++      </div>
+ 
+-        <div style="margin-top:26px;">${reservedPanel(guest, c)}</div>
++      ${capsLine("Request the pleasure of your company", c, {
++        size: 16,
++        spacing: 4,
++        weight: 700,
++        color: c.inkSoft,
++        top: 22,
++      })}
+ 
++      ${
++        date
++          ? `<div style="font-family:${FONT_DISPLAY};font-weight:700;font-size:32px;color:${c.ink};text-align:center;margin-top:16px;line-height:1.4;">
++               ${esc(date)}
++             </div>`
++          : ""
++      }
+ 
+-      </div>
+     </div>
+   `;
+ 
+-  return pageShell({
+-    palette,
+-    background: "#fbfaf7",
+-    children: body,
+-  });
+-}
+-
+-/* -------------------------------------------------------------------------- */
+-/* 2. GOLDEN EDITORIAL — a designed, gallery-style keepsake                   */
+-/* -------------------------------------------------------------------------- */
+-
+-export function editorialInvitationHtml(settings, guest, palette) {
+-  const c = palCss(palette);
+-
+-  const photo = settings.invitationImageData || settings.invitationImageUrl;
+-  const date = formatWeddingDate(settings.weddingDate);
+-
+-  const venues = twoColumn(
+-    venueCell(
++  // Right column: greeting, message, venues, dress code, RSVP and the
++  // reserved-for-you panel — everything guest-specific and informational.
++  const venues = `
++    <div style="text-align:center;">${venueCell(
+       {
+         title: "Ceremony",
+         time: settings.ceremonyTime,
+@@ -1171,143 +577,117 @@ export function editorialInvitationHtml(settings, guest, palette) {
+       },
+       c,
+       { compact: true },
+-    ),
+-    venueCell(
+-      {
+-        title: "Reception",
+-        time: settings.receptionTime,
+-        name: settings.receptionVenueName,
+-        address: settings.receptionVenueAddress,
+-        mapUrl: settings.receptionVenueMapUrl,
+-      },
+-      c,
+-      { compact: true },
+-    ),
+-    { divider: c.gold, gutter: 56 },
+-  );
+-
+-  const body = `
+-    <!-- Deep colour band behind the top third -->
+-    <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:${c.creamDeep};"></div>
+-
+-    <!-- Fine engraved frame -->
+-    <div style="position:absolute;top:34px;left:34px;right:34px;bottom:34px;border:1px solid ${c.gold};opacity:0.55;"></div>
+-    <div style="position:absolute;top:44px;left:44px;right:44px;bottom:44px;border:1px solid ${c.goldFaint};"></div>
+-
+-    <div style="position:absolute;top:16px;left:16px;">
+-      ${ornamentalCorner(c.gold, { width: 230, height: 230, opacity: 0.5 })}
+-    </div>
+-    <div style="position:absolute;bottom:16px;right:16px;">
+-      ${ornamentalCorner(c.gold, {
+-        width: 230,
+-        height: 230,
+-        mirrorX: true,
+-        mirrorY: true,
+-        opacity: 0.5,
+-      })}
+-    </div>
+-
+-    <div
+-      style="
+-        position:absolute;
+-        top:44px;
+-        left:44px;
+-        right:44px;
+-        bottom:44px;
+-        box-sizing:border-box;
+-        padding:48px 88px 40px;
+-      "
+-    >
+-
+-      <!-- Monogram medallion -->
+-      <div style="text-align:center;">
+-        <div
+-          style="
+-            display:inline-block;
+-            width:92px;
+-            height:92px;
+-            border:1px solid ${c.gold};
+-            border-radius:46px;
+-            box-sizing:border-box;
+-            font-family:${FONT_DISPLAY};
+-            font-style:italic;
+-            font-size:36px;
+-            line-height:90px;
+-            color:${c.gold};
+-            letter-spacing:2px;
+-          "
+-        >${initials(settings.brideName, settings.groomName)}</div>
+-      </div>
+-
+-      ${capsLine("Together with their families", c, {
+-        size: 18,
+-        spacing: 6,
+-        weight: 700,
+-        color: c.inkSoft,
+-        top: 24,
+-      })}
++    )}</div>
+ 
+-      <div style="margin-top:20px;">
+-        ${scriptDuo(settings.brideName, settings.groomName, c, 86)}
+-      </div>
+-
+-      ${ruleWithDiamond(c, 210, 24)}
+-
+-      ${
+-        date
+-          ? `<div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:32px;letter-spacing:1px;color:${c.ink};text-align:center;margin-top:20px;line-height:1.4;">
+-               ${esc(date)}
+-             </div>`
+-          : ""
+-      }
++    ${
++      settings.receptionTime || settings.receptionVenueName || settings.receptionVenueAddress
++        ? `<div style="margin-top:24px;text-align:center;">${venueCell(
++            {
++              title: "Reception",
++              time: settings.receptionTime,
++              name: settings.receptionVenueName,
++              address: settings.receptionVenueAddress,
++              mapUrl: settings.receptionVenueMapUrl,
++            },
++            c,
++            { compact: true },
++          )}</div>`
++        : ""
++    }
++  `;
+ 
+-      ${
+-        photo
+-          ? `<div style="margin-top:26px;">${heroPhoto(photo, 920, 520, settings.invitationImageFit)}</div>`
+-          : ""
+-      }
++  const rightColumn = `
++    <div style="text-align:center;">
+ 
+       ${
+         guest
+           ? capsLine(`Dear ${fullName(guest)}`, c, {
+-              size: 18,
+-              spacing: 5,
++              size: 16,
++              spacing: 4,
+               weight: 700,
+               color: c.inkSoft,
+-              top: 26,
+             })
+           : ""
+       }
+ 
++      ${ruleWithDiamond(c, 130, 16)}
++
+       ${
+         settings.weddingMessage
+-          ? `<div style="margin-top:24px;">${messageBlock(
++          ? `<div style="margin-top:20px;">${messageBlock(
+               settings.weddingMessage,
+               c,
+-              700,
++              560,
+             )}</div>`
+           : ""
+       }
+ 
+-      <div style="margin-top:${photo ? 28 : 48}px;">${venues}</div>
++      <div style="margin-top:${settings.weddingMessage ? 26 : 20}px;">${venues}</div>
+ 
+       ${
+         settings.dressCode
+-          ? `<div style="margin-top:26px;">${dressCodeInline(settings, c)}</div>`
++          ? `<div style="margin-top:24px;">${dressCodeInline(settings, c)}</div>`
+           : ""
+       }
+ 
+-      <div style="margin-top:26px;">${rsvpLine(settings, c)}</div>
++      ${
++        settings.rsvpEnabled !== false
++          ? `<div style="margin-top:24px;">${rsvpLine(settings, c)}</div>`
++          : ""
++      }
+ 
+-      <div style="margin-top:26px;">${reservedPanel(guest, c)}</div>
++      <div style="margin-top:24px;">${reservedPanel(guest, c)}</div>
+ 
++    </div>
++  `;
+ 
++  const columns = twoColumn(leftColumn, rightColumn, {
++    divider: c.gold,
++    gutter: 76,
++  });
++
++  const body = `
++    <!-- Soft cream backdrop behind the framed card -->
++    <div style="position:absolute;inset:0;background:${c.cream};"></div>
++
++    <!-- The invitation card: a double gold frame, just like the on-screen
++         page's rounded-2xl border-gold/40 outer card and its inner
++         rounded-xl border-border/60 panel. -->
++    <div
++      style="
++        position:absolute;
++        top:46px;
++        left:46px;
++        right:46px;
++        bottom:46px;
++        background:#ffffff;
++        border:1px solid ${c.gold};
++        box-sizing:border-box;
++        padding:8px;
++      "
++    >
++      <div
++        style="
++          width:100%;
++          height:100%;
++          box-sizing:border-box;
++          border:1px solid ${c.goldFaint};
++          padding:52px 64px;
++          display:table;
++        "
++      >
++        <div style="display:table-cell;vertical-align:middle;">
++          ${columns}
++        </div>
++      </div>
+     </div>
+   `;
+ 
+   return pageShell({
+     palette,
+     background: "#fbfaf7",
++    width: INVITATION_PAGE_WIDTH,
++    height: INVITATION_PAGE_HEIGHT,
+     children: body,
+   });
+ }
+@@ -1316,13 +696,16 @@ export function editorialInvitationHtml(settings, guest, palette) {
+ /* Template selector                                                          */
+ /* -------------------------------------------------------------------------- */
+ 
++// "Golden Editorial" has been removed — the keepsake design (below) is now
++// the only invitation layout, so every legacy template id stored on an
++// existing settings document just resolves to it too.
+ const INVITATION_BUILDERS = {
+   keepsake: keepsakeInvitationHtml,
+-  editorial: editorialInvitationHtml,
+   // Legacy ids stored on existing settings documents.
+   classic: keepsakeInvitationHtml,
+-  modern: editorialInvitationHtml,
+-  botanical: editorialInvitationHtml,
++  editorial: keepsakeInvitationHtml,
++  modern: keepsakeInvitationHtml,
++  botanical: keepsakeInvitationHtml,
+ };
+ 
+ export function buildInvitationHtml(templateId, settings, guest, palette) {
+@@ -1686,5 +1069,6 @@ export const FONTS = {
+   FONT_DISPLAY,
+   FONT_SCRIPT,
+   FONT_BODY,
++  FONT_SANS,
+   FONT_LABEL,
+ };
+\ No newline at end of file
+diff --git a/src/utils/pdfThemes.js b/src/utils/pdfThemes.js
+index 88a21cd..b14076d 100644
+--- a/src/utils/pdfThemes.js
++++ b/src/utils/pdfThemes.js
+@@ -73,18 +73,17 @@ export function getColorScheme(id) {
+   return PDF_COLOR_SCHEMES.find((s) => s.id === id) || PDF_COLOR_SCHEMES[0];
+ }
+ 
++// "Golden Editorial" has been removed: it never matched the on-screen
++// invitation, and having two designs to keep in sync was how they drifted
++// apart in the first place. "keepsake" is now the only invitation layout —
++// it mirrors the on-screen page's typography, spacing and hero image
++// exactly, laid out landscape so guest details can sit left/right.
+ export const PDF_TEMPLATES = [
+   {
+     id: "keepsake",
+-    label: "Website Keepsake",
++    label: "Wedding Invitation",
+     description:
+-      "An exact print version of the on-screen invitation — background photo, invitation artwork and all.",
+-  },
+-  {
+-    id: "editorial",
+-    label: "Golden Editorial",
+-    description:
+-      "An engraved gallery card: monogram medallion, double gold frame and a framed portrait.",
++      "A landscape keepsake that mirrors the on-screen invitation exactly — same fonts, spacing and artwork treatment.",
+   },
+ ];
+ 
+@@ -92,8 +91,9 @@ export const DEFAULT_TEMPLATE_ID = "keepsake";
+ 
+ const LEGACY_TEMPLATE_IDS = {
+   classic: "keepsake",
+-  modern: "editorial",
+-  botanical: "editorial",
++  editorial: "keepsake",
++  modern: "keepsake",
++  botanical: "keepsake",
+ };
+ 
+ export function resolveTemplateId(id) {
