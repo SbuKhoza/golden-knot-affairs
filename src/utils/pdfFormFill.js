@@ -11,7 +11,30 @@
  * or wrong PDF.
  */
 
+import { rgb } from "pdf-lib";
 import { downloadBlob } from "@/utils/pdf";
+
+const WARM_CHARCOAL = rgb(65 / 255, 58 / 255, 48 / 255);
+const WEDDING_DAY_CHARCOAL = rgb(45 / 255, 40 / 255, 34 / 255);
+
+const FIELD_STYLES = {
+  username: { fontSize: 7.5, minFontSize: 5.5, textColor: WARM_CHARCOAL },
+  ceremonyVenueName: { fontSize: 7.5, minFontSize: 5.5, textColor: WARM_CHARCOAL },
+  receptionVenueName: { fontSize: 7.5, minFontSize: 5.5, textColor: WARM_CHARCOAL },
+  weddingMonth: { fontSize: 8.5, minFontSize: 6.5, textColor: WARM_CHARCOAL },
+  weddingDay: { fontSize: 17, minFontSize: 14, textColor: WEDDING_DAY_CHARCOAL },
+  weddingYear: { fontSize: 8.5, minFontSize: 6.5, textColor: WARM_CHARCOAL },
+  ceremonyTime: { fontSize: 8.5, minFontSize: 6.5, textColor: WARM_CHARCOAL },
+  receptionTime: { fontSize: 8.5, minFontSize: 6.5, textColor: WARM_CHARCOAL },
+  tableNumber: { fontSize: 9.5, minFontSize: 7, textColor: WARM_CHARCOAL },
+  additionalMessage: { fontSize: 7.5, minFontSize: 5, textColor: WARM_CHARCOAL },
+};
+
+const DEFAULT_FIELD_STYLE = {
+  fontSize: 7.5,
+  minFontSize: 5,
+  textColor: WARM_CHARCOAL,
+};
 
 /**
  * Typed error so callers (the download button, admin previews, etc.) can
@@ -32,8 +55,18 @@ export class InvitationTemplateError extends Error {
 }
 
 const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 function splitWeddingDate(value) {
@@ -104,10 +137,42 @@ function fieldValues(settings, guest) {
  * field, so the guest's actual name always ends up on the page even if the
  * font doesn't perfectly match the template's design in that edge case.
  */
-async function setFieldText(field, value, preferredFont, fallbackFontPromise) {
+function fittedFontSize(field, value, font, fontSize, minFontSize) {
   try {
-    field.setText(value);
-    field.updateAppearances(preferredFont);
+    const widths = field.acroField
+      .getWidgets()
+      .map((widget) => widget.getRectangle().width)
+      .filter((width) => Number.isFinite(width) && width > 0);
+
+    if (widths.length === 0) return fontSize;
+
+    // Leave a little horizontal inset so glyphs never touch the field edge.
+    const availableWidth = Math.max(1, Math.min(...widths) - 4);
+    const longestLineWidth = String(value)
+      .split(/\r?\n/)
+      .reduce((largest, line) => Math.max(largest, font.widthOfTextAtSize(line, fontSize)), 0);
+
+    if (longestLineWidth <= availableWidth) return fontSize;
+
+    return Math.max(minFontSize, fontSize * (availableWidth / longestLineWidth));
+  } catch {
+    // If a template exposes an unusual widget structure, retain its requested
+    // field-specific size rather than preventing the invitation download.
+    return fontSize;
+  }
+}
+
+function applyFieldAppearance(field, value, font, { fontSize, minFontSize, textColor }) {
+  const resolvedFontSize = fittedFontSize(field, value, font, fontSize, minFontSize);
+  field.setText(value);
+  field.setFontSize(resolvedFontSize);
+  field.setTextColor(textColor);
+  field.updateAppearances(font);
+}
+
+async function setFieldText(field, value, preferredFont, fallbackFontPromise, style) {
+  try {
+    applyFieldAppearance(field, value, preferredFont, style);
     return;
   } catch {
     // Preferred font couldn't encode this value — fall back below.
@@ -115,8 +180,7 @@ async function setFieldText(field, value, preferredFont, fallbackFontPromise) {
 
   try {
     const fallbackFont = await fallbackFontPromise();
-    field.setText(value);
-    field.updateAppearances(fallbackFont);
+    applyFieldAppearance(field, value, fallbackFont, style);
   } catch {
     // Even the fallback failed (e.g. field isn't actually a text field) —
     // leave this one field blank rather than failing the whole download.
@@ -210,7 +274,13 @@ export async function downloadFilledInvitationTemplate(settings, guest) {
       continue;
     }
 
-    await setFieldText(field, value, preferredFont, getFallbackFont);
+    await setFieldText(
+      field,
+      value,
+      preferredFont,
+      getFallbackFont,
+      FIELD_STYLES[name] || DEFAULT_FIELD_STYLE,
+    );
   }
 
   // Bakes the entered text into the page content and removes the
