@@ -144,7 +144,15 @@ export async function downloadFilledInvitationTemplate(settings, guest) {
 
   let bytes;
   try {
-    const response = await fetch(templateUrl);
+    // Firebase Storage doesn't allow direct browser fetches (no CORS headers),
+    // so the bytes come through our own same-origin proxy instead. If that
+    // ever fails we still try the direct URL as a last resort.
+    let response = await fetch(
+      `/api/public/invitation-template?url=${encodeURIComponent(templateUrl)}`,
+    );
+    if (!response.ok) {
+      response = await fetch(templateUrl);
+    }
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
