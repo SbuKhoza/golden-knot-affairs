@@ -1,14 +1,13 @@
 import { doc, getDoc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { ensureGuestSignIn } from "@/services/authService";
-import { DEFAULT_COLOR_SCHEME_ID, DEFAULT_TEMPLATE_ID } from "@/utils/pdfThemes";
+import { DEFAULT_COLOR_SCHEME_ID } from "@/utils/pdfThemes";
 
 const DOC_PATH = ["weddingSettings", "main"];
 
 export const defaultSettings = {
   brideName: "",
   groomName: "",
-  templateId: DEFAULT_TEMPLATE_ID,
   colorSchemeId: DEFAULT_COLOR_SCHEME_ID,
   weddingDate: "",
   ceremonyTime: "",

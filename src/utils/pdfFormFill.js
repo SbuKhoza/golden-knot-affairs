@@ -1,22 +1,36 @@
 /*
  * Fills the admin-uploaded fillable invitation PDF (a real AcroForm — text
  * fields placed in a tool like Adobe Acrobat on top of a decorative design
- * made in Canva or similar) with this guest's details, instead of building
- * the invitation from scratch in HTML/CSS like `pdf.js` does.
+ * made in Canva or similar) with this guest's details.
  *
- * This only runs when `settings.invitationPdfUrl` points at a PDF that
- * actually has AcroForm fields. If it doesn't (e.g. the admin uploaded a
- * plain decorative PDF with no fields at all), `fillInvitationTemplate`
- * returns `null` so the caller can fall back to the HTML-rendered
- * invitation in `pdf.js`.
+ * The invitation has no generated fallback design any more — this uploaded,
+ * fillable template is the *only* invitation. If it isn't configured, isn't
+ * reachable, or isn't an AcroForm at all, `downloadFilledInvitationTemplate`
+ * throws an `InvitationTemplateError` with a `code` the caller can use to
+ * show a precise, actionable message instead of silently producing a blank
+ * or wrong PDF.
  */
 
 import { downloadBlob } from "@/utils/pdf";
 
-// Every field name this app knows how to fill, and where its value comes
-// from. Unknown/missing fields in the uploaded template are simply skipped
-// — the template doesn't have to use every one of these, and older
-// templates without the newer fields still work.
+/**
+ * Typed error so callers (the download button, admin previews, etc.) can
+ * branch on `err.code` rather than parsing a message string.
+ *
+ * Codes:
+ * - NO_TEMPLATE:     `settings.invitationPdfUrl` isn't set at all.
+ * - FETCH_FAILED:    The URL didn't return a usable file (network/host issue).
+ * - LOAD_FAILED:     The bytes fetched aren't a PDF pdf-lib can parse.
+ * - NOT_FILLABLE:    The PDF loaded fine but has no AcroForm fields at all.
+ */
+export class InvitationTemplateError extends Error {
+  constructor(code, message) {
+    super(message);
+    this.name = "InvitationTemplateError";
+    this.code = code;
+  }
+}
+
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
@@ -46,6 +60,10 @@ function fullGuestName(guest) {
     .join(" ");
 }
 
+// Every field name this app knows how to fill, and where its value comes
+// from. Unknown/missing fields in the uploaded template are simply skipped
+// — the template doesn't have to use every one of these, and older
+// templates without the newer fields still work.
 function fieldValues(settings, guest) {
   const { weddingMonth, weddingDay, weddingYear } = splitWeddingDate(settings.weddingDate);
 
@@ -69,56 +87,122 @@ function fieldValues(settings, guest) {
 }
 
 /**
+ * Sets a text field's value and regenerates its appearance so the value is
+ * actually visible (rather than only stored as form data).
+ *
+ * pdf-lib doesn't read each field's own /DA font when it regenerates an
+ * appearance stream — left unset, it silently falls back to plain
+ * Helvetica, which looks out of place next to a template designed around an
+ * elegant serif. This app's templates use Times Roman ("TiRo") in their own
+ * default appearance, so that's what's tried first.
+ *
+ * `StandardFonts.TimesRoman` only supports WinAnsi encoding (Latin-1), so a
+ * value containing characters outside that range (e.g. some Central/Eastern
+ * European names, or non-Latin scripts) would otherwise throw and cause the
+ * whole field to be silently skipped, leaving it blank on the guest's PDF.
+ * Instead, this falls back to a Unicode-capable embedded font for just that
+ * field, so the guest's actual name always ends up on the page even if the
+ * font doesn't perfectly match the template's design in that edge case.
+ */
+async function setFieldText(field, value, preferredFont, fallbackFontPromise) {
+  try {
+    field.setText(value);
+    field.updateAppearances(preferredFont);
+    return;
+  } catch {
+    // Preferred font couldn't encode this value — fall back below.
+  }
+
+  try {
+    const fallbackFont = await fallbackFontPromise();
+    field.setText(value);
+    field.updateAppearances(fallbackFont);
+  } catch {
+    // Even the fallback failed (e.g. field isn't actually a text field) —
+    // leave this one field blank rather than failing the whole download.
+  }
+}
+
+/**
  * Fetches the admin-uploaded template, fills every field it recognises,
  * flattens the form so the guest gets a normal (non-editable) PDF, and
  * triggers a download.
  *
- * Returns `true` if it filled and downloaded a template PDF, or `false` if
- * `settings.invitationPdfUrl` isn't set, isn't reachable, or isn't an
- * AcroForm at all — the caller should fall back to the HTML-rendered
- * invitation in that case.
+ * Throws `InvitationTemplateError` (see codes above) if the template isn't
+ * usable; resolves with no return value on a successful download.
  */
 export async function downloadFilledInvitationTemplate(settings, guest) {
   const templateUrl = settings.invitationPdfUrl;
-  if (!templateUrl) return false;
+  if (!templateUrl) {
+    throw new InvitationTemplateError(
+      "NO_TEMPLATE",
+      "No invitation template has been uploaded yet.",
+    );
+  }
 
   const { PDFDocument, StandardFonts } = await import("pdf-lib");
 
-  const response = await fetch(templateUrl);
-  if (!response.ok) {
-    throw new Error(`Couldn't fetch invitation template (${response.status})`);
+  let bytes;
+  try {
+    const response = await fetch(templateUrl);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    bytes = await response.arrayBuffer();
+  } catch (err) {
+    throw new InvitationTemplateError(
+      "FETCH_FAILED",
+      `Couldn't fetch the invitation template: ${err.message}`,
+    );
   }
-  const bytes = await response.arrayBuffer();
 
-  const pdfDoc = await PDFDocument.load(bytes);
+  let pdfDoc;
+  try {
+    pdfDoc = await PDFDocument.load(bytes);
+  } catch (err) {
+    throw new InvitationTemplateError(
+      "LOAD_FAILED",
+      `The uploaded invitation template isn't a valid PDF: ${err.message}`,
+    );
+  }
+
   const form = pdfDoc.getForm();
   const fields = form.getFields();
 
-  // Not actually a fillable form — nothing to fill in, so let the caller
-  // fall back to the generated invitation instead of downloading a blank
-  // decorative PDF with the guest's name missing.
-  if (fields.length === 0) return false;
+  // Not actually a fillable form — there's nothing to fill in, and this app
+  // no longer has a generated design to fall back to.
+  if (fields.length === 0) {
+    throw new InvitationTemplateError(
+      "NOT_FILLABLE",
+      "The uploaded invitation template has no fillable fields.",
+    );
+  }
 
-  // pdf-lib doesn't read each field's own /DA font when it regenerates an
-  // appearance stream for flattening — left unset, it silently falls back
-  // to plain Helvetica, which looks out of place next to a template
-  // designed around an elegant serif. Every field on this template's own
-  // default appearance specifies Times Roman ("TiRo"), so that's embedded
-  // explicitly and applied to each field as it's filled.
-  const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+  const preferredFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+  // Embedded lazily, and only once, if some value actually needs it.
+  let fallbackFont = null;
+  const getFallbackFont = async () => {
+    if (!fallbackFont) {
+      fallbackFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    }
+    return fallbackFont;
+  };
 
   const values = fieldValues(settings, guest);
 
   for (const [name, value] of Object.entries(values)) {
     if (!value) continue;
+
+    let field;
     try {
-      const field = form.getTextField(name);
-      field.setText(value);
-      field.updateAppearances(font);
+      field = form.getTextField(name);
     } catch {
       // Field doesn't exist on this template, or isn't a text field —
       // skip it rather than failing the whole download.
+      continue;
     }
+
+    await setFieldText(field, value, preferredFont, getFallbackFont);
   }
 
   // Bakes the entered text into the page content and removes the
@@ -131,6 +215,4 @@ export async function downloadFilledInvitationTemplate(settings, guest) {
 
   const guestName = fullGuestName(guest) || "guest";
   downloadBlob(blob, `invitation-${guestName.replace(/\s+/g, "-").toLowerCase()}.pdf`);
-
-  return true;
 }

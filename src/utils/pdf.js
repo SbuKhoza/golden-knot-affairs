@@ -1,17 +1,17 @@
 // src/utils/pdf.js
+//
+// Renders the wedding *program* PDF via jsPDF + html2canvas. The invitation
+// no longer has a generated fallback design here — it is always the admin's
+// uploaded fillable PDF template, filled in by `pdfFormFill.js`.
 
 import {
   getColorScheme,
-  getTemplateMeta,
 } from "@/utils/pdfThemes";
 
 import {
-  buildInvitationHtml,
   buildProgramPages,
   PAGE_HEIGHT,
   PAGE_WIDTH,
-  INVITATION_PAGE_HEIGHT,
-  INVITATION_PAGE_WIDTH,
 } from "@/utils/pdfTemplates";
 
 /*
@@ -22,15 +22,6 @@ import {
 const A4_WIDTH_MM = 210;
 const A4_HEIGHT_MM =
   (A4_WIDTH_MM * PAGE_HEIGHT) / PAGE_WIDTH;
-
-/*
- * The invitation renders landscape — true A4 landscape (297 x 210mm) — so a
- * printed page reads left/right the way the two-column layout is designed,
- * rather than needing to be a tall single column.
- */
-const INVITATION_WIDTH_MM = 297;
-const INVITATION_HEIGHT_MM =
-  (INVITATION_WIDTH_MM * INVITATION_PAGE_HEIGHT) / INVITATION_PAGE_WIDTH;
 
 const FONT_HREF =
   "https://fonts.googleapis.com/css2?family=Great+Vibes&family=Karla:ital,wght@0,400;0,500;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500;1,600&display=swap";
@@ -147,108 +138,6 @@ async function loadFontsInFrame(idoc) {
   await new Promise((resolve) =>
     setTimeout(resolve, 120),
   );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Remote image -> data URL                                                   */
-/* -------------------------------------------------------------------------- */
-
-async function toDataUrl(url) {
-  if (!url) return "";
-
-  if (
-    url.startsWith("data:")
-  ) {
-    return url;
-  }
-
-  try {
-    const res = await fetch(
-      url,
-      {
-        mode:"cors",
-      },
-    );
-
-    if (!res.ok) {
-      throw new Error(
-        `Image fetch failed: ${res.status}`,
-      );
-    }
-
-    const blob =
-      await res.blob();
-
-    return await new Promise(
-      (resolve, reject) => {
-        const reader =
-          new FileReader();
-
-        reader.onload = () =>
-          resolve(reader.result);
-
-        reader.onerror =
-          reject;
-
-        reader.readAsDataURL(
-          blob,
-        );
-      },
-    );
-  } catch (err) {
-    console.warn(
-      "[pdf] Could not inline remote image:",
-      url,
-      err,
-    );
-
-    return "";
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-/* Resolve all images before rendering                                        */
-/* -------------------------------------------------------------------------- */
-
-async function withSafeImages(
-  settings,
-) {
-  const [
-    invitationImageData,
-    dressCodeImageData,
-    backgroundImageData,
-  ] = await Promise.all([
-    toDataUrl(
-      settings.invitationImageData ||
-        settings.invitationImageUrl,
-    ),
-
-    toDataUrl(
-      settings.dressCodeImageData ||
-        settings.dressCodeImageUrl,
-    ),
-
-    toDataUrl(
-      settings.backgroundImageData ||
-        settings.backgroundImageUrl,
-    ),
-  ]);
-
-  return {
-    ...settings,
-
-    invitationImageData,
-
-    invitationImageUrl:"",
-
-    dressCodeImageData,
-
-    dressCodeImageUrl:"",
-
-    backgroundImageData,
-
-    backgroundImageUrl:"",
-  };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -553,63 +442,11 @@ async function pdfFromPages(
   return pdf;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Invitation                                                                 */
-/* -------------------------------------------------------------------------- */
-
-export async function generateInvitationPdf(
-  settings,
-  guest,
-) {
-  try {
-    const safeSettings =
-      await withSafeImages(
-        settings,
-      );
-
-    const palette =
-      getColorScheme(
-        safeSettings.colorSchemeId,
-      ).colors;
-
-    const template =
-      getTemplateMeta(
-        safeSettings.templateId,
-      );
-
-    const html =
-      buildInvitationHtml(
-        template.id,
-        safeSettings,
-        guest,
-        palette,
-      );
-
-    return await pdfFromPages(
-      [html],
-      {
-        widthPx: INVITATION_PAGE_WIDTH,
-        heightPx: INVITATION_PAGE_HEIGHT,
-        widthMm: INVITATION_WIDTH_MM,
-        heightMm: INVITATION_HEIGHT_MM,
-        orientation: "landscape",
-      },
-    );
-  } catch (err) {
-    console.error(
-      "[pdf] Failed to generate invitation PDF:",
-      err,
-    );
-
-    throw err;
-  }
-}
-
 /**
- * Triggers a browser download for an arbitrary Blob — shared by the
- * jsPDF-rendered invitation/program above and by the AcroForm template
- * filler in `pdfFormFill.js`, which produces a Blob directly from pdf-lib
- * rather than through jsPDF.
+ * Triggers a browser download for an arbitrary Blob — used by the
+ * AcroForm template filler in `pdfFormFill.js`, which produces a Blob
+ * directly from pdf-lib rather than through jsPDF, and by the jsPDF-rendered
+ * program below via `pdf.output("blob")`.
  */
 export function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
@@ -623,32 +460,6 @@ export function downloadBlob(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export async function downloadInvitationPdf(
-  settings,
-  guest,
-) {
-  const pdf =
-    await generateInvitationPdf(
-      settings,
-      guest,
-    );
-
-  const surname =
-    (
-      guest?.surname ||
-      "guest"
-    )
-      .toLowerCase()
-      .replace(
-        /[^a-z0-9]+/g,
-        "-",
-      );
-
-  pdf.save(
-    `wedding-invitation-${surname}.pdf`,
-  );
-}
-
 /* -------------------------------------------------------------------------- */
 /* Program                                                                    */
 /* -------------------------------------------------------------------------- */
@@ -657,19 +468,14 @@ export async function generateProgramPdf(
   settings,
 ) {
   try {
-    const safeSettings =
-      await withSafeImages(
-        settings,
-      );
-
     const palette =
       getColorScheme(
-        safeSettings.colorSchemeId,
+        settings.colorSchemeId,
       ).colors;
 
     const pages =
       buildProgramPages(
-        safeSettings,
+        settings,
         palette,
       );
 

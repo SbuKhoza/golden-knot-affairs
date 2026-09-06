@@ -3,8 +3,7 @@ import { useState } from "react";
 import { GuestGate } from "@/components/wedding/GuestGate";
 import { GuestNav } from "@/components/wedding/GuestNav";
 import { Ornament, Monogram } from "@/components/wedding/Ornament";
-import { downloadInvitationPdf } from "@/utils/pdf";
-import { downloadFilledInvitationTemplate } from "@/utils/pdfFormFill";
+import { downloadFilledInvitationTemplate, InvitationTemplateError } from "@/utils/pdfFormFill";
 import { formatWeddingDate, isPastDeadline } from "@/utils/format";
 
 export const Route = createFileRoute("/invitation")({
@@ -83,24 +82,21 @@ function InvitationPage({ guest, settings, signOut }) {
     setError("");
     setDownloading("invitation");
     try {
-      // If the admin has uploaded a fillable AcroForm invitation template
-      // (fields placed over a decorative design in Acrobat or similar),
-      // fill it with this guest's details and download that instead — it's
-      // the couple's actual designed invitation, not the generated one.
-      // `downloadFilledInvitationTemplate` returns false when there's no
-      // template, or when the uploaded PDF isn't actually a fillable form,
-      // so this falls back to the HTML-rendered invitation either way.
-      const filledTemplate = await downloadFilledInvitationTemplate(settings, guest).catch((err) => {
-        console.error("Filling invitation template failed, falling back:", err);
-        return false;
-      });
-
-      if (!filledTemplate) {
-        await downloadInvitationPdf(settings, guest);
-      }
+      // The invitation is always the admin's uploaded, fillable AcroForm
+      // PDF template (fields placed over a decorative design in Acrobat or
+      // similar) — there's no generated fallback design any more.
+      await downloadFilledInvitationTemplate(settings, guest);
     } catch (err) {
       console.error("Invitation PDF download failed:", err);
-      setError("We couldn't prepare that download. Please try again.");
+      if (err instanceof InvitationTemplateError) {
+        setError(
+          err.code === "NO_TEMPLATE"
+            ? "The couple hasn't uploaded an invitation yet. Please check back soon."
+            : "We couldn't prepare the invitation PDF right now. Please try again shortly, or let the couple know.",
+        );
+      } else {
+        setError("We couldn't prepare that download. Please try again.");
+      }
     } finally {
       setDownloading("");
     }
@@ -261,14 +257,20 @@ function InvitationPage({ guest, settings, signOut }) {
           </section>
 
           <section className="animate-soft mt-8 grid gap-4 sm:grid-cols-2">
-            <button
-              type="button"
-              onClick={handleInvitationDownload}
-              disabled={downloading === "invitation"}
-              className="rounded-md border border-gold/60 bg-white/85 px-6 py-5 text-xs uppercase tracking-[0.3em] text-primary backdrop-blur-md transition hover:bg-white disabled:opacity-60"
-            >
-              {downloading === "invitation" ? "Preparing download…" : "Download invitation"}
-            </button>
+            {settings.invitationPdfUrl ? (
+              <button
+                type="button"
+                onClick={handleInvitationDownload}
+                disabled={downloading === "invitation"}
+                className="rounded-md border border-gold/60 bg-white/85 px-6 py-5 text-xs uppercase tracking-[0.3em] text-primary backdrop-blur-md transition hover:bg-white disabled:opacity-60"
+              >
+                {downloading === "invitation" ? "Preparing download…" : "Download invitation"}
+              </button>
+            ) : (
+              <div className="rounded-md border border-dashed border-border bg-white/70 px-6 py-5 text-center text-xs uppercase tracking-[0.3em] text-muted-foreground backdrop-blur-md">
+                Invitation coming soon
+              </div>
+            )}
             {settings.programPublished ? (
               <Link
                 to="/program"

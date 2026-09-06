@@ -3,6 +3,11 @@
 //
 // Each color in a palette is an [r, g, b] triple (0–255) for jsPDF, plus a
 // `hex` used purely to paint the little swatch preview in the admin UI.
+//
+// This only drives the generated wedding *program* PDF now. The invitation
+// no longer has a pre-coded design of its own — it is always the admin's
+// uploaded fillable PDF template, filled in by `pdfFormFill.js` — so the
+// old `PDF_TEMPLATES` invitation-layout registry has been removed.
 
 export const PDF_COLOR_SCHEMES = [
   {
@@ -71,38 +76,4 @@ export const DEFAULT_COLOR_SCHEME_ID = "gold-cream";
 
 export function getColorScheme(id) {
   return PDF_COLOR_SCHEMES.find((s) => s.id === id) || PDF_COLOR_SCHEMES[0];
-}
-
-export const PDF_TEMPLATES = [
-  {
-    id: "keepsake",
-    label: "Website Keepsake",
-    description:
-      "An exact print version of the on-screen invitation — background photo, invitation artwork and all.",
-  },
-  {
-    id: "editorial",
-    label: "Golden Editorial",
-    description:
-      "An engraved gallery card: monogram medallion, double gold frame and a framed portrait.",
-  },
-];
-
-export const DEFAULT_TEMPLATE_ID = "keepsake";
-
-const LEGACY_TEMPLATE_IDS = {
-  classic: "keepsake",
-  modern: "editorial",
-  botanical: "editorial",
-};
-
-export function resolveTemplateId(id) {
-  if (PDF_TEMPLATES.some((t) => t.id === id)) return id;
-  return LEGACY_TEMPLATE_IDS[id] || DEFAULT_TEMPLATE_ID;
-}
-
-
-export function getTemplateMeta(id) {
-  const resolved = resolveTemplateId(id);
-  return PDF_TEMPLATES.find((t) => t.id === resolved) || PDF_TEMPLATES[0];
 }

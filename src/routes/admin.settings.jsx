@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
-import { InvitationDesignPicker } from "@/components/admin/InvitationDesignPicker";
+import { ProgramColorPicker } from "@/components/admin/ProgramColorPicker";
 import { Loader } from "@/components/common/Loader";
 import { defaultSettings, saveSettings, subscribeToSettings } from "@/services/settingsService";
 import { deleteWeddingFile, uploadWeddingFile, validateFile } from "@/services/storageService";
@@ -288,12 +288,13 @@ function SettingsPage() {
       </section>
 
       <section className="rounded-xl border border-border bg-card p-6">
-        <h2 className="font-display text-xl">Invitation design</h2>
+        <h2 className="font-display text-xl">Wedding program design</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Choose the palette used when guests' invitation and program PDFs are generated.
+          Choose the accent palette used when the wedding program PDF is generated. The invitation itself always
+          comes from the fillable PDF template you upload below.
         </p>
         <div className="mt-5">
-          <InvitationDesignPicker
+          <ProgramColorPicker
             colorSchemeId={values.colorSchemeId}
             onColorSchemeChange={(id) => update("colorSchemeId", id)}
           />
@@ -390,17 +391,18 @@ function SettingsPage() {
               </div>
             ) : null}
           </Field>
-          <Field label="Fillable invitation template (optional)">
+          <Field label="Fillable invitation template">
             <p className="mb-2 text-xs leading-relaxed text-muted-foreground">
               Upload a PDF with real AcroForm text fields (e.g. designed in Canva, then given fillable fields in
-              Adobe Acrobat or a similar tool). When a guest downloads their invitation, this template is filled
-              in with their details and downloaded instead of the generated design below — the couple's own
-              artwork, not a substitute. Recognised field names: <code>username</code>, <code>ceremonyVenueName</code>,{" "}
-              <code>receptionVenueName</code>, <code>ceremonyTime</code>, <code>receptionTime</code>,{" "}
-              <code>weddingMonth</code>, <code>weddingDay</code>, <code>weddingYear</code>, <code>tableNumber</code>,{" "}
-              <code>additionalMessage</code>, <code>ceremonyVenueMapUrl</code>, <code>receptionVenueMapUrl</code>.
-              If the uploaded PDF has no fillable fields at all, guests automatically get the generated invitation
-              below instead.
+              Adobe Acrobat or a similar tool). This is the couple's own artwork, not a substitute — when a guest
+              downloads their invitation, this template is filled in with their details and downloaded. There is no
+              generated fallback design any more, so guests can't download an invitation PDF until a working
+              fillable template is uploaded here. Recognised field names: <code>username</code>,{" "}
+              <code>ceremonyVenueName</code>, <code>receptionVenueName</code>, <code>ceremonyTime</code>,{" "}
+              <code>receptionTime</code>, <code>weddingMonth</code>, <code>weddingDay</code>,{" "}
+              <code>weddingYear</code>, <code>tableNumber</code>, <code>additionalMessage</code>,{" "}
+              <code>ceremonyVenueMapUrl</code>, <code>receptionVenueMapUrl</code>. The uploaded PDF must actually
+              contain AcroForm fields — a plain flattened/decorative PDF with no fields won't work.
             </p>
             <input
               type="file"
@@ -413,7 +415,6 @@ function SettingsPage() {
               <p className="mt-2 text-xs text-muted-foreground">Uploading…</p>
             ) : values.invitationPdfUrl ? (
               <div className="mt-2 flex items-center gap-3">
-                
                  <a href={values.invitationPdfUrl}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -430,7 +431,11 @@ function SettingsPage() {
                   {removingKey === "invitationPdfUrl" ? "Removing…" : "Remove"}
                 </button>
               </div>
-            ) : null}
+            ) : (
+              <p className="mt-2 text-xs text-destructive">
+                No template uploaded yet — guests won't be able to download an invitation PDF until you add one.
+              </p>
+            )}
           </Field>
         </div>
       </section>
