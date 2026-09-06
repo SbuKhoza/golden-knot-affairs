@@ -1293,7 +1293,7 @@ export function buildInvitationHtml(templateId, settings, guest, palette) {
 /* PROGRAM                                                                    */
 /* -------------------------------------------------------------------------- */
 
-const MAX_ITEMS_PER_PAGE = 8;
+const MAX_ITEMS_PER_PAGE = 12;
 
 function programHeaderHtml(
   settings,
@@ -1317,8 +1317,7 @@ function programHeaderHtml(
             color:${c.ink};
           "
         >
-          ${esc(settings.brideName)} &amp;
-          ${esc(settings.groomName)}
+          ${esc(settings.brideName)}&nbsp;&amp;&nbsp;${esc(settings.groomName)}
         </div>
 
         <div
@@ -1364,9 +1363,7 @@ function programHeaderHtml(
           line-height:1;
         "
       >
-        ${esc(settings.brideName || "Bride")}
-        &amp;
-        ${esc(settings.groomName || "Groom")}
+        ${esc(settings.brideName || "Bride")}&nbsp;&amp;&nbsp;${esc(settings.groomName || "Groom")}
       </div>
 
       <div
@@ -1399,8 +1396,10 @@ function timelineItemHtml(
     <div
       style="
         display:flex;
-        gap:25px;
-        padding:0 100px;
+        gap:28px;
+        max-width:880px;
+        margin:0 auto;
+        padding:0 40px;
       "
     >
 
@@ -1450,7 +1449,7 @@ function timelineItemHtml(
 
       <div
         style="
-          padding-bottom:28px;
+          padding-bottom:34px;
         "
       >
 
