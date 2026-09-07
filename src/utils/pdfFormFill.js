@@ -11,30 +11,65 @@
  * or wrong PDF.
  */
 
-import { rgb } from "pdf-lib";
+import { rgb, setFillingColor, setFontAndSize, PDFString } from "pdf-lib";
 import { downloadBlob } from "@/utils/pdf";
+import { googleMapsUrl } from "@/utils/format";
+import { getColorScheme } from "@/utils/pdfThemes";
 
-const WARM_CHARCOAL = rgb(65 / 255, 58 / 255, 48 / 255);
-const WEDDING_DAY_CHARCOAL = rgb(45 / 255, 40 / 255, 34 / 255);
-
-const FIELD_STYLES = {
-  username: { fontSize: 6.5, minFontSize: 5.5, textColor: WARM_CHARCOAL },
-  ceremonyVenueName: { fontSize: 9.5, minFontSize: 8.8, textColor: WARM_CHARCOAL },
-  receptionVenueName: { fontSize: 9.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
-  weddingMonth: { fontSize: 9.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
-  weddingDay: { fontSize: 17, minFontSize: 14, textColor: WEDDING_DAY_CHARCOAL },
-  weddingYear: { fontSize: 9.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
-  ceremonyTime: { fontSize: 11.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
-  receptionTime: { fontSize: 11.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
-  tableNumber: { fontSize: 12.5, minFontSize: 9, textColor: WARM_CHARCOAL },
-  additionalMessage: { fontSize: 9.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
+// Font sizes per field are fixed, but text *color* now follows the admin's
+// chosen color scheme (see `themeTextColors` below) instead of a single
+// hardcoded charcoal, so the "Wedding program design" picker also styles
+// the filled-in invitation text.
+const FIELD_SIZES = {
+  username: { fontSize: 8.5, minFontSize: 7.5 },
+  ceremonyVenueName: { fontSize: 9.5, minFontSize: 8.8 },
+  receptionVenueName: { fontSize: 9.5, minFontSize: 7.5 },
+  weddingMonth: { fontSize: 9.5, minFontSize: 7.5 },
+  weddingDay: { fontSize: 17, minFontSize: 14, emphasis: true },
+  weddingYear: { fontSize: 9.5, minFontSize: 7.5 },
+  ceremonyTime: { fontSize: 11.5, minFontSize: 7.5 },
+  receptionTime: { fontSize: 11.5, minFontSize: 7.5 },
+  tableNumber: { fontSize: 12.5, minFontSize: 9 },
+  additionalMessage: { fontSize: 9.5, minFontSize: 7.5 },
 };
 
-const DEFAULT_FIELD_STYLE = {
-  fontSize: 7.5,
-  minFontSize: 7,
-  textColor: WARM_CHARCOAL,
-};
+const DEFAULT_FIELD_SIZE = { fontSize: 7.5, minFontSize: 7 };
+
+function clampByte(value) {
+  return Math.max(0, Math.min(255, value));
+}
+
+// A slightly deeper shade of the scheme's ink color, used only for the
+// large wedding-day number so it still reads as the emphasised element on
+// the page regardless of which color scheme is active.
+function darken([r, g, b], factor = 0.72) {
+  return [clampByte(r * factor), clampByte(g * factor), clampByte(b * factor)];
+}
+
+/**
+ * Resolves the two text colors used across the filled invitation — the
+ * regular ink color and a deeper "emphasis" color for the wedding-day
+ * number — from the admin's chosen color scheme (`settings.colorSchemeId`),
+ * the same palette used for the wedding program PDF.
+ */
+function themeTextColors(colorSchemeId) {
+  const scheme = getColorScheme(colorSchemeId);
+  const [r, g, b] = scheme.colors.ink;
+  const [dr, dg, db] = darken(scheme.colors.ink);
+  return {
+    textColor: rgb(r / 255, g / 255, b / 255),
+    emphasisColor: rgb(dr / 255, dg / 255, db / 255),
+  };
+}
+
+function fieldStyleFor(name, themeColors) {
+  const size = FIELD_SIZES[name] || DEFAULT_FIELD_SIZE;
+  return {
+    fontSize: size.fontSize,
+    minFontSize: size.minFontSize,
+    textColor: size.emphasis ? themeColors.emphasisColor : themeColors.textColor,
+  };
+}
 
 /**
  * Typed error so callers (the download button, admin previews, etc.) can
@@ -111,11 +146,21 @@ function fieldValues(settings, guest) {
     receptionTime: settings.receptionTime || "",
     tableNumber: guest?.tableNumber ? String(guest.tableNumber) : "",
     additionalMessage: settings.weddingMessage || "",
-    // These two fields sit in a 1x1pt box on the template (invisible on
-    // the page) — they're filled with the plain URL as ordinary form data,
-    // not shown anywhere, per how the template was designed.
-    ceremonyVenueMapUrl: settings.ceremonyVenueMapUrl || "",
-    receptionVenueMapUrl: settings.receptionVenueMapUrl || "",
+    // These two fields sit in a 1x1pt invisible box on the template — still
+    // filled with the plain URL as ordinary form data for backwards
+    // compatibility — but the actual clickable link guests can tap comes
+    // from `embedMapLink` below, which lays a real Link annotation over the
+    // visible venue-name field instead.
+    ceremonyVenueMapUrl: googleMapsUrl(
+      settings.ceremonyVenueMapUrl,
+      settings.ceremonyVenueName,
+      settings.ceremonyVenueAddress,
+    ),
+    receptionVenueMapUrl: googleMapsUrl(
+      settings.receptionVenueMapUrl,
+      settings.receptionVenueName,
+      settings.receptionVenueAddress,
+    ),
   };
 }
 
@@ -165,9 +210,87 @@ function fittedFontSize(field, value, font, fontSize, minFontSize) {
 function applyFieldAppearance(field, value, font, { fontSize, minFontSize, textColor }) {
   const resolvedFontSize = fittedFontSize(field, value, font, fontSize, minFontSize);
   field.setText(value);
-  field.setFontSize(resolvedFontSize);
-  field.setTextColor(textColor);
+
+  // `PDFTextField` has no `setTextColor` method in pdf-lib — calling one
+  // (as this used to) throws and is silently swallowed by the caller's
+  // try/catch, leaving the field blank. The correct way to set color is to
+  // write it into the field's own `/DA` (default appearance) string
+  // alongside the font/size, in the same format pdf-lib's own appearance
+  // provider reads back — then `updateAppearances` picks it up from there.
+  const da = [
+    setFillingColor(textColor).toString(),
+    setFontAndSize(font.name, resolvedFontSize).toString(),
+  ].join("\n");
+  field.acroField.setDefaultAppearance(da);
   field.updateAppearances(font);
+}
+
+// Finds which page a text field's widget actually sits on, so a Link
+// annotation can be added to that same page's /Annots array. Most templates
+// (this one included) set the widget's own /P entry to its parent page, but
+// that isn't strictly guaranteed by the PDF spec, so this falls back to
+// scanning every page's annotations for the widget itself.
+function findWidgetPage(pdfDoc, pages, widget) {
+  const pageRef = widget.P();
+  if (pageRef) {
+    const direct = pages.find((page) => page.ref === pageRef);
+    if (direct) return direct;
+  }
+
+  for (const page of pages) {
+    const annots = page.node.Annots();
+    if (!annots) continue;
+    for (let i = 0; i < annots.size(); i += 1) {
+      if (pdfDoc.context.lookup(annots.get(i)) === widget.dict) return page;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Embeds a real, clickable PDF link (a `/Link` annotation with a `/URI`
+ * action) over the visible `anchorFieldName` field — e.g. the ceremony or
+ * reception venue name — so tapping that text on the finished PDF opens the
+ * maps link in the guest's browser or maps app.
+ *
+ * This is separate from filling `ceremonyVenueMapUrl`/`receptionVenueMapUrl`
+ * as plain text: those two fields are an invisible 1x1pt box on the
+ * template and were never wired up to anything clickable, so the map link
+ * effectively wasn't "embedded" anywhere a guest could use it. Link
+ * annotations aren't part of the AcroForm field tree, so they survive
+ * `form.flatten()` untouched.
+ */
+function embedMapLink(pdfDoc, form, anchorFieldName, url) {
+  if (!url) return;
+
+  let anchorField;
+  try {
+    anchorField = form.getTextField(anchorFieldName);
+  } catch {
+    // Template doesn't have this field — nothing to anchor the link to.
+    return;
+  }
+
+  const pages = pdfDoc.getPages();
+  for (const widget of anchorField.acroField.getWidgets()) {
+    const page = findWidgetPage(pdfDoc, pages, widget);
+    if (!page) continue;
+
+    const { x, y, width, height } = widget.getRectangle();
+    const linkDict = pdfDoc.context.obj({
+      Type: "Annot",
+      Subtype: "Link",
+      Rect: [x, y, x + width, y + height],
+      Border: [0, 0, 0],
+      A: {
+        Type: "Action",
+        S: "URI",
+        URI: PDFString.of(url),
+      },
+    });
+    page.node.addAnnot(pdfDoc.context.register(linkDict));
+  }
 }
 
 async function setFieldText(field, value, preferredFont, fallbackFontPromise, style) {
@@ -261,6 +384,7 @@ export async function downloadFilledInvitationTemplate(settings, guest) {
   };
 
   const values = fieldValues(settings, guest);
+  const themeColors = themeTextColors(settings.colorSchemeId);
 
   for (const [name, value] of Object.entries(values)) {
     if (!value) continue;
@@ -279,13 +403,20 @@ export async function downloadFilledInvitationTemplate(settings, guest) {
       value,
       preferredFont,
       getFallbackFont,
-      FIELD_STYLES[name] || DEFAULT_FIELD_STYLE,
+      fieldStyleFor(name, themeColors),
     );
   }
 
+  // Lay real, clickable links over the venue names so guests can tap
+  // straight through to maps — see `embedMapLink` for why this is separate
+  // from the (invisible) ceremonyVenueMapUrl/receptionVenueMapUrl fields.
+  embedMapLink(pdfDoc, form, "ceremonyVenueName", values.ceremonyVenueMapUrl);
+  embedMapLink(pdfDoc, form, "receptionVenueName", values.receptionVenueMapUrl);
+
   // Bakes the entered text into the page content and removes the
   // interactive form, so the guest downloads a normal finished PDF rather
-  // than one that still looks like an editable form.
+  // than one that still looks like an editable form. Link annotations added
+  // above aren't part of the AcroForm field tree, so they aren't touched.
   form.flatten();
 
   const filledBytes = await pdfDoc.save();

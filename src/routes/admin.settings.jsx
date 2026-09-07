@@ -255,43 +255,14 @@ function SettingsPage() {
           </div>
         </div>
 
-        <div className="mt-4">
-          <Field label="Dress code image (optional)">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => e.target.files[0] && handleUpload("dressCodeImageUrl", e.target.files[0], "image")}
-              disabled={uploadingKey === "dressCodeImageUrl"}
-              className="text-sm"
-            />
-            {uploadingKey === "dressCodeImageUrl" ? (
-              <p className="mt-2 text-xs text-muted-foreground">Uploading…</p>
-            ) : values.dressCodeImageUrl ? (
-              <div className="mt-2 flex items-center gap-3">
-                <img
-                  src={values.dressCodeImageUrl}
-                  alt=""
-                  className="h-20 w-20 rounded-full border border-border object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleRemove("dressCodeImageUrl")}
-                  disabled={removingKey === "dressCodeImageUrl"}
-                  className="text-xs text-destructive underline underline-offset-4 disabled:opacity-60"
-                >
-                  {removingKey === "dressCodeImageUrl" ? "Removing…" : "Remove"}
-                </button>
-              </div>
-            ) : null}
-          </Field>
-        </div>
       </section>
 
       <section className="rounded-xl border border-border bg-card p-6">
         <h2 className="font-display text-xl">Wedding program design</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Choose the accent palette used when the wedding program PDF is generated. The invitation itself always
-          comes from the fillable PDF template you upload below.
+          Choose the accent palette used when the wedding program PDF is generated. This also sets the ink color
+          used for the guest details filled into the invitation PDF template below — the template's own artwork
+          and layout stay exactly as you designed them.
         </p>
         <div className="mt-5">
           <ProgramColorPicker
@@ -338,33 +309,6 @@ function SettingsPage() {
                 </button>
               </div>
             ) : null}
-            <div className="mt-4">
-              <span className={labelClass}>How the image fills the invitation</span>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { id: "cover", label: "Cover", hint: "Fills the space, crops the edges" },
-                  { id: "contain", label: "Contain", hint: "Shows the whole picture" },
-                  { id: "fill", label: "Fill", hint: "Stretches to fit exactly" },
-                ].map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    title={option.hint}
-                    onClick={() => update("invitationImageFit", option.id)}
-                    className={`rounded-full border px-4 py-1.5 text-xs transition ${
-                      (values.invitationImageFit || "cover") === option.id
-                        ? "border-gold ring-2 ring-gold/40 text-foreground"
-                        : "border-border text-muted-foreground hover:border-gold/60"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Cover keeps the picture in proportion and trims the bottom. Contain shows everything. Fill stretches it.
-              </p>
-            </div>
           </Field>
 
           <Field label="Background image">

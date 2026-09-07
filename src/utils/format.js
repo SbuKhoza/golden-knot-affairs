@@ -31,9 +31,12 @@ export function friendlyError(error, fallback = "Something went wrong. Please tr
     "auth/user-not-found": "Incorrect email or password.",
     "auth/wrong-password": "Incorrect email or password.",
     "auth/too-many-requests": "Too many attempts. Please wait a moment and try again.",
-    "auth/operation-not-allowed": "Guest sign-in isn't enabled yet. Please ask the site administrator to enable Anonymous authentication in the Firebase console.",
-    "auth/admin-restricted-operation": "Guest sign-in isn't enabled yet. Please ask the site administrator to enable Anonymous authentication in the Firebase console.",
-    "auth/configuration-not-found": "Sign-in isn't configured yet. Please ask the site administrator to check the Firebase authentication settings.",
+    "auth/operation-not-allowed":
+      "Guest sign-in isn't enabled yet. Please ask the site administrator to enable Anonymous authentication in the Firebase console.",
+    "auth/admin-restricted-operation":
+      "Guest sign-in isn't enabled yet. Please ask the site administrator to enable Anonymous authentication in the Firebase console.",
+    "auth/configuration-not-found":
+      "Sign-in isn't configured yet. Please ask the site administrator to check the Firebase authentication settings.",
     "storage/unauthorized": "You don't have permission to upload that file.",
     "storage/canceled": "The upload was cancelled.",
   };
@@ -50,6 +53,17 @@ export function formatWeddingDate(value) {
     month: "long",
     year: "numeric",
   });
+}
+
+// Shared by the invitation web page and the filled invitation PDF, so both
+// always agree on the same maps link: the admin's explicit URL if they gave
+// one, otherwise an auto-built Google Maps search from the venue name/address.
+export function googleMapsUrl(explicitUrl, venueName, venueAddress) {
+  if (explicitUrl) return explicitUrl;
+  if (!venueAddress) return "";
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    `${venueName || ""} ${venueAddress}`.trim(),
+  )}`;
 }
 
 export function isPastDeadline(deadline) {
