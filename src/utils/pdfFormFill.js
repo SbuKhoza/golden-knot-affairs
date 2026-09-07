@@ -24,13 +24,13 @@ const FIELD_SIZES = {
   username: { fontSize: 8.5, minFontSize: 7.5 },
   ceremonyVenueName: { fontSize: 9.5, minFontSize: 8.8 },
   receptionVenueName: { fontSize: 9.5, minFontSize: 7.5 },
-  weddingMonth: { fontSize: 9.5, minFontSize: 7.5 },
+  weddingMonth: { fontSize: 12.5, minFontSize: 10.5 },
   weddingDay: { fontSize: 17, minFontSize: 14, emphasis: true },
   weddingYear: { fontSize: 9.5, minFontSize: 7.5 },
   ceremonyTime: { fontSize: 11.5, minFontSize: 7.5 },
   receptionTime: { fontSize: 11.5, minFontSize: 7.5 },
   tableNumber: { fontSize: 12.5, minFontSize: 9 },
-  additionalMessage: { fontSize: 9.5, minFontSize: 7.5 },
+  additionalMessage: { fontSize: 9.5, minFontSize: 8.5 },
 };
 
 const DEFAULT_FIELD_SIZE = { fontSize: 7.5, minFontSize: 7 };
