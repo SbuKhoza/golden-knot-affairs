@@ -19,7 +19,7 @@ const WEDDING_DAY_CHARCOAL = rgb(45 / 255, 40 / 255, 34 / 255);
 
 const FIELD_STYLES = {
   username: { fontSize: 6.5, minFontSize: 5.5, textColor: WARM_CHARCOAL },
-  ceremonyVenueName: { fontSize: 9.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
+  ceremonyVenueName: { fontSize: 9.5, minFontSize: 8.8, textColor: WARM_CHARCOAL },
   receptionVenueName: { fontSize: 9.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
   weddingMonth: { fontSize: 9.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
   weddingDay: { fontSize: 17, minFontSize: 14, textColor: WEDDING_DAY_CHARCOAL },
@@ -32,7 +32,7 @@ const FIELD_STYLES = {
 
 const DEFAULT_FIELD_STYLE = {
   fontSize: 7.5,
-  minFontSize: 5,
+  minFontSize: 7,
   textColor: WARM_CHARCOAL,
 };
 
