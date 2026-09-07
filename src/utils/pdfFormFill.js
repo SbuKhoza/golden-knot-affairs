@@ -19,15 +19,15 @@ const WEDDING_DAY_CHARCOAL = rgb(45 / 255, 40 / 255, 34 / 255);
 
 const FIELD_STYLES = {
   username: { fontSize: 6.5, minFontSize: 5.5, textColor: WARM_CHARCOAL },
-  ceremonyVenueName: { fontSize: 9.5, minFontSize: 6.5, textColor: WARM_CHARCOAL },
-  receptionVenueName: { fontSize: 9.5, minFontSize: 6.5, textColor: WARM_CHARCOAL },
-  weddingMonth: { fontSize: 9.5, minFontSize: 6.5, textColor: WARM_CHARCOAL },
+  ceremonyVenueName: { fontSize: 9.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
+  receptionVenueName: { fontSize: 9.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
+  weddingMonth: { fontSize: 9.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
   weddingDay: { fontSize: 17, minFontSize: 14, textColor: WEDDING_DAY_CHARCOAL },
-  weddingYear: { fontSize: 9.5, minFontSize: 6.5, textColor: WARM_CHARCOAL },
-  ceremonyTime: { fontSize: 11.5, minFontSize: 6.5, textColor: WARM_CHARCOAL },
-  receptionTime: { fontSize: 11.5, minFontSize: 6.5, textColor: WARM_CHARCOAL },
-  tableNumber: { fontSize: 12.5, minFontSize: 7, textColor: WARM_CHARCOAL },
-  additionalMessage: { fontSize: 9.5, minFontSize: 6.5, textColor: WARM_CHARCOAL },
+  weddingYear: { fontSize: 9.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
+  ceremonyTime: { fontSize: 11.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
+  receptionTime: { fontSize: 11.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
+  tableNumber: { fontSize: 12.5, minFontSize: 9, textColor: WARM_CHARCOAL },
+  additionalMessage: { fontSize: 9.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
 };
 
 const DEFAULT_FIELD_STYLE = {
