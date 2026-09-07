@@ -88,7 +88,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Enter your name to open your personal wedding invitation and RSVP.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "/og-image.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:type", content: "image/png" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Our Wedding — Invitation & RSVP" },
+      {
+        name: "twitter:description",
+        content: "Enter your name to open your personal wedding invitation and RSVP.",
+      },
+      { name: "twitter:image", content: "/og-image.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
