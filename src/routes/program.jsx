@@ -4,6 +4,7 @@ import { GuestGate } from "@/components/wedding/GuestGate";
 import { GuestNav } from "@/components/wedding/GuestNav";
 import { Ornament } from "@/components/wedding/Ornament";
 import { downloadProgramPdf } from "@/utils/pdf";
+import { downloadFilledProgramTemplate } from "@/utils/pdfProgramFill";
 
 export const Route = createFileRoute("/program")({
   head: () => ({
@@ -31,8 +32,12 @@ function ProgramPage({ guest, settings, signOut }) {
     setError("");
     setBusy(true);
     try {
-      if (settings.programPdfUrl) window.open(settings.programPdfUrl, "_blank", "noopener");
-      else await downloadProgramPdf(settings);
+      try {
+        await downloadFilledProgramTemplate(settings);
+      } catch (templateErr) {
+        console.warn("Template fill failed, using generated program:", templateErr);
+        await downloadProgramPdf(settings);
+      }
     } catch (err) {
       console.error("Program PDF download failed:", err);
       setError("We couldn't prepare that download. Please try again.");

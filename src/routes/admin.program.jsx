@@ -4,7 +4,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { Loader } from "@/components/common/Loader";
 import { defaultSettings, saveSettings, subscribeToSettings } from "@/services/settingsService";
 import { deleteWeddingFile, uploadWeddingFile } from "@/services/storageService";
-import { downloadProgramPdf } from "@/utils/pdf";
+import { downloadFilledProgramTemplate } from "@/utils/pdfProgramFill";
 import { friendlyError } from "@/utils/format";
 
 export const Route = createFileRoute("/admin/program")({
@@ -110,7 +110,7 @@ function ProgramAdminPage() {
     try {
       const url = await uploadWeddingFile(file, "program", "pdf");
       await saveSettings({ programPdfUrl: url });
-      setNotice("Program PDF uploaded. Guests will download this file.");
+      setNotice("Program template uploaded. Guests will get it filled in with the program above.");
     } catch (err) {
       setError(friendlyError(err));
     } finally {
@@ -134,7 +134,7 @@ function ProgramAdminPage() {
     setError("");
     setPreviewing(true);
     try {
-      await downloadProgramPdf({ ...settings, programItems: items });
+      await downloadFilledProgramTemplate({ ...settings, programItems: items });
     } catch (err) {
       setError(friendlyError(err));
     } finally {
@@ -243,7 +243,7 @@ function ProgramAdminPage() {
       <section className="rounded-xl border border-border bg-card p-6">
         <h2 className="font-display text-xl">Your own program PDF (optional)</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Upload a designed program and guests will download that instead of the generated one.
+          Upload the fillable program template (wedding-program-template-floral.pdf). Guests download it filled in with the moments above. Leave empty to use the built-in copy.
         </p>
         <div className="mt-4">
           <input

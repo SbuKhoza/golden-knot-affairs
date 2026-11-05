@@ -101,13 +101,38 @@ export async function buildFilledProgramPdf(settings, templateBytes) {
   return pdfDoc.save({ useObjectStreams: false });
 }
 
-/** Used by the Program page / admin preview. */
-export async function downloadFilledProgramTemplate(settings) {
-  const url = settings.programTemplateUrl || "/templates/wedding-program-template.pdf";
-  let res;
-  try { res = await fetch(url); if (!res.ok) throw new Error(`HTTP ${res.status}`); }
-  catch (e) { throw new ProgramTemplateError("FETCH_FAILED", `Couldn't fetch program template: ${e.message}`); }
+const BUNDLED_TEMPLATE = "/templates/wedding-program-template-floral.pdf";
 
-  const bytes = await buildFilledProgramPdf(settings, await res.arrayBuffer());
-  downloadBlob(new Blob([bytes], { type: "application/pdf" }), "wedding-program.pdf");
+async function fetchBytes(url, viaProxy) {
+  const target = viaProxy ? `/api/public/invitation-template?url=${encodeURIComponent(url)}` : url;
+  const res = await fetch(target);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.arrayBuffer();
+}
+
+/**
+ * Fills the program template and downloads it.
+ * Uses the admin-uploaded template (settings.programPdfUrl) first; if that is
+ * missing, unreachable or not a fillable form, falls back to the template
+ * shipped in /public/templates.
+ */
+export async function downloadFilledProgramTemplate(settings) {
+  const candidates = [];
+  if (settings.programPdfUrl) candidates.push({ url: settings.programPdfUrl, proxy: true });
+  candidates.push({ url: BUNDLED_TEMPLATE, proxy: false });
+
+  let lastError;
+  for (const { url, proxy } of candidates) {
+    try {
+      const bytes = await buildFilledProgramPdf(settings, await fetchBytes(url, proxy));
+      downloadBlob(new Blob([bytes], { type: "application/pdf" }), "wedding-program.pdf");
+      return;
+    } catch (e) {
+      console.warn("[program] template failed:", url, e);
+      lastError = e;
+    }
+  }
+  throw lastError instanceof ProgramTemplateError
+    ? lastError
+    : new ProgramTemplateError("FETCH_FAILED", `Couldn't prepare the program: ${lastError?.message}`);
 }
