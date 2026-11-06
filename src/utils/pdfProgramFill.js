@@ -82,11 +82,13 @@ export async function buildFilledProgramPdf(settings, templateBytes) {
     throw new ProgramTemplateError("NOT_FILLABLE", "The program template has no fillable fields.");
 
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  let filled = 0;
 
   for (const [name, value] of Object.entries(programFieldValues(settings))) {
     let field;
     try { field = form.getTextField(name); } catch { continue; }
     if (!value) { field.setText(""); continue; }   // unused slot stays blank
+    filled += 1;
     const s = STYLE[name] || { size: 10, min: 8 };
     const size = s.multiline ? fitMultiline(field, value, font, s.size, s.min)
                              : fit(field, value, font, s.size, s.min);
@@ -97,6 +99,7 @@ export async function buildFilledProgramPdf(settings, templateBytes) {
     field.updateAppearances(font);
   }
 
+  console.info("[program] filled template:", filled, "fields with data,", Object.keys(programFieldValues(settings)).length, "total");
   form.flatten();
   return pdfDoc.save({ useObjectStreams: false });
 }
@@ -125,6 +128,7 @@ export async function downloadFilledProgramTemplate(settings) {
   for (const { url, proxy } of candidates) {
     try {
       const bytes = await buildFilledProgramPdf(settings, await fetchBytes(url, proxy));
+      console.info("[program] template source:", url);
       downloadBlob(new Blob([bytes], { type: "application/pdf" }), "wedding-program.pdf");
       return;
     } catch (e) {
