@@ -4,7 +4,7 @@ import { GuestGate } from "@/components/wedding/GuestGate";
 import { GuestNav } from "@/components/wedding/GuestNav";
 import { Ornament, Monogram } from "@/components/wedding/Ornament";
 import { downloadFilledInvitationTemplate, InvitationTemplateError } from "@/utils/pdfFormFill";
-import { formatWeddingDate, googleMapsUrl, isPastDeadline } from "@/utils/format";
+import { formatWeddingDate, isPastDeadline } from "@/utils/format";
 
 export const Route = createFileRoute("/invitation")({
   head: () => ({
@@ -63,16 +63,20 @@ function InvitationPage({ guest, settings, signOut }) {
   const deadlinePassed = isPastDeadline(settings.rsvpDeadline);
   const rsvpOpen = settings.rsvpEnabled !== false && !deadlinePassed;
   const hasBackground = Boolean(settings.backgroundImageUrl);
-  const ceremonyMapsUrl = googleMapsUrl(
-    settings.ceremonyVenueMapUrl,
-    settings.ceremonyVenueName,
-    settings.ceremonyVenueAddress,
-  );
-  const receptionMapsUrl = googleMapsUrl(
-    settings.receptionVenueMapUrl,
-    settings.receptionVenueName,
-    settings.receptionVenueAddress,
-  );
+  const ceremonyMapsUrl =
+    settings.ceremonyVenueMapUrl ||
+    (settings.ceremonyVenueAddress
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          `${settings.ceremonyVenueName || ""} ${settings.ceremonyVenueAddress}`.trim(),
+        )}`
+      : "");
+  const receptionMapsUrl =
+    settings.receptionVenueMapUrl ||
+    (settings.receptionVenueAddress
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          `${settings.receptionVenueName || ""} ${settings.receptionVenueAddress}`.trim(),
+        )}`
+      : "");
 
   async function handleInvitationDownload() {
     setError("");
@@ -127,12 +131,7 @@ function InvitationPage({ guest, settings, signOut }) {
                   src={settings.invitationImageUrl}
                   alt="Wedding invitation artwork"
                   loading="lazy"
-                  // Below `sm` (mobile), force a wide rectangular crop —
-                  // without an explicit ratio the image collapses toward a
-                  // square on narrow viewports. At `sm` and up (desktop),
-                  // this is unchanged from before: natural ratio capped by
-                  // max-h-72.
-                  className="mx-auto mb-10 aspect-[16/10] w-full rounded-lg object-cover shadow-md sm:aspect-auto sm:max-h-72"
+                  className="mx-auto mb-10 aspect-[4/3] w-full rounded-lg object-cover object-top shadow-md sm:aspect-auto sm:max-h-72"
                 />
               ) : (
                 <Monogram bride={settings.brideName} groom={settings.groomName} />
@@ -176,7 +175,6 @@ function InvitationPage({ guest, settings, signOut }) {
                 <DressCodeDetail
                   label="Dress code"
                   value={settings.dressCode}
-                  imageUrl={settings.dressCodeImageUrl}
                 />
               </div>
 

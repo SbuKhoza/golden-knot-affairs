@@ -157,10 +157,10 @@ function SettingsPage() {
       <section className="rounded-xl border border-border bg-card p-6">
         <h2 className="font-display text-xl">Couple</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <Field label="Groom name" htmlFor="ws-bride">
+          <Field label="Bride name" htmlFor="ws-bride">
             <input id="ws-bride" className={inputClass} value={values.brideName} onChange={(e) => update("brideName", e.target.value)} />
           </Field>
-          <Field label="Bride name" htmlFor="ws-groom">
+          <Field label="Groom name" htmlFor="ws-groom">
             <input id="ws-groom" className={inputClass} value={values.groomName} onChange={(e) => update("groomName", e.target.value)} />
           </Field>
         </div>
@@ -260,9 +260,8 @@ function SettingsPage() {
       <section className="rounded-xl border border-border bg-card p-6">
         <h2 className="font-display text-xl">Wedding program design</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Choose the accent palette used when the wedding program PDF is generated. This also sets the ink color
-          used for the guest details filled into the invitation PDF template below — the template's own artwork
-          and layout stay exactly as you designed them.
+          Choose the accent palette used when the wedding program PDF is generated. The invitation itself always
+          comes from the fillable PDF template you upload below.
         </p>
         <div className="mt-5">
           <ProgramColorPicker
