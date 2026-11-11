@@ -297,7 +297,7 @@ export async function downloadFilledInvitationTemplate(settings, guest) {
     ["ceremonyVenueName", "ceremonyVenueMapUrl", settings.ceremonyVenueMapUrl, settings.ceremonyVenueAddress || settings.ceremonyVenueName],
     ["receptionVenueName", "receptionVenueMapUrl", settings.receptionVenueMapUrl, settings.receptionVenueAddress || settings.receptionVenueName],
   ];
-  const { PDFName, PDFString } = await import("pdf-lib");
+  const { PDFString } = await import("pdf-lib");
   for (const [nameField, urlField, url, place] of mapLinks) {
     const href = url || (place ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}` : "");
     if (!href) continue;
@@ -322,7 +322,6 @@ export async function downloadFilledInvitationTemplate(settings, guest) {
     });
     page.node.addAnnot(pdfDoc.context.register(annot));
   }
-  void PDFName;
 
   // Bakes the entered text into the page content and removes the
   // interactive form, so the guest downloads a normal finished PDF rather
