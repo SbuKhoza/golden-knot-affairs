@@ -131,7 +131,7 @@ function InvitationPage({ guest, settings, signOut }) {
                   src={settings.invitationImageUrl}
                   alt="Wedding invitation artwork"
                   loading="lazy"
-                  className="mx-auto mb-10 max-h-72 w-full rounded-lg object-cover shadow-md"
+                  className="mx-auto mb-10 aspect-[4/3] w-full rounded-lg object-cover object-top shadow-md sm:aspect-auto sm:max-h-72"
                 />
               ) : (
                 <Monogram bride={settings.brideName} groom={settings.groomName} />
@@ -175,7 +175,6 @@ function InvitationPage({ guest, settings, signOut }) {
                 <DressCodeDetail
                   label="Dress code"
                   value={settings.dressCode}
-                  imageUrl={settings.dressCodeImageUrl}
                 />
               </div>
 

@@ -13,21 +13,22 @@
 
 import { rgb } from "pdf-lib";
 import { downloadBlob } from "@/utils/pdf";
+import { getColorScheme } from "@/utils/pdfThemes";
 
 const WARM_CHARCOAL = rgb(65 / 255, 58 / 255, 48 / 255);
 const WEDDING_DAY_CHARCOAL = rgb(45 / 255, 40 / 255, 34 / 255);
 
 const FIELD_STYLES = {
   username: { fontSize: 6.5, minFontSize: 5.5, textColor: WARM_CHARCOAL },
-  ceremonyVenueName: { fontSize: 9.5, minFontSize: 8.8, textColor: WARM_CHARCOAL },
-  receptionVenueName: { fontSize: 9.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
+  ceremonyVenueName: { fontSize: 6.5, minFontSize: 4.5, textColor: WARM_CHARCOAL },
+  receptionVenueName: { fontSize: 6.5, minFontSize: 4.5, textColor: WARM_CHARCOAL },
   weddingMonth: { fontSize: 9.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
   weddingDay: { fontSize: 17, minFontSize: 14, textColor: WEDDING_DAY_CHARCOAL },
   weddingYear: { fontSize: 9.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
   ceremonyTime: { fontSize: 11.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
   receptionTime: { fontSize: 11.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
   tableNumber: { fontSize: 12.5, minFontSize: 9, textColor: WARM_CHARCOAL },
-  additionalMessage: { fontSize: 9.5, minFontSize: 7.5, textColor: WARM_CHARCOAL },
+  additionalMessage: { fontSize: 6.5, minFontSize: 4.5, textColor: WARM_CHARCOAL },
 };
 
 const DEFAULT_FIELD_STYLE = {
@@ -260,6 +261,11 @@ export async function downloadFilledInvitationTemplate(settings, guest) {
     return fallbackFont;
   };
 
+  const scheme = getColorScheme(settings.colorSchemeId)?.colors || {};
+  const toRgb = (c, fb) => (Array.isArray(c) ? rgb(c[0] / 255, c[1] / 255, c[2] / 255) : fb);
+  const inkColor = toRgb(scheme.ink, WARM_CHARCOAL);
+  const accentColor = toRgb(scheme.gold, WEDDING_DAY_CHARCOAL);
+
   const values = fieldValues(settings, guest);
 
   for (const [name, value] of Object.entries(values)) {
@@ -279,9 +285,44 @@ export async function downloadFilledInvitationTemplate(settings, guest) {
       value,
       preferredFont,
       getFallbackFont,
-      FIELD_STYLES[name] || DEFAULT_FIELD_STYLE,
+      {
+        ...(FIELD_STYLES[name] || DEFAULT_FIELD_STYLE),
+        textColor: name === "weddingDay" ? accentColor : inkColor,
+      },
     );
   }
+
+  // Make each venue name clickable, opening its map link.
+  const mapLinks = [
+    ["ceremonyVenueName", "ceremonyVenueMapUrl", settings.ceremonyVenueMapUrl, settings.ceremonyVenueAddress || settings.ceremonyVenueName],
+    ["receptionVenueName", "receptionVenueMapUrl", settings.receptionVenueMapUrl, settings.receptionVenueAddress || settings.receptionVenueName],
+  ];
+  const { PDFName, PDFString } = await import("pdf-lib");
+  for (const [nameField, urlField, url, place] of mapLinks) {
+    const href = url || (place ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}` : "");
+    if (!href) continue;
+    let target = null;
+    for (const fname of [nameField, urlField]) {
+      try {
+        const w = form.getField(fname).acroField.getWidgets()[0];
+        const r = w?.getRectangle();
+        if (r && r.width > 2 && r.height > 2) { target = { w, r }; break; }
+      } catch { /* field missing */ }
+    }
+    if (!target) continue;
+    const pageRef = target.w.P();
+    const page = pdfDoc.getPages().find((pg) => pg.ref === pageRef) || pdfDoc.getPages()[0];
+    const { x, y, width, height } = target.r;
+    const annot = pdfDoc.context.obj({
+      Type: "Annot",
+      Subtype: "Link",
+      Rect: [x, y, x + width, y + height],
+      Border: [0, 0, 0],
+      A: { Type: "Action", S: "URI", URI: PDFString.of(href) },
+    });
+    page.node.addAnnot(pdfDoc.context.register(annot));
+  }
+  void PDFName;
 
   // Bakes the entered text into the page content and removes the
   // interactive form, so the guest downloads a normal finished PDF rather
