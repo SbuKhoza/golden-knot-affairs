@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { adminSignIn } from "@/services/authService";
+import { staffSignIn } from "@/services/authService";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { friendlyError } from "@/utils/format";
 
@@ -19,27 +19,27 @@ export const Route = createFileRoute("/admin/login")({
 
 function AdminLogin() {
   const navigate = useNavigate();
-  const { user, isAdmin } = useAdminAuth();
+  const { user, role } = useAdminAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (user && isAdmin) navigate({ to: "/admin/dashboard" });
-  }, [user, isAdmin, navigate]);
+    if (user && role) navigate({ to: role === "scan-admin" ? "/scan" : "/admin/dashboard" });
+  }, [user, role, navigate]);
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
     setBusy(true);
     try {
-      await adminSignIn(email, password);
-      navigate({ to: "/admin/dashboard" });
+      const { role: signedInRole } = await staffSignIn(email, password);
+      navigate({ to: signedInRole === "scan-admin" ? "/scan" : "/admin/dashboard" });
     } catch (err) {
       setError(
         err?.code === "not-admin"
-          ? "That account doesn't have administrator access."
+          ? "That account doesn't have admin or scanner access."
           : friendlyError(err, "We couldn't sign you in. Please try again."),
       );
     } finally {
@@ -54,7 +54,7 @@ function AdminLogin() {
         className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-sm"
         noValidate
       >
-        <h1 className="text-center font-display text-2xl">Administrator sign in</h1>
+        <h1 className="text-center font-display text-2xl">Staff sign in</h1>
         <div className="mt-8 space-y-4">
           <div>
             <label htmlFor="email" className="mb-1.5 block text-xs uppercase tracking-[0.2em] text-muted-foreground">

@@ -31,6 +31,24 @@ export async function adminSignIn(email, password) {
   return cred.user;
 }
 
+/**
+ * Sign in a staff member. Full admins ("admins" collection / admin claim) and
+ * scan-admins ("scan-admin" collection) are both allowed; anyone else is
+ * signed straight back out. Resolves to { user, role }.
+ */
+export async function staffSignIn(email, password) {
+  const a = auth();
+  const cred = await signInWithEmailAndPassword(a, email.trim(), password);
+  const role = await getStaffRole(cred.user);
+  if (!role) {
+    await signOut(a);
+    const error = new Error("not-admin");
+    error.code = "not-admin";
+    throw error;
+  }
+  return { user: cred.user, role };
+}
+
 export async function adminSignOut() {
   await signOut(auth());
 }
@@ -50,6 +68,27 @@ export async function checkIsAdmin(user) {
   } catch {
     return false;
   }
+}
+
+/**
+ * Scan-admins are listed in the "scan-admin" collection (document ID = the
+ * user's Firebase Auth UID). They can view guests and approve arrivals only.
+ */
+export async function checkIsScanAdmin(user) {
+  if (!user || user.isAnonymous) return false;
+  try {
+    const snap = await getDoc(doc(db(), "scan-admin", user.uid));
+    return snap.exists();
+  } catch {
+    return false;
+  }
+}
+
+/** "admin" | "scan-admin" | null */
+export async function getStaffRole(user) {
+  if (await checkIsAdmin(user)) return "admin";
+  if (await checkIsScanAdmin(user)) return "scan-admin";
+  return null;
 }
 
 export function watchAuth(callback) {

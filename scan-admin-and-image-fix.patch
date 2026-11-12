@@ -1,0 +1,1164 @@
+diff --git a/AGENTS.md b/AGENTS.md
+index 7056192..12a7e69 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -9,4 +9,4 @@
+ > the editor, so keep the branch in a working state.
+ <!-- LOVABLE:END -->
+ 
+-- Encode each guest's existing unique Firestore document ID in their QR; validate QR scans through the authenticated guest-document lookup, and record arrivals only from the admin entrance scanner.
++- Each guest's entry QR encodes `GKA1:<Firestore document ID>` (never a URL). Only staff listed in the `admins` or `scan-admin` collections can read it back, and `scan-admin` users may only flip `approved` false -> true (see firestore.rules).
+diff --git a/SCAN_ADMIN_SETUP.md b/SCAN_ADMIN_SETUP.md
+new file mode 100644
+index 0000000..390d3ae
+--- /dev/null
++++ b/SCAN_ADMIN_SETUP.md
+@@ -0,0 +1,50 @@
++# Entrance scanner (`scan-admin`) setup
++
++## 1. Create a scanner account
++1. Firebase console → Authentication → Users → **Add user** (email + password).
++2. Copy that user's **UID**.
++3. Firestore → start collection **`scan-admin`** → Document ID = the UID → add any field
++   (e.g. `name: "Door staff 1"`).
++4. Sign in at `/admin/login`. Scan-admins land on `/scan`.
++
++Remove the document to revoke access.
++
++## 2. Security rules
++These are the rules that actually enforce the permissions (the UI alone is not security).
++**Merge** them into your existing `firestore.rules` — keep what you already have for guests,
++settings, RSVPs and `admins`. Multiple `allow` lines for the same operation are OR-ed, so these
++only *add* access.
++
++```
++function isStaff() {
++  return request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous';
++}
++function isScanAdmin() {
++  return isStaff() && exists(/databases/$(database)/documents/scan-admin/$(request.auth.uid));
++}
++
++// Scanners can check their own membership, and nothing else here. Nobody can write from the client.
++match /scan-admin/{uid} {
++  allow get: if request.auth != null && request.auth.uid == uid;
++  allow list, write: if false;
++}
++
++match /invitedGuests/{guestId} {
++  // Scan-admins may see the whole guest list ...
++  allow read: if isScanAdmin();
++
++  // ... and may ONLY mark a guest approved (false -> true), touching only these fields.
++  // They cannot create, delete, edit details, or un-approve.
++  allow update: if isScanAdmin()
++    && !(resource.data.get('approved', false) == true || resource.data.get('checkedInAt', null) != null)
++    && request.resource.data.approved == true
++    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(
++         ['approved', 'approvedAt', 'approvedBy', 'approvedVia',
++          'checkedInAt', 'checkedInBy', 'updatedAt']);
++}
++```
++
++## 3. QR codes
++Guest QR codes now contain `GKA1:<guestId>` instead of a web link, so a normal phone camera shows
++plain text and opens nothing. Previously issued link-style QR codes are still recognised by the
++scanner. Scanning needs camera permission and the site must be served over **https**.
+diff --git a/src/components/admin/CheckInPanel.jsx b/src/components/admin/CheckInPanel.jsx
+new file mode 100644
+index 0000000..afa708e
+--- /dev/null
++++ b/src/components/admin/CheckInPanel.jsx
+@@ -0,0 +1,387 @@
++import { useCallback, useEffect, useMemo, useRef, useState } from "react";
++import { EmptyState, Loader } from "@/components/common/Loader";
++import { approveGuest, isGuestApproved, subscribeToGuests } from "@/services/guestService";
++import { guestIdFromQr } from "@/utils/guestQr";
++import { friendlyError } from "@/utils/format";
++
++const FILTERS = [
++  ["all", "All"],
++  ["waiting", "Not yet approved"],
++  ["approved", "Approved"],
++];
++
++function fullName(g) {
++  return [g.firstName, g.surname].filter(Boolean).join(" ");
++}
++
++function timeOf(value) {
++  const date = value?.toDate ? value.toDate() : value instanceof Date ? value : null;
++  return date ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
++}
++
++/**
++ * Entrance check-in: scan a guest's QR or tap Approve in the list.
++ * Read-only apart from approving — it never edits or creates guests.
++ */
++export function CheckInPanel() {
++  const [guests, setGuests] = useState([]);
++  const [loading, setLoading] = useState(true);
++  const [loadError, setLoadError] = useState("");
++  const [tab, setTab] = useState("scan");
++  const [lastApproved, setLastApproved] = useState(null);
++
++  useEffect(
++    () =>
++      subscribeToGuests(
++        (data) => {
++          setGuests(data);
++          setLoading(false);
++        },
++        () => {
++          setLoadError("We couldn't load the guest list right now.");
++          setLoading(false);
++        },
++      ),
++    [],
++  );
++
++  const approvedCount = guests.filter(isGuestApproved).length;
++
++  if (loading) return <Loader label="Loading guests…" />;
++
++  return (
++    <div className="mx-auto max-w-4xl space-y-6">
++      <div className="flex flex-wrap items-center justify-between gap-3">
++        <div className="inline-flex rounded-md border border-border bg-card p-1">
++          {[
++            ["scan", "Scan QR"],
++            ["list", "Guest list"],
++          ].map(([key, label]) => (
++            <button
++              key={key}
++              type="button"
++              onClick={() => setTab(key)}
++              aria-pressed={tab === key}
++              className={`rounded px-5 py-2 text-xs uppercase tracking-[0.2em] transition ${
++                tab === key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"
++              }`}
++            >
++              {label}
++            </button>
++          ))}
++        </div>
++        <p className="text-sm text-muted-foreground">
++          <span className="font-display text-xl text-foreground">{approvedCount}</span> of {guests.length} invitations approved
++        </p>
++      </div>
++
++      {loadError ? (
++        <p role="alert" className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
++          {loadError}
++        </p>
++      ) : null}
++
++      {tab === "scan" ? (
++        <Scanner lastApproved={lastApproved} onResult={setLastApproved} />
++      ) : (
++        <GuestList guests={guests} onApproved={setLastApproved} />
++      )}
++    </div>
++  );
++}
++
++/* ------------------------------------------------------------------ */
++/* Scanner                                                             */
++/* ------------------------------------------------------------------ */
++
++function Scanner({ onResult }) {
++  const videoRef = useRef(null);
++  const controlsRef = useRef(null);
++  const busyRef = useRef(false);
++  const lastScanRef = useRef({ id: "", at: 0 });
++  const [running, setRunning] = useState(false);
++  const [cameraError, setCameraError] = useState("");
++  const [result, setResult] = useState(null);
++
++  const stop = useCallback(() => {
++    try {
++      controlsRef.current?.stop();
++    } catch {
++      /* already stopped */
++    }
++    controlsRef.current = null;
++    setRunning(false);
++  }, []);
++
++  useEffect(() => stop, [stop]);
++
++  const handleScan = useCallback(
++    async (text) => {
++      const id = guestIdFromQr(text);
++      const now = Date.now();
++      // Ignore the same code being re-read by the camera for a few seconds.
++      if (id && lastScanRef.current.id === id && now - lastScanRef.current.at < 4000) return;
++      if (busyRef.current) return;
++      busyRef.current = true;
++      lastScanRef.current = { id: id || String(text), at: now };
++
++      try {
++        if (!id) {
++          setResult({ kind: "invalid" });
++          return;
++        }
++        const outcome = await approveGuest(id, "qr");
++        if (!outcome) {
++          setResult({ kind: "unknown" });
++          return;
++        }
++        setResult({ kind: outcome.alreadyApproved ? "already" : "approved", guest: outcome.guest });
++        if (!outcome.alreadyApproved) onResult?.(outcome.guest);
++        if (navigator.vibrate) navigator.vibrate(outcome.alreadyApproved ? [80, 60, 80] : 120);
++      } catch (err) {
++        setResult({ kind: "error", message: friendlyError(err, "We couldn't check that code. Please try again.") });
++      } finally {
++        busyRef.current = false;
++      }
++    },
++    [onResult],
++  );
++
++  async function start() {
++    setCameraError("");
++    setResult(null);
++    try {
++      if (!navigator.mediaDevices?.getUserMedia) {
++        throw new Error("unsupported");
++      }
++      // Loaded on demand: the camera library only exists in the browser.
++      const { BrowserQRCodeReader } = await import("@zxing/browser");
++      const reader = new BrowserQRCodeReader();
++      controlsRef.current = await reader.decodeFromConstraints(
++        { video: { facingMode: { ideal: "environment" } } },
++        videoRef.current,
++        (scan) => {
++          if (scan) handleScan(scan.getText());
++        },
++      );
++      setRunning(true);
++    } catch (err) {
++      const denied = err?.name === "NotAllowedError" || err?.name === "SecurityError";
++      setCameraError(
++        denied
++          ? "Camera access was blocked. Allow camera permission for this site in your browser settings, then try again."
++          : "We couldn't start the camera. Make sure this page is opened over https and that no other app is using the camera.",
++      );
++    }
++  }
++
++  return (
++    <section className="space-y-5">
++      <div className="overflow-hidden rounded-2xl border border-border bg-black">
++        <div className="relative mx-auto aspect-square w-full max-w-md">
++          <video ref={videoRef} muted playsInline className={`size-full object-cover ${running ? "" : "invisible"}`} />
++          {running ? (
++            <div aria-hidden="true" className="pointer-events-none absolute inset-[18%] rounded-2xl border-2 border-gold/80" />
++          ) : (
++            <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-white/70">
++              Camera is off
++            </div>
++          )}
++        </div>
++      </div>
++
++      <div className="flex flex-wrap justify-center gap-3">
++        {running ? (
++          <button
++            type="button"
++            onClick={stop}
++            className="rounded-md border border-border px-6 py-3 text-xs uppercase tracking-[0.25em] transition hover:bg-secondary"
++          >
++            Stop camera
++          </button>
++        ) : (
++          <button
++            type="button"
++            onClick={start}
++            className="rounded-md bg-primary px-8 py-3.5 text-xs uppercase tracking-[0.25em] text-primary-foreground transition hover:bg-primary/90"
++          >
++            Start scanning
++          </button>
++        )}
++      </div>
++
++      {cameraError ? (
++        <p role="alert" className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
++          {cameraError}
++        </p>
++      ) : null}
++
++      <ScanResult result={result} />
++    </section>
++  );
++}
++
++function ScanResult({ result }) {
++  if (!result) {
++    return (
++      <p className="text-center text-sm text-muted-foreground">
++        Point the camera at a guest’s entry QR. Valid guests are approved automatically.
++      </p>
++    );
++  }
++
++  const tones = {
++    approved: ["border-primary/50 bg-primary/10", "Approved — welcome in"],
++    already: ["border-gold/60 bg-gold/15", "Already approved"],
++    unknown: ["border-destructive/40 bg-destructive/10", "Guest not found"],
++    invalid: ["border-destructive/40 bg-destructive/10", "Not a wedding entry QR"],
++    error: ["border-destructive/40 bg-destructive/10", "Something went wrong"],
++  };
++  const [tone, title] = tones[result.kind];
++  const guest = result.guest;
++
++  return (
++    <div role="status" aria-live="assertive" className={`rounded-2xl border p-6 text-center ${tone}`}>
++      <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{title}</p>
++      {guest ? (
++        <>
++          <p className="mt-3 font-display text-3xl">{fullName(guest)}</p>
++          <p className="mt-2 text-sm text-muted-foreground">
++            {guest.numberOfSeats ?? 1} seat{(guest.numberOfSeats ?? 1) > 1 ? "s" : ""}
++            {guest.tableNumber ? ` · Table ${guest.tableNumber}` : ""}
++            {guest.rsvpStatus ? ` · RSVP ${guest.rsvpStatus}` : ""}
++          </p>
++          {result.kind === "already" && timeOf(guest.approvedAt || guest.checkedInAt) ? (
++            <p className="mt-2 text-sm">First approved at {timeOf(guest.approvedAt || guest.checkedInAt)}</p>
++          ) : null}
++        </>
++      ) : (
++        <p className="mt-3 text-sm">
++          {result.kind === "unknown" && "This code doesn’t match anyone on the guest list."}
++          {result.kind === "invalid" && "This QR wasn’t issued by the invitation site."}
++          {result.kind === "error" && result.message}
++        </p>
++      )}
++    </div>
++  );
++}
++
++/* ------------------------------------------------------------------ */
++/* Guest list (read-only + Approve)                                    */
++/* ------------------------------------------------------------------ */
++
++function GuestList({ guests, onApproved }) {
++  const [search, setSearch] = useState("");
++  const [filter, setFilter] = useState("all");
++  const [pendingId, setPendingId] = useState("");
++  const [error, setError] = useState("");
++
++  const visible = useMemo(() => {
++    let list = guests;
++    if (filter === "approved") list = list.filter(isGuestApproved);
++    if (filter === "waiting") list = list.filter((g) => !isGuestApproved(g));
++    const q = search.trim().toLowerCase();
++    if (q) list = list.filter((g) => `${g.firstName} ${g.surname} ${g.tableNumber || ""}`.toLowerCase().includes(q));
++    return list;
++  }, [guests, filter, search]);
++
++  async function handleApprove(guest) {
++    setError("");
++    setPendingId(guest.id);
++    try {
++      const outcome = await approveGuest(guest.id, "manual");
++      if (outcome && !outcome.alreadyApproved) onApproved?.(outcome.guest);
++    } catch (err) {
++      setError(friendlyError(err, "We couldn't approve that guest. Please try again."));
++    } finally {
++      setPendingId("");
++    }
++  }
++
++  return (
++    <section className="space-y-4">
++      <div className="flex flex-wrap items-center gap-3">
++        <input
++          type="search"
++          value={search}
++          onChange={(e) => setSearch(e.target.value)}
++          placeholder="Search name or table…"
++          aria-label="Search guests"
++          className="h-11 min-w-0 flex-1 rounded-md border border-input bg-background px-4 outline-none focus:ring-2 focus:ring-ring/40"
++        />
++        <div className="flex flex-wrap gap-2">
++          {FILTERS.map(([key, label]) => (
++            <button
++              key={key}
++              type="button"
++              onClick={() => setFilter(key)}
++              aria-pressed={filter === key}
++              className={`rounded-full border px-4 py-2 text-xs transition ${
++                filter === key ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-secondary"
++              }`}
++            >
++              {label}
++            </button>
++          ))}
++        </div>
++      </div>
++
++      {error ? (
++        <p role="alert" className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
++          {error}
++        </p>
++      ) : null}
++
++      {visible.length === 0 ? (
++        <EmptyState title="No guests found" description="Try a different search or filter." />
++      ) : (
++        <div className="overflow-x-auto rounded-xl border border-border bg-card">
++          <table className="w-full min-w-[640px] text-left text-sm">
++            <thead className="border-b border-border text-xs uppercase tracking-[0.15em] text-muted-foreground">
++              <tr>
++                <th className="px-4 py-3 font-medium">Guest</th>
++                <th className="px-4 py-3 font-medium">Seats</th>
++                <th className="px-4 py-3 font-medium">Table</th>
++                <th className="px-4 py-3 font-medium">RSVP</th>
++                <th className="px-4 py-3 font-medium">Diet / needs</th>
++                <th className="px-4 py-3 text-right font-medium">Approved</th>
++              </tr>
++            </thead>
++            <tbody>
++              {visible.map((g) => {
++                const approved = isGuestApproved(g);
++                const needs = [g.dietaryRequirements, g.specialRequirements].filter(Boolean).join(" · ");
++                return (
++                  <tr key={g.id} className="border-b border-border/60 last:border-0">
++                    <td className="px-4 py-3 font-medium">{fullName(g)}</td>
++                    <td className="px-4 py-3">{g.numberOfSeats ?? 1}</td>
++                    <td className="px-4 py-3">{g.tableNumber || "—"}</td>
++                    <td className="px-4 py-3 capitalize">{g.rsvpStatus || "pending"}</td>
++                    <td className="max-w-[14rem] px-4 py-3 text-muted-foreground">{needs || "—"}</td>
++                    <td className="px-4 py-3 text-right">
++                      {approved ? (
++                        <span className="inline-flex items-center gap-2 text-primary">
++                          <span aria-hidden="true">✓</span>
++                          <span>{timeOf(g.approvedAt || g.checkedInAt) || "Approved"}</span>
++                        </span>
++                      ) : (
++                        <button
++                          type="button"
++                          onClick={() => handleApprove(g)}
++                          disabled={pendingId === g.id}
++                          className="rounded-md bg-primary px-4 py-2 text-xs uppercase tracking-[0.2em] text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
++                        >
++                          {pendingId === g.id ? "Approving…" : "Approve"}
++                        </button>
++                      )}
++                    </td>
++                  </tr>
++                );
++              })}
++            </tbody>
++          </table>
++        </div>
++      )}
++    </section>
++  );
++}
+diff --git a/src/components/wedding/GuestQrPass.jsx b/src/components/wedding/GuestQrPass.jsx
+index 656a5ed..5da6e88 100644
+--- a/src/components/wedding/GuestQrPass.jsx
++++ b/src/components/wedding/GuestQrPass.jsx
+@@ -1,7 +1,7 @@
+ import { useEffect, useState } from "react";
+ import { Download, QrCode } from "lucide-react";
+ import { Button } from "@/components/ui/button";
+-import { guestQrUrl } from "@/utils/guestQr";
++import { guestQrPayload } from "@/utils/guestQr";
+ 
+ export function GuestQrPass({ guest }) {
+   const [visible, setVisible] = useState(false);
+@@ -15,7 +15,7 @@ export function GuestQrPass({ guest }) {
+     let active = true;
+     setError("");
+     import("qrcode")
+-      .then((QRCode) => QRCode.toDataURL(guestQrUrl(guest.id), { errorCorrectionLevel: "M", margin: 3, width: 420 }))
++      .then((QRCode) => QRCode.toDataURL(guestQrPayload(guest.id), { errorCorrectionLevel: "M", margin: 3, width: 420 }))
+       .then((url) => {
+         if (active) setImageUrl(url);
+       })
+@@ -53,7 +53,7 @@ export function GuestQrPass({ guest }) {
+             <>
+               <img src={imageUrl} alt={`Unique entry QR code for ${fullName}`} className="mx-auto size-64 max-w-full bg-white p-2" />
+               <p className="mt-3 text-sm font-medium">{fullName}</p>
+-              <p className="mt-1 text-xs text-muted-foreground">Show this QR at the entrance.</p>
++              <p className="mt-1 text-xs text-muted-foreground">Show this QR at the reception entrance. It can only be read by the venue’s scanner.</p>
+               <Button className="mt-4" variant="outline" asChild>
+                 <a href={imageUrl} download={`entry-qr-${guest.id}.png`}>
+                   <Download aria-hidden="true" />
+diff --git a/src/hooks/useAdminAuth.js b/src/hooks/useAdminAuth.js
+index c53e70d..535f141 100644
+--- a/src/hooks/useAdminAuth.js
++++ b/src/hooks/useAdminAuth.js
+@@ -1,18 +1,30 @@
+ import { useEffect, useState } from "react";
+-import { checkIsAdmin, watchAuth } from "@/services/authService";
++import { getStaffRole, watchAuth } from "@/services/authService";
+ 
++/**
++ * role: "admin" (full access) | "scan-admin" (view guests + approve only) | null.
++ * isAdmin stays true ONLY for full admins, so existing admin pages are unchanged.
++ */
+ export function useAdminAuth() {
+-  const [state, setState] = useState({ loading: true, user: null, isAdmin: false });
++  const [state, setState] = useState({
++    loading: true,
++    user: null,
++    role: null,
++    isAdmin: false,
++    isScanAdmin: false,
++  });
+ 
+   useEffect(() => {
+     let active = true;
+     const unsub = watchAuth(async (user) => {
+       if (!user || user.isAnonymous) {
+-        if (active) setState({ loading: false, user: null, isAdmin: false });
++        if (active) setState({ loading: false, user: null, role: null, isAdmin: false, isScanAdmin: false });
+         return;
+       }
+-      const isAdmin = await checkIsAdmin(user);
+-      if (active) setState({ loading: false, user, isAdmin });
++      const role = await getStaffRole(user);
++      if (active) {
++        setState({ loading: false, user, role, isAdmin: role === "admin", isScanAdmin: role === "scan-admin" });
++      }
+     });
+     return () => {
+       active = false;
+diff --git a/src/routeTree.gen.ts b/src/routeTree.gen.ts
+index e8cbbb2..f081683 100644
+--- a/src/routeTree.gen.ts
++++ b/src/routeTree.gen.ts
+@@ -13,8 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
+ import { Route as InvitationRouteImport } from './routes/invitation'
+ import { Route as ProgramRouteImport } from './routes/program'
+ import { Route as RsvpRouteImport } from './routes/rsvp'
++import { Route as ScanRouteImport } from './routes/scan'
+ import { Route as VerifyRouteImport } from './routes/verify'
+ import { Route as AdminIndexRouteImport } from './routes/admin.index'
++import { Route as AdminCheckInRouteImport } from './routes/admin.check-in'
+ import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
+ import { Route as AdminGuestsRouteImport } from './routes/admin.guests'
+ import { Route as AdminLoginRouteImport } from './routes/admin.login'
+@@ -43,6 +45,11 @@ const RsvpRoute = RsvpRouteImport.update({
+   path: '/rsvp',
+   getParentRoute: () => rootRouteImport,
+ } as any)
++const ScanRoute = ScanRouteImport.update({
++  id: '/scan',
++  path: '/scan',
++  getParentRoute: () => rootRouteImport,
++} as any)
+ const VerifyRoute = VerifyRouteImport.update({
+   id: '/verify',
+   path: '/verify',
+@@ -53,6 +60,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
+   path: '/admin/',
+   getParentRoute: () => rootRouteImport,
+ } as any)
++const AdminCheckInRoute = AdminCheckInRouteImport.update({
++  id: '/admin/check-in',
++  path: '/admin/check-in',
++  getParentRoute: () => rootRouteImport,
++} as any)
+ const AdminDashboardRoute = AdminDashboardRouteImport.update({
+   id: '/admin/dashboard',
+   path: '/admin/dashboard',
+@@ -95,7 +107,9 @@ export interface FileRoutesByFullPath {
+   '/invitation': typeof InvitationRoute
+   '/program': typeof ProgramRoute
+   '/rsvp': typeof RsvpRoute
++  '/scan': typeof ScanRoute
+   '/verify': typeof VerifyRoute
++  '/admin/check-in': typeof AdminCheckInRoute
+   '/admin/dashboard': typeof AdminDashboardRoute
+   '/admin/guests': typeof AdminGuestsRoute
+   '/admin/login': typeof AdminLoginRoute
+@@ -110,7 +124,9 @@ export interface FileRoutesByTo {
+   '/invitation': typeof InvitationRoute
+   '/program': typeof ProgramRoute
+   '/rsvp': typeof RsvpRoute
++  '/scan': typeof ScanRoute
+   '/verify': typeof VerifyRoute
++  '/admin/check-in': typeof AdminCheckInRoute
+   '/admin/dashboard': typeof AdminDashboardRoute
+   '/admin/guests': typeof AdminGuestsRoute
+   '/admin/login': typeof AdminLoginRoute
+@@ -126,7 +142,9 @@ export interface FileRoutesById {
+   '/invitation': typeof InvitationRoute
+   '/program': typeof ProgramRoute
+   '/rsvp': typeof RsvpRoute
++  '/scan': typeof ScanRoute
+   '/verify': typeof VerifyRoute
++  '/admin/check-in': typeof AdminCheckInRoute
+   '/admin/dashboard': typeof AdminDashboardRoute
+   '/admin/guests': typeof AdminGuestsRoute
+   '/admin/login': typeof AdminLoginRoute
+@@ -143,7 +161,9 @@ export interface FileRouteTypes {
+     | '/invitation'
+     | '/program'
+     | '/rsvp'
++    | '/scan'
+     | '/verify'
++    | '/admin/check-in'
+     | '/admin/dashboard'
+     | '/admin/guests'
+     | '/admin/login'
+@@ -158,7 +178,9 @@ export interface FileRouteTypes {
+     | '/invitation'
+     | '/program'
+     | '/rsvp'
++    | '/scan'
+     | '/verify'
++    | '/admin/check-in'
+     | '/admin/dashboard'
+     | '/admin/guests'
+     | '/admin/login'
+@@ -173,7 +195,9 @@ export interface FileRouteTypes {
+     | '/invitation'
+     | '/program'
+     | '/rsvp'
++    | '/scan'
+     | '/verify'
++    | '/admin/check-in'
+     | '/admin/dashboard'
+     | '/admin/guests'
+     | '/admin/login'
+@@ -189,7 +213,9 @@ export interface RootRouteChildren {
+   InvitationRoute: typeof InvitationRoute
+   ProgramRoute: typeof ProgramRoute
+   RsvpRoute: typeof RsvpRoute
++  ScanRoute: typeof ScanRoute
+   VerifyRoute: typeof VerifyRoute
++  AdminCheckInRoute: typeof AdminCheckInRoute
+   AdminDashboardRoute: typeof AdminDashboardRoute
+   AdminGuestsRoute: typeof AdminGuestsRoute
+   AdminLoginRoute: typeof AdminLoginRoute
+@@ -230,6 +256,13 @@ declare module '@tanstack/react-router' {
+       preLoaderRoute: typeof RsvpRouteImport
+       parentRoute: typeof rootRouteImport
+     }
++    '/scan': {
++      id: '/scan'
++      path: '/scan'
++      fullPath: '/scan'
++      preLoaderRoute: typeof ScanRouteImport
++      parentRoute: typeof rootRouteImport
++    }
+     '/verify': {
+       id: '/verify'
+       path: '/verify'
+@@ -244,6 +277,13 @@ declare module '@tanstack/react-router' {
+       preLoaderRoute: typeof AdminIndexRouteImport
+       parentRoute: typeof rootRouteImport
+     }
++    '/admin/check-in': {
++      id: '/admin/check-in'
++      path: '/admin/check-in'
++      fullPath: '/admin/check-in'
++      preLoaderRoute: typeof AdminCheckInRouteImport
++      parentRoute: typeof rootRouteImport
++    }
+     '/admin/dashboard': {
+       id: '/admin/dashboard'
+       path: '/admin/dashboard'
+@@ -301,7 +341,9 @@ const rootRouteChildren: RootRouteChildren = {
+   InvitationRoute: InvitationRoute,
+   ProgramRoute: ProgramRoute,
+   RsvpRoute: RsvpRoute,
++  ScanRoute: ScanRoute,
+   VerifyRoute: VerifyRoute,
++  AdminCheckInRoute: AdminCheckInRoute,
+   AdminDashboardRoute: AdminDashboardRoute,
+   AdminGuestsRoute: AdminGuestsRoute,
+   AdminLoginRoute: AdminLoginRoute,
+diff --git a/src/routes/admin.check-in.jsx b/src/routes/admin.check-in.jsx
+new file mode 100644
+index 0000000..81e427d
+--- /dev/null
++++ b/src/routes/admin.check-in.jsx
+@@ -0,0 +1,17 @@
++import { createFileRoute } from "@tanstack/react-router";
++import { AdminShell } from "@/components/admin/AdminShell";
++import { CheckInPanel } from "@/components/admin/CheckInPanel";
++
++export const Route = createFileRoute("/admin/check-in")({
++  head: () => ({
++    meta: [
++      { title: "Entrance check-in — Admin" },
++      { name: "robots", content: "noindex" },
++    ],
++  }),
++  component: () => (
++    <AdminShell title="Entrance check-in">
++      <CheckInPanel />
++    </AdminShell>
++  ),
++});
+diff --git a/src/routes/admin.login.jsx b/src/routes/admin.login.jsx
+index fcb6aee..b809ed6 100644
+--- a/src/routes/admin.login.jsx
++++ b/src/routes/admin.login.jsx
+@@ -1,6 +1,6 @@
+ import { createFileRoute, useNavigate } from "@tanstack/react-router";
+ import { useEffect, useState } from "react";
+-import { adminSignIn } from "@/services/authService";
++import { staffSignIn } from "@/services/authService";
+ import { useAdminAuth } from "@/hooks/useAdminAuth";
+ import { friendlyError } from "@/utils/format";
+ 
+@@ -19,27 +19,27 @@ export const Route = createFileRoute("/admin/login")({
+ 
+ function AdminLogin() {
+   const navigate = useNavigate();
+-  const { user, isAdmin } = useAdminAuth();
++  const { user, role } = useAdminAuth();
+   const [email, setEmail] = useState("");
+   const [password, setPassword] = useState("");
+   const [error, setError] = useState("");
+   const [busy, setBusy] = useState(false);
+ 
+   useEffect(() => {
+-    if (user && isAdmin) navigate({ to: "/admin/dashboard" });
+-  }, [user, isAdmin, navigate]);
++    if (user && role) navigate({ to: role === "scan-admin" ? "/scan" : "/admin/dashboard" });
++  }, [user, role, navigate]);
+ 
+   async function handleSubmit(event) {
+     event.preventDefault();
+     setError("");
+     setBusy(true);
+     try {
+-      await adminSignIn(email, password);
+-      navigate({ to: "/admin/dashboard" });
++      const { role: signedInRole } = await staffSignIn(email, password);
++      navigate({ to: signedInRole === "scan-admin" ? "/scan" : "/admin/dashboard" });
+     } catch (err) {
+       setError(
+         err?.code === "not-admin"
+-          ? "That account doesn't have administrator access."
++          ? "That account doesn't have admin or scanner access."
+           : friendlyError(err, "We couldn't sign you in. Please try again."),
+       );
+     } finally {
+@@ -54,7 +54,7 @@ function AdminLogin() {
+         className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-sm"
+         noValidate
+       >
+-        <h1 className="text-center font-display text-2xl">Administrator sign in</h1>
++        <h1 className="text-center font-display text-2xl">Staff sign in</h1>
+         <div className="mt-8 space-y-4">
+           <div>
+             <label htmlFor="email" className="mb-1.5 block text-xs uppercase tracking-[0.2em] text-muted-foreground">
+diff --git a/src/routes/index.jsx b/src/routes/index.jsx
+index a04e9d1..25dc425 100644
+--- a/src/routes/index.jsx
++++ b/src/routes/index.jsx
+@@ -1,7 +1,7 @@
+ import { createFileRoute, useNavigate } from "@tanstack/react-router";
+ import { useEffect, useState } from "react";
+ import { Ornament } from "@/components/wedding/Ornament";
+-import { verifyGuest, verifyGuestById } from "@/services/guestService";
++import { verifyGuest } from "@/services/guestService";
+ import { getSettings } from "@/services/settingsService";
+ import { saveGuestSession } from "@/hooks/useGuestSession";
+ import { formatWeddingDate, friendlyError } from "@/utils/format";
+@@ -41,35 +41,6 @@ function WelcomePage() {
+       .catch(() => setSettings(null));
+   }, []);
+ 
+-  useEffect(() => {
+-    const invitationId = new URLSearchParams(window.location.search).get("invite");
+-    if (!invitationId) return undefined;
+-
+-    let active = true;
+-    setStatus("verifying");
+-    setError("");
+-    verifyGuestById(invitationId)
+-      .then((guest) => {
+-        if (!active) return;
+-        if (!guest) {
+-          setStatus("idle");
+-          setError("We couldn't find an invitation for this QR code. Please contact the couple.");
+-          return;
+-        }
+-        saveGuestSession(guest.id);
+-        navigate({ to: "/rsvp", replace: true });
+-      })
+-      .catch((err) => {
+-        if (!active) return;
+-        setStatus("idle");
+-        setError(friendlyError(err, "We couldn't open your invitation. Please try again."));
+-      });
+-
+-    return () => {
+-      active = false;
+-    };
+-  }, [navigate]);
+-
+   async function handleSubmit(event) {
+     event.preventDefault();
+     setError("");
+diff --git a/src/routes/invitation.jsx b/src/routes/invitation.jsx
+index 6b8fa53..ec3116c 100644
+--- a/src/routes/invitation.jsx
++++ b/src/routes/invitation.jsx
+@@ -132,7 +132,7 @@ function InvitationPage({ guest, settings, signOut }) {
+                   src={settings.invitationImageUrl}
+                   alt="Wedding invitation artwork"
+                   loading="lazy"
+-                  className="mx-auto mb-10 aspect-[4/3] w-full rounded-lg object-cover object-top shadow-md sm:aspect-auto sm:max-h-72"
++                  className="mx-auto mb-10 h-auto w-full rounded-lg shadow-md"
+                 />
+               ) : (
+                 <Monogram bride={settings.brideName} groom={settings.groomName} />
+diff --git a/src/routes/scan.jsx b/src/routes/scan.jsx
+new file mode 100644
+index 0000000..169f79c
+--- /dev/null
++++ b/src/routes/scan.jsx
+@@ -0,0 +1,64 @@
++import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
++import { CheckInPanel } from "@/components/admin/CheckInPanel";
++import { Loader } from "@/components/common/Loader";
++import { useAdminAuth } from "@/hooks/useAdminAuth";
++import { adminSignOut } from "@/services/authService";
++
++export const Route = createFileRoute("/scan")({
++  head: () => ({
++    meta: [
++      { title: "Entrance Scanner — Wedding" },
++      { name: "robots", content: "noindex" },
++    ],
++  }),
++  component: ScanRoute,
++});
++
++/** Entrance page for "scan-admin" staff (full admins may use it too). */
++function ScanRoute() {
++  const { loading, user, role } = useAdminAuth();
++  const navigate = useNavigate();
++
++  if (loading) return <Loader full label="Checking your access…" />;
++
++  if (!user || !role) {
++    return (
++      <main className="flex min-h-screen items-center justify-center bg-background px-4 text-center">
++        <div>
++          <h1 className="font-display text-2xl">Scanner access required</h1>
++          <p className="mt-2 text-sm text-muted-foreground">Please sign in with a scanner or administrator account.</p>
++          <Link
++            to="/admin/login"
++            className="mt-6 inline-block rounded-md bg-primary px-6 py-3 text-xs uppercase tracking-[0.25em] text-primary-foreground"
++          >
++            Go to login
++          </Link>
++        </div>
++      </main>
++    );
++  }
++
++  return (
++    <div className="min-h-screen bg-background">
++      <header className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-4 sm:px-6">
++        <div>
++          <h1 className="font-display text-xl sm:text-2xl">Entrance check-in</h1>
++          <p className="text-xs text-muted-foreground">{user.email}</p>
++        </div>
++        <button
++          type="button"
++          onClick={async () => {
++            await adminSignOut();
++            navigate({ to: "/admin/login" });
++          }}
++          className="rounded-md border border-border px-4 py-2 text-xs uppercase tracking-[0.2em] transition hover:bg-secondary"
++        >
++          Logout
++        </button>
++      </header>
++      <main className="p-4 sm:p-6">
++        <CheckInPanel />
++      </main>
++    </div>
++  );
++}
+diff --git a/src/services/authService.js b/src/services/authService.js
+index 724059f..3cc170b 100644
+--- a/src/services/authService.js
++++ b/src/services/authService.js
+@@ -31,6 +31,24 @@ export async function adminSignIn(email, password) {
+   return cred.user;
+ }
+ 
++/**
++ * Sign in a staff member. Full admins ("admins" collection / admin claim) and
++ * scan-admins ("scan-admin" collection) are both allowed; anyone else is
++ * signed straight back out. Resolves to { user, role }.
++ */
++export async function staffSignIn(email, password) {
++  const a = auth();
++  const cred = await signInWithEmailAndPassword(a, email.trim(), password);
++  const role = await getStaffRole(cred.user);
++  if (!role) {
++    await signOut(a);
++    const error = new Error("not-admin");
++    error.code = "not-admin";
++    throw error;
++  }
++  return { user: cred.user, role };
++}
++
+ export async function adminSignOut() {
+   await signOut(auth());
+ }
+@@ -52,6 +70,27 @@ export async function checkIsAdmin(user) {
+   }
+ }
+ 
++/**
++ * Scan-admins are listed in the "scan-admin" collection (document ID = the
++ * user's Firebase Auth UID). They can view guests and approve arrivals only.
++ */
++export async function checkIsScanAdmin(user) {
++  if (!user || user.isAnonymous) return false;
++  try {
++    const snap = await getDoc(doc(db(), "scan-admin", user.uid));
++    return snap.exists();
++  } catch {
++    return false;
++  }
++}
++
++/** "admin" | "scan-admin" | null */
++export async function getStaffRole(user) {
++  if (await checkIsAdmin(user)) return "admin";
++  if (await checkIsScanAdmin(user)) return "scan-admin";
++  return null;
++}
++
+ export function watchAuth(callback) {
+   return onAuthStateChanged(auth(), callback);
+ }
+diff --git a/src/services/guestService.js b/src/services/guestService.js
+index f80d022..87acbb0 100644
+--- a/src/services/guestService.js
++++ b/src/services/guestService.js
+@@ -9,6 +9,7 @@ import {
+   onSnapshot,
+   orderBy,
+   query,
++  runTransaction,
+   serverTimestamp,
+   updateDoc,
+   where,
+@@ -46,6 +47,9 @@ export async function createGuest(input) {
+     rsvpResponse: null,
+     dietaryRequirements: "",
+     specialRequirements: "",
++    approved: false,
++    approvedAt: null,
++    approvedBy: null,
+     checkedInAt: null,
+     checkedInBy: null,
+     createdAt: serverTimestamp(),
+@@ -65,29 +69,51 @@ export async function deleteGuest(id) {
+   await deleteDoc(doc(db(), COLLECTION, id));
+ }
+ 
+-/** Find and mark a single guest when an administrator scans their entry QR. */
+-export async function checkInGuest(id) {
++/** True when a guest has been approved at the entrance (older records used checkedInAt). */
++export function isGuestApproved(guest) {
++  return Boolean(guest?.approved || guest?.checkedInAt);
++}
++
++/**
++ * Approve one guest at the entrance — from a QR scan (via "qr") or the
++ * Approve button in the guest list (via "manual").
++ *
++ * Only these fields are written, and only ever false -> true, which is exactly
++ * what the "scan-admin" Firestore rules allow. Nothing else on the guest can
++ * be changed from here.
++ *
++ * Resolves to null when no such guest exists, otherwise
++ * { guest, alreadyApproved }.
++ */
++export async function approveGuest(id, via = "manual") {
+   const guestId = String(id || "").trim();
+   if (!/^[A-Za-z0-9_-]{1,150}$/.test(guestId)) return null;
+   const ref = doc(db(), COLLECTION, guestId);
+-  const snap = await getDoc(ref);
+-  if (!snap.exists()) return null;
++  const uid = auth().currentUser?.uid || "";
+ 
+-  const guest = { id: snap.id, ...snap.data() };
+-  if (guest.checkedInAt) {
+-    return { guest, alreadyCheckedIn: true };
+-  }
++  return runTransaction(db(), async (tx) => {
++    const snap = await tx.get(ref);
++    if (!snap.exists()) return null;
+ 
+-  await updateDoc(ref, {
+-    checkedInAt: serverTimestamp(),
+-    checkedInBy: auth().currentUser?.uid || "",
+-    updatedAt: serverTimestamp(),
++    const current = { id: snap.id, ...snap.data() };
++    if (isGuestApproved(current)) {
++      return { guest: current, alreadyApproved: true };
++    }
++
++    tx.update(ref, {
++      approved: true,
++      approvedAt: serverTimestamp(),
++      approvedBy: uid,
++      approvedVia: via,
++      checkedInAt: serverTimestamp(),
++      checkedInBy: uid,
++      updatedAt: serverTimestamp(),
++    });
++    return {
++      guest: { ...current, approved: true, approvedAt: new Date(), approvedBy: uid, approvedVia: via },
++      alreadyApproved: false,
++    };
+   });
+-  const updated = await getDoc(ref);
+-  return {
+-    guest: updated.exists() ? { id: updated.id, ...updated.data() } : guest,
+-    alreadyCheckedIn: false,
+-  };
+ }
+ 
+ export function subscribeToGuests(onData, onError) {
+@@ -116,7 +142,7 @@ function publicGuest(id, data) {
+     plusOneAllowed: Boolean(data.plusOneAllowed),
+     plusOneName: data.plusOneName || "",
+     rsvpStatus: data.rsvpStatus || "pending",
+-    checkedIn: Boolean(data.checkedInAt),
++    checkedIn: isGuestApproved(data),
+   };
+ }
+ 
+@@ -140,12 +166,6 @@ export async function verifyGuest({ firstName, surname, invitationCode }) {
+   return publicGuest(first.id, first.data());
+ }
+ 
+-/** Open a guest's own invitation using its unique ID from their personal QR. */
+-export async function verifyGuestById(id) {
+-  if (!/^[A-Za-z0-9_-]{1,150}$/.test(String(id || ""))) return null;
+-  return fetchVerifiedGuest(id);
+-}
+-
+ /** Re-validate a session guest id against Firestore on every protected page. */
+ export async function fetchVerifiedGuest(id) {
+   await ensureGuestSignIn();
+diff --git a/src/utils/guestQr.js b/src/utils/guestQr.js
+index 051f477..3487b44 100644
+--- a/src/utils/guestQr.js
++++ b/src/utils/guestQr.js
+@@ -1,24 +1,41 @@
+-/** Build the personal guest entry URL encoded in their QR code. */
+-export function guestQrUrl(guestId, origin) {
+-  const baseOrigin =
+-    origin || (typeof window === "undefined" ? "https://invitation.invalid" : window.location.origin);
+-  const url = new URL("/", baseOrigin);
+-  url.searchParams.set("invite", String(guestId));
+-  return url.toString();
++/**
++ * Entry QR payloads.
++ *
++ * The QR deliberately does NOT contain a web link. A normal phone camera or
++ * generic QR app will just show a short piece of text ("GKA1:<id>") and has
++ * nothing to open. Only the check-in scanner inside the admin area knows what
++ * to do with it, and even there the guest record can only be read by a signed-in
++ * "scan-admin" (or admin) account — enforced by Firestore security rules.
++ */
++export const QR_PREFIX = "GKA1:";
++const ID_PATTERN = /^[A-Za-z0-9_-]{1,150}$/;
++
++/** Build the payload encoded in a guest's personal entry QR. */
++export function guestQrPayload(guestId) {
++  return `${QR_PREFIX}${String(guestId)}`;
+ }
+ 
+-/** Read a guest ID from either the app URL printed in the QR or a raw ID. */
++/**
++ * Read a guest ID from scan data. Accepts the current payload, the old
++ * link-style QR (so already-saved codes still work at the door) and a raw ID
++ * typed or pasted in by hand. Returns "" when the data isn't a guest QR.
++ */
+ export function guestIdFromQr(value) {
+   const scanned = String(value ?? "").trim();
+   if (!scanned) return "";
+ 
++  if (scanned.startsWith(QR_PREFIX)) {
++    const id = scanned.slice(QR_PREFIX.length);
++    return ID_PATTERN.test(id) ? id : "";
++  }
++
+   try {
+     const url = new URL(scanned, "https://invitation.invalid");
+     const invite = url.searchParams.get("invite");
+-    if (invite) return invite;
++    if (invite) return ID_PATTERN.test(invite) ? invite : "";
+   } catch {
+-    // A raw guest ID is valid scan data too.
++    // Not a URL — fall through to raw ID.
+   }
+ 
+-  return /^[A-Za-z0-9_-]{1,150}$/.test(scanned) ? scanned : "";
+-}
+\ No newline at end of file
++  return ID_PATTERN.test(scanned) ? scanned : "";
++}
+diff --git a/src/utils/guestQr.test.js b/src/utils/guestQr.test.js
+index 6666ea5..885c082 100644
+--- a/src/utils/guestQr.test.js
++++ b/src/utils/guestQr.test.js
+@@ -1,26 +1,28 @@
+ import assert from "node:assert/strict";
+ import { test } from "node:test";
+-import { guestIdFromQr, guestQrUrl } from "./guestQr.js";
++import { guestIdFromQr, guestQrPayload } from "./guestQr.js";
+ 
+-test("each guest document ID produces its own RSVP QR URL", () => {
+-  const firstUrl = new URL(guestQrUrl("guest-one", "https://wedding.example"));
+-  const secondUrl = new URL(guestQrUrl("guest-two", "https://wedding.example"));
++test("each guest document ID produces its own QR payload", () => {
++  assert.notEqual(guestQrPayload("guest-one"), guestQrPayload("guest-two"));
++  assert.equal(guestIdFromQr(guestQrPayload("guest-one")), "guest-one");
++  assert.equal(guestIdFromQr(guestQrPayload("guest-two")), "guest-two");
++});
+ 
+-  assert.equal(firstUrl.searchParams.get("invite"), "guest-one");
+-  assert.equal(secondUrl.searchParams.get("invite"), "guest-two");
+-  assert.notEqual(firstUrl.toString(), secondUrl.toString());
++test("the QR payload is not a link, so generic scanners have nothing to open", () => {
++  const payload = guestQrPayload("guest-one");
++  assert.ok(!/^https?:/i.test(payload));
++  assert.ok(!payload.includes("/"));
+ });
+ 
+-test("scanned QR URLs resolve only to their matching invitation ID", () => {
++test("previously issued link-style QR codes still resolve to the right guest", () => {
+   assert.equal(guestIdFromQr("https://wedding.example/?invite=guest-one"), "guest-one");
+   assert.equal(guestIdFromQr("https://wedding.example/?invite=guest-two"), "guest-two");
+-  assert.notEqual(
+-    guestIdFromQr(guestQrUrl("guest-one", "https://wedding.example")),
+-    guestIdFromQr(guestQrUrl("guest-two", "https://wedding.example")),
+-  );
+ });
+ 
+-test("scanner also accepts a copied guest ID", () => {
++test("scanner rejects junk and accepts a copied guest ID", () => {
+   assert.equal(guestIdFromQr("guest-one"), "guest-one");
+   assert.equal(guestIdFromQr("  "), "");
+-});
+\ No newline at end of file
++  assert.equal(guestIdFromQr("GKA1:"), "");
++  assert.equal(guestIdFromQr("GKA1:bad id/../x"), "");
++  assert.equal(guestIdFromQr("https://example.com/menu"), "");
++});

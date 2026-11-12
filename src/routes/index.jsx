@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Ornament } from "@/components/wedding/Ornament";
-import { verifyGuest, verifyGuestById } from "@/services/guestService";
+import { verifyGuest } from "@/services/guestService";
 import { getSettings } from "@/services/settingsService";
 import { saveGuestSession } from "@/hooks/useGuestSession";
 import { formatWeddingDate, friendlyError } from "@/utils/format";
@@ -40,35 +40,6 @@ function WelcomePage() {
       .then(setSettings)
       .catch(() => setSettings(null));
   }, []);
-
-  useEffect(() => {
-    const invitationId = new URLSearchParams(window.location.search).get("invite");
-    if (!invitationId) return undefined;
-
-    let active = true;
-    setStatus("verifying");
-    setError("");
-    verifyGuestById(invitationId)
-      .then((guest) => {
-        if (!active) return;
-        if (!guest) {
-          setStatus("idle");
-          setError("We couldn't find an invitation for this QR code. Please contact the couple.");
-          return;
-        }
-        saveGuestSession(guest.id);
-        navigate({ to: "/rsvp", replace: true });
-      })
-      .catch((err) => {
-        if (!active) return;
-        setStatus("idle");
-        setError(friendlyError(err, "We couldn't open your invitation. Please try again."));
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [navigate]);
 
   async function handleSubmit(event) {
     event.preventDefault();

@@ -13,8 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as InvitationRouteImport } from './routes/invitation'
 import { Route as ProgramRouteImport } from './routes/program'
 import { Route as RsvpRouteImport } from './routes/rsvp'
+import { Route as ScanRouteImport } from './routes/scan'
 import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminCheckInRouteImport } from './routes/admin.check-in'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminGuestsRouteImport } from './routes/admin.guests'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
@@ -43,6 +45,11 @@ const RsvpRoute = RsvpRouteImport.update({
   path: '/rsvp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ScanRoute = ScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VerifyRoute = VerifyRouteImport.update({
   id: '/verify',
   path: '/verify',
@@ -51,6 +58,11 @@ const VerifyRoute = VerifyRouteImport.update({
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCheckInRoute = AdminCheckInRouteImport.update({
+  id: '/admin/check-in',
+  path: '/admin/check-in',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
@@ -95,7 +107,9 @@ export interface FileRoutesByFullPath {
   '/invitation': typeof InvitationRoute
   '/program': typeof ProgramRoute
   '/rsvp': typeof RsvpRoute
+  '/scan': typeof ScanRoute
   '/verify': typeof VerifyRoute
+  '/admin/check-in': typeof AdminCheckInRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/login': typeof AdminLoginRoute
@@ -110,7 +124,9 @@ export interface FileRoutesByTo {
   '/invitation': typeof InvitationRoute
   '/program': typeof ProgramRoute
   '/rsvp': typeof RsvpRoute
+  '/scan': typeof ScanRoute
   '/verify': typeof VerifyRoute
+  '/admin/check-in': typeof AdminCheckInRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/login': typeof AdminLoginRoute
@@ -126,7 +142,9 @@ export interface FileRoutesById {
   '/invitation': typeof InvitationRoute
   '/program': typeof ProgramRoute
   '/rsvp': typeof RsvpRoute
+  '/scan': typeof ScanRoute
   '/verify': typeof VerifyRoute
+  '/admin/check-in': typeof AdminCheckInRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/guests': typeof AdminGuestsRoute
   '/admin/login': typeof AdminLoginRoute
@@ -143,7 +161,9 @@ export interface FileRouteTypes {
     | '/invitation'
     | '/program'
     | '/rsvp'
+    | '/scan'
     | '/verify'
+    | '/admin/check-in'
     | '/admin/dashboard'
     | '/admin/guests'
     | '/admin/login'
@@ -158,7 +178,9 @@ export interface FileRouteTypes {
     | '/invitation'
     | '/program'
     | '/rsvp'
+    | '/scan'
     | '/verify'
+    | '/admin/check-in'
     | '/admin/dashboard'
     | '/admin/guests'
     | '/admin/login'
@@ -173,7 +195,9 @@ export interface FileRouteTypes {
     | '/invitation'
     | '/program'
     | '/rsvp'
+    | '/scan'
     | '/verify'
+    | '/admin/check-in'
     | '/admin/dashboard'
     | '/admin/guests'
     | '/admin/login'
@@ -189,7 +213,9 @@ export interface RootRouteChildren {
   InvitationRoute: typeof InvitationRoute
   ProgramRoute: typeof ProgramRoute
   RsvpRoute: typeof RsvpRoute
+  ScanRoute: typeof ScanRoute
   VerifyRoute: typeof VerifyRoute
+  AdminCheckInRoute: typeof AdminCheckInRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminGuestsRoute: typeof AdminGuestsRoute
   AdminLoginRoute: typeof AdminLoginRoute
@@ -230,6 +256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RsvpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/scan': {
+      id: '/scan'
+      path: '/scan'
+      fullPath: '/scan'
+      preLoaderRoute: typeof ScanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/verify': {
       id: '/verify'
       path: '/verify'
@@ -242,6 +275,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/check-in': {
+      id: '/admin/check-in'
+      path: '/admin/check-in'
+      fullPath: '/admin/check-in'
+      preLoaderRoute: typeof AdminCheckInRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/dashboard': {
@@ -301,7 +341,9 @@ const rootRouteChildren: RootRouteChildren = {
   InvitationRoute: InvitationRoute,
   ProgramRoute: ProgramRoute,
   RsvpRoute: RsvpRoute,
+  ScanRoute: ScanRoute,
   VerifyRoute: VerifyRoute,
+  AdminCheckInRoute: AdminCheckInRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminGuestsRoute: AdminGuestsRoute,
   AdminLoginRoute: AdminLoginRoute,

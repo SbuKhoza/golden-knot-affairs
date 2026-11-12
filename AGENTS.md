@@ -9,4 +9,4 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- Encode each guest's existing unique Firestore document ID in their QR; validate QR scans through the authenticated guest-document lookup, and record arrivals only from the admin entrance scanner.
+- Each guest's entry QR encodes `GKA1:<Firestore document ID>` (never a URL). Only staff listed in the `admins` or `scan-admin` collections can read it back, and `scan-admin` users may only flip `approved` false -> true (see firestore.rules).

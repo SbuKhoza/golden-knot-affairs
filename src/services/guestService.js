@@ -9,6 +9,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  runTransaction,
   serverTimestamp,
   updateDoc,
   where,
@@ -46,6 +47,9 @@ export async function createGuest(input) {
     rsvpResponse: null,
     dietaryRequirements: "",
     specialRequirements: "",
+    approved: false,
+    approvedAt: null,
+    approvedBy: null,
     checkedInAt: null,
     checkedInBy: null,
     createdAt: serverTimestamp(),
@@ -65,29 +69,51 @@ export async function deleteGuest(id) {
   await deleteDoc(doc(db(), COLLECTION, id));
 }
 
-/** Find and mark a single guest when an administrator scans their entry QR. */
-export async function checkInGuest(id) {
+/** True when a guest has been approved at the entrance (older records used checkedInAt). */
+export function isGuestApproved(guest) {
+  return Boolean(guest?.approved || guest?.checkedInAt);
+}
+
+/**
+ * Approve one guest at the entrance — from a QR scan (via "qr") or the
+ * Approve button in the guest list (via "manual").
+ *
+ * Only these fields are written, and only ever false -> true, which is exactly
+ * what the "scan-admin" Firestore rules allow. Nothing else on the guest can
+ * be changed from here.
+ *
+ * Resolves to null when no such guest exists, otherwise
+ * { guest, alreadyApproved }.
+ */
+export async function approveGuest(id, via = "manual") {
   const guestId = String(id || "").trim();
   if (!/^[A-Za-z0-9_-]{1,150}$/.test(guestId)) return null;
   const ref = doc(db(), COLLECTION, guestId);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return null;
+  const uid = auth().currentUser?.uid || "";
 
-  const guest = { id: snap.id, ...snap.data() };
-  if (guest.checkedInAt) {
-    return { guest, alreadyCheckedIn: true };
-  }
+  return runTransaction(db(), async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) return null;
 
-  await updateDoc(ref, {
-    checkedInAt: serverTimestamp(),
-    checkedInBy: auth().currentUser?.uid || "",
-    updatedAt: serverTimestamp(),
+    const current = { id: snap.id, ...snap.data() };
+    if (isGuestApproved(current)) {
+      return { guest: current, alreadyApproved: true };
+    }
+
+    tx.update(ref, {
+      approved: true,
+      approvedAt: serverTimestamp(),
+      approvedBy: uid,
+      approvedVia: via,
+      checkedInAt: serverTimestamp(),
+      checkedInBy: uid,
+      updatedAt: serverTimestamp(),
+    });
+    return {
+      guest: { ...current, approved: true, approvedAt: new Date(), approvedBy: uid, approvedVia: via },
+      alreadyApproved: false,
+    };
   });
-  const updated = await getDoc(ref);
-  return {
-    guest: updated.exists() ? { id: updated.id, ...updated.data() } : guest,
-    alreadyCheckedIn: false,
-  };
 }
 
 export function subscribeToGuests(onData, onError) {
@@ -116,7 +142,7 @@ function publicGuest(id, data) {
     plusOneAllowed: Boolean(data.plusOneAllowed),
     plusOneName: data.plusOneName || "",
     rsvpStatus: data.rsvpStatus || "pending",
-    checkedIn: Boolean(data.checkedInAt),
+    checkedIn: isGuestApproved(data),
   };
 }
 
@@ -138,12 +164,6 @@ export async function verifyGuest({ firstName, surname, invitationCode }) {
   const first = snap.docs[0];
   if (!first) return null;
   return publicGuest(first.id, first.data());
-}
-
-/** Open a guest's own invitation using its unique ID from their personal QR. */
-export async function verifyGuestById(id) {
-  if (!/^[A-Za-z0-9_-]{1,150}$/.test(String(id || ""))) return null;
-  return fetchVerifiedGuest(id);
 }
 
 /** Re-validate a session guest id against Firestore on every protected page. */

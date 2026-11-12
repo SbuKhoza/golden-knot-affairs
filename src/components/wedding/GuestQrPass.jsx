@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Download, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { guestQrUrl } from "@/utils/guestQr";
+import { guestQrPayload } from "@/utils/guestQr";
 
 export function GuestQrPass({ guest }) {
   const [visible, setVisible] = useState(false);
@@ -15,7 +15,7 @@ export function GuestQrPass({ guest }) {
     let active = true;
     setError("");
     import("qrcode")
-      .then((QRCode) => QRCode.toDataURL(guestQrUrl(guest.id), { errorCorrectionLevel: "M", margin: 3, width: 420 }))
+      .then((QRCode) => QRCode.toDataURL(guestQrPayload(guest.id), { errorCorrectionLevel: "M", margin: 3, width: 420 }))
       .then((url) => {
         if (active) setImageUrl(url);
       })
@@ -53,7 +53,7 @@ export function GuestQrPass({ guest }) {
             <>
               <img src={imageUrl} alt={`Unique entry QR code for ${fullName}`} className="mx-auto size-64 max-w-full bg-white p-2" />
               <p className="mt-3 text-sm font-medium">{fullName}</p>
-              <p className="mt-1 text-xs text-muted-foreground">Show this QR at the entrance.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Show this QR at the reception entrance. It can only be read by the venue’s scanner.</p>
               <Button className="mt-4" variant="outline" asChild>
                 <a href={imageUrl} download={`entry-qr-${guest.id}.png`}>
                   <Download aria-hidden="true" />

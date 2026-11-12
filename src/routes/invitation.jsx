@@ -132,7 +132,7 @@ function InvitationPage({ guest, settings, signOut }) {
                   src={settings.invitationImageUrl}
                   alt="Wedding invitation artwork"
                   loading="lazy"
-                  className="mx-auto mb-10 aspect-[4/3] w-full rounded-lg object-cover object-top shadow-md sm:aspect-auto sm:max-h-72"
+                  className="mx-auto mb-10 h-auto w-full rounded-lg shadow-md"
                 />
               ) : (
                 <Monogram bride={settings.brideName} groom={settings.groomName} />
