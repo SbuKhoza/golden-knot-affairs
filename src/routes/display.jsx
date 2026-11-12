@@ -93,8 +93,10 @@ function StaffSignIn() {
   );
 }
 
+const DISPLAY_MS = 7000;
+
 function WelcomeScreen() {
-  const { current, queue } = useWelcomeState();
+  const { current } = useWelcomeState();
   const [settings, setSettings] = useState(null);
   const [feedError, setFeedError] = useState(false);
 
@@ -110,12 +112,17 @@ function WelcomeScreen() {
     return startWelcomeFeed(() => setFeedError(true));
   }, []);
 
-  // Show each guest for a few seconds, faster when several are waiting.
+  // Every guest (and the Test guest) is shown for exactly one slot, then the
+  // screen moves on to the next waiting guest or back to the live idle screen.
+  // The timer is tied to the guest on screen, so new arrivals joining the queue
+  // never restart or stretch it.
+  const currentKey = current?.key;
   useEffect(() => {
-    if (!current) return undefined;
-    const timer = window.setTimeout(() => welcomeStore.next(), queue.length > 2 ? 4000 : 7000);
+    if (!currentKey) return undefined;
+    const waiting = welcomeStore.getState().queue.length;
+    const timer = window.setTimeout(() => welcomeStore.next(), waiting > 2 ? 4000 : DISPLAY_MS);
     return () => window.clearTimeout(timer);
-  }, [current, queue.length]);
+  }, [currentKey]);
 
   function toggleFullscreen() {
     if (document.fullscreenElement) document.exitFullscreen?.();
@@ -123,6 +130,11 @@ function WelcomeScreen() {
   }
 
   function sendTest() {
+    // One test at a time, so pressing Test repeatedly can't pile up a queue.
+    const state = welcomeStore.getState();
+    if (String(state.current?.key).startsWith("test-") || state.queue.some((a) => String(a.key).startsWith("test-"))) {
+      return;
+    }
     welcomeStore.enqueue({
       key: `test-${Date.now()}`,
       firstName: "Test",
