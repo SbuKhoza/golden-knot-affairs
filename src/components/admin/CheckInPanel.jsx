@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EmptyState, Loader } from "@/components/common/Loader";
-import { approveGuest, isGuestApproved, sortGuestsAlphabetically, subscribeToGuests } from "@/services/guestService";
+import { Modal } from "@/components/common/Modal";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+import {
+  approveGuest,
+  isGuestApproved,
+  revertAllApprovals,
+  revertApproval,
+  sortGuestsAlphabetically,
+  subscribeToGuests,
+} from "@/services/guestService";
 import { announceWelcome } from "@/services/welcomeService";
 import { guestIdFromQr } from "@/utils/guestQr";
 import { friendlyError } from "@/utils/format";
@@ -25,6 +34,8 @@ function timeOf(value) {
  * Read-only apart from approving — it never edits or creates guests.
  */
 export function CheckInPanel() {
+  // Only full admins may revert approvals; scan-admins never see those buttons.
+  const { isAdmin } = useAdminAuth();
   const [guests, setGuests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -98,7 +109,7 @@ export function CheckInPanel() {
       {tab === "scan" ? (
         <Scanner lastApproved={lastApproved} onResult={handleApproved} />
       ) : (
-        <GuestList guests={guests} onApproved={handleApproved} />
+        <GuestList guests={guests} onApproved={handleApproved} canRevert={isAdmin} />
       )}
     </div>
   );
@@ -284,11 +295,14 @@ function ScanResult({ result }) {
 /* Guest list (read-only + Approve)                                    */
 /* ------------------------------------------------------------------ */
 
-function GuestList({ guests, onApproved }) {
+function GuestList({ guests, onApproved, canRevert = false }) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [pendingId, setPendingId] = useState("");
   const [error, setError] = useState("");
+  const [reverting, setReverting] = useState(null); // a guest, "all", or null
+  const [revertBusy, setRevertBusy] = useState(false);
+  const approvedTotal = guests.filter(isGuestApproved).length;
 
   const visible = useMemo(() => {
     let list = sortGuestsAlphabetically(guests);
@@ -309,6 +323,22 @@ function GuestList({ guests, onApproved }) {
       setError(friendlyError(err, "We couldn't approve that guest. Please try again."));
     } finally {
       setPendingId("");
+    }
+  }
+
+  async function confirmRevert() {
+    if (!reverting || !canRevert) return;
+    setError("");
+    setRevertBusy(true);
+    try {
+      if (reverting === "all") await revertAllApprovals();
+      else await revertApproval(reverting.id);
+      setReverting(null);
+    } catch (err) {
+      setError(friendlyError(err, "We couldn't revert that approval. Please try again."));
+      setReverting(null);
+    } finally {
+      setRevertBusy(false);
     }
   }
 
@@ -338,6 +368,15 @@ function GuestList({ guests, onApproved }) {
             </button>
           ))}
         </div>
+        {canRevert && approvedTotal > 0 ? (
+          <button
+            type="button"
+            onClick={() => setReverting("all")}
+            className="h-11 w-full rounded-md border border-destructive/40 px-4 text-xs uppercase tracking-[0.2em] text-destructive transition hover:bg-destructive/10 sm:w-auto"
+          >
+            Revert all approvals ({approvedTotal})
+          </button>
+        ) : null}
       </div>
 
       {error ? (
@@ -381,6 +420,14 @@ function GuestList({ guests, onApproved }) {
                     >
                       {pendingId === g.id ? "Approving…" : "Approve"}
                     </button>
+                  ) : canRevert ? (
+                    <button
+                      type="button"
+                      onClick={() => setReverting(g)}
+                      className="mt-4 h-12 w-full rounded-md border border-destructive/40 text-xs uppercase tracking-[0.2em] text-destructive transition hover:bg-destructive/10"
+                    >
+                      Revert approval
+                    </button>
                   ) : null}
                 </li>
               );
@@ -413,9 +460,20 @@ function GuestList({ guests, onApproved }) {
                       <td className="max-w-[14rem] px-4 py-3 text-muted-foreground">{needs || "—"}</td>
                       <td className="px-4 py-3 text-right">
                         {approved ? (
-                          <span className="inline-flex items-center gap-2 text-primary">
-                            <span aria-hidden="true">✓</span>
-                            <span>{timeOf(g.approvedAt || g.checkedInAt) || "Approved"}</span>
+                          <span className="inline-flex items-center gap-3">
+                            <span className="inline-flex items-center gap-2 text-primary">
+                              <span aria-hidden="true">✓</span>
+                              <span>{timeOf(g.approvedAt || g.checkedInAt) || "Approved"}</span>
+                            </span>
+                            {canRevert ? (
+                              <button
+                                type="button"
+                                onClick={() => setReverting(g)}
+                                className="rounded-md border border-destructive/40 px-3 py-1.5 text-xs text-destructive transition hover:bg-destructive/10"
+                              >
+                                Revert
+                              </button>
+                            ) : null}
                           </span>
                         ) : (
                           <button
@@ -436,6 +494,36 @@ function GuestList({ guests, onApproved }) {
           </div>
         </>
       )}
+
+      <Modal
+        open={Boolean(reverting) && canRevert}
+        onClose={() => (revertBusy ? undefined : setReverting(null))}
+        title={reverting === "all" ? "Revert all approvals" : "Revert approval"}
+      >
+        <p className="text-sm text-muted-foreground">
+          {reverting === "all"
+            ? `Mark all ${approvedTotal} approved guests as not yet approved? Everyone will need to be scanned or approved again.`
+            : `Mark ${reverting?.firstName ?? ""} ${reverting?.surname ?? ""} as not yet approved? They will need to be scanned or approved again.`}
+        </p>
+        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={() => setReverting(null)}
+            disabled={revertBusy}
+            className="h-12 rounded-md border border-border px-6 text-xs uppercase tracking-[0.2em] transition hover:bg-secondary disabled:opacity-60"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={confirmRevert}
+            disabled={revertBusy}
+            className="h-12 rounded-md bg-destructive px-6 text-xs uppercase tracking-[0.2em] text-white transition hover:bg-destructive/90 disabled:opacity-60"
+          >
+            {revertBusy ? "Reverting…" : "Revert"}
+          </button>
+        </div>
+      </Modal>
     </section>
   );
 }

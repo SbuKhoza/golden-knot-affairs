@@ -44,8 +44,13 @@ export function startWelcomeFeed(onError) {
     latest,
     (snap) => {
       snap.docChanges().forEach((change) => {
-        if (change.type === "removed") return;
         const data = change.doc.data();
+        // An admin reverted this approval: allow a later re-approval to be welcomed again.
+        if (!data.approved && (change.type === "modified" || change.type === "removed")) {
+          welcomeStore.forget(change.doc.id);
+          return;
+        }
+        if (change.type === "removed") return;
         // approvedAt is briefly null while the server timestamp is still being written.
         if (!data.approved || !data.approvedAt) return;
         if (firstSnapshot) welcomeStore.markSeen(change.doc.id);

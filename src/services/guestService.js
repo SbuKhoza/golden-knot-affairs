@@ -9,6 +9,7 @@ import {
   onSnapshot,
   query,
   runTransaction,
+  writeBatch,
   serverTimestamp,
   updateDoc,
   where,
@@ -113,6 +114,35 @@ export async function approveGuest(id, via = "manual") {
       alreadyApproved: false,
     };
   });
+}
+
+const CLEARED_APPROVAL = {
+  approved: false,
+  approvedAt: null,
+  approvedBy: null,
+  approvedVia: null,
+  checkedInAt: null,
+  checkedInBy: null,
+};
+
+/**
+ * ADMIN ONLY: undo an approval. Scan-admins cannot do this — the Firestore rules
+ * only let them flip approved false -> true — and the UI hides the button from them.
+ */
+export async function revertApproval(id) {
+  await updateDoc(doc(db(), COLLECTION, String(id)), { ...CLEARED_APPROVAL, updatedAt: serverTimestamp() });
+}
+
+/** ADMIN ONLY: undo every approval (e.g. after testing). Resolves to how many were reverted. */
+export async function revertAllApprovals() {
+  const snap = await getDocs(collection(db(), COLLECTION));
+  const approved = snap.docs.filter((d) => isGuestApproved(d.data()));
+  for (let i = 0; i < approved.length; i += 400) {
+    const batch = writeBatch(db());
+    approved.slice(i, i + 400).forEach((d) => batch.update(d.ref, { ...CLEARED_APPROVAL, updatedAt: serverTimestamp() }));
+    await batch.commit();
+  }
+  return approved.length;
 }
 
 const collator = new Intl.Collator(undefined, { sensitivity: "base", numeric: true });

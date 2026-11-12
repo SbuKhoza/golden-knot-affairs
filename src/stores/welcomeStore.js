@@ -33,6 +33,11 @@ export const welcomeStore = {
     seen.add(key);
   },
 
+  /** Allow a guest to be welcomed again (their approval was reverted, then re-approved). */
+  forget(key) {
+    seen.delete(key);
+  },
+
   /** Add an arrival. Returns false if this guest was already welcomed. */
   enqueue(arrival) {
     if (!arrival?.key || seen.has(arrival.key)) return false;
