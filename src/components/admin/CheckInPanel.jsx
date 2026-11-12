@@ -51,8 +51,8 @@ export function CheckInPanel() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="inline-flex rounded-md border border-border bg-card p-1">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="grid w-full grid-cols-2 rounded-md border border-border bg-card p-1 sm:inline-grid sm:w-auto">
           {[
             ["scan", "Scan QR"],
             ["list", "Guest list"],
@@ -62,7 +62,7 @@ export function CheckInPanel() {
               type="button"
               onClick={() => setTab(key)}
               aria-pressed={tab === key}
-              className={`rounded px-5 py-2 text-xs uppercase tracking-[0.2em] transition ${
+              className={`rounded px-5 py-3 text-xs uppercase tracking-[0.2em] transition sm:py-2 ${
                 tab === key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"
               }`}
             >
@@ -70,7 +70,7 @@ export function CheckInPanel() {
             </button>
           ))}
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-center text-sm text-muted-foreground sm:text-right">
           <span className="font-display text-xl text-foreground">{approvedCount}</span> of {guests.length} invitations approved
         </p>
       </div>
@@ -300,24 +300,24 @@ function GuestList({ guests, onApproved }) {
 
   return (
     <section className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="space-y-3">
         <input
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search name or table…"
           aria-label="Search guests"
-          className="h-11 min-w-0 flex-1 rounded-md border border-input bg-background px-4 outline-none focus:ring-2 focus:ring-ring/40"
+          className="h-14 w-full rounded-md border border-input bg-background px-4 text-base outline-none focus:ring-2 focus:ring-ring/40 sm:h-12"
         />
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {FILTERS.map(([key, label]) => (
             <button
               key={key}
               type="button"
               onClick={() => setFilter(key)}
               aria-pressed={filter === key}
-              className={`rounded-full border px-4 py-2 text-xs transition ${
-                filter === key ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-secondary"
+              className={`h-11 rounded-md border px-2 text-center text-xs leading-tight transition ${
+                filter === key ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-secondary"
               }`}
             >
               {label}
@@ -335,52 +335,92 @@ function GuestList({ guests, onApproved }) {
       {visible.length === 0 ? (
         <EmptyState title="No guests found" description="Try a different search or filter." />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border bg-card">
-          <table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="border-b border-border text-xs uppercase tracking-[0.15em] text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3 font-medium">Guest</th>
-                <th className="px-4 py-3 font-medium">Seats</th>
-                <th className="px-4 py-3 font-medium">Table</th>
-                <th className="px-4 py-3 font-medium">RSVP</th>
-                <th className="px-4 py-3 font-medium">Diet / needs</th>
-                <th className="px-4 py-3 text-right font-medium">Approved</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((g) => {
-                const approved = isGuestApproved(g);
-                const needs = [g.dietaryRequirements, g.specialRequirements].filter(Boolean).join(" · ");
-                return (
-                  <tr key={g.id} className="border-b border-border/60 last:border-0">
-                    <td className="px-4 py-3 font-medium">{fullName(g)}</td>
-                    <td className="px-4 py-3">{g.numberOfSeats ?? 1}</td>
-                    <td className="px-4 py-3">{g.tableNumber || "—"}</td>
-                    <td className="px-4 py-3 capitalize">{g.rsvpStatus || "pending"}</td>
-                    <td className="max-w-[14rem] px-4 py-3 text-muted-foreground">{needs || "—"}</td>
-                    <td className="px-4 py-3 text-right">
-                      {approved ? (
-                        <span className="inline-flex items-center gap-2 text-primary">
-                          <span aria-hidden="true">✓</span>
-                          <span>{timeOf(g.approvedAt || g.checkedInAt) || "Approved"}</span>
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleApprove(g)}
-                          disabled={pendingId === g.id}
-                          className="rounded-md bg-primary px-4 py-2 text-xs uppercase tracking-[0.2em] text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
-                        >
-                          {pendingId === g.id ? "Approving…" : "Approve"}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {/* Phones: one card per guest */}
+          <ul className="space-y-3 md:hidden">
+            {visible.map((g) => {
+              const approved = isGuestApproved(g);
+              const needs = [g.dietaryRequirements, g.specialRequirements].filter(Boolean).join(" · ");
+              const seats = g.numberOfSeats ?? 1;
+              return (
+                <li key={g.id} className="rounded-xl border border-border bg-card p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="min-w-0 break-words font-display text-lg leading-snug">{fullName(g)}</p>
+                    {approved ? (
+                      <span className="shrink-0 rounded-full bg-primary/15 px-3 py-1 text-xs text-primary">
+                        ✓ {timeOf(g.approvedAt || g.checkedInAt) || "Approved"}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {seats} seat{seats > 1 ? "s" : ""}
+                    {g.tableNumber ? ` · Table ${g.tableNumber}` : ""}
+                    {` · RSVP ${g.rsvpStatus || "pending"}`}
+                  </p>
+                  {needs ? <p className="mt-1 break-words text-sm text-muted-foreground">{needs}</p> : null}
+                  {!approved ? (
+                    <button
+                      type="button"
+                      onClick={() => handleApprove(g)}
+                      disabled={pendingId === g.id}
+                      className="mt-4 h-12 w-full rounded-md bg-primary text-xs uppercase tracking-[0.2em] text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
+                    >
+                      {pendingId === g.id ? "Approving…" : "Approve"}
+                    </button>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+
+          {/* Tablets and desktop: table */}
+          <div className="hidden overflow-x-auto rounded-xl border border-border bg-card md:block">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-border text-xs uppercase tracking-[0.15em] text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Guest</th>
+                  <th className="px-4 py-3 font-medium">Seats</th>
+                  <th className="px-4 py-3 font-medium">Table</th>
+                  <th className="px-4 py-3 font-medium">RSVP</th>
+                  <th className="px-4 py-3 font-medium">Diet / needs</th>
+                  <th className="px-4 py-3 text-right font-medium">Approved</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((g) => {
+                  const approved = isGuestApproved(g);
+                  const needs = [g.dietaryRequirements, g.specialRequirements].filter(Boolean).join(" · ");
+                  return (
+                    <tr key={g.id} className="border-b border-border/60 last:border-0">
+                      <td className="px-4 py-3 font-medium">{fullName(g)}</td>
+                      <td className="px-4 py-3">{g.numberOfSeats ?? 1}</td>
+                      <td className="px-4 py-3">{g.tableNumber || "—"}</td>
+                      <td className="px-4 py-3 capitalize">{g.rsvpStatus || "pending"}</td>
+                      <td className="max-w-[14rem] px-4 py-3 text-muted-foreground">{needs || "—"}</td>
+                      <td className="px-4 py-3 text-right">
+                        {approved ? (
+                          <span className="inline-flex items-center gap-2 text-primary">
+                            <span aria-hidden="true">✓</span>
+                            <span>{timeOf(g.approvedAt || g.checkedInAt) || "Approved"}</span>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleApprove(g)}
+                            disabled={pendingId === g.id}
+                            className="rounded-md bg-primary px-4 py-2 text-xs uppercase tracking-[0.2em] text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
+                          >
+                            {pendingId === g.id ? "Approving…" : "Approve"}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </section>
   );
