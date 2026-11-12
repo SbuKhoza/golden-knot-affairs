@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Encode each guest's existing unique Firestore document ID in their QR; validate QR scans through the authenticated guest-document lookup, and record arrivals only from the admin entrance scanner.

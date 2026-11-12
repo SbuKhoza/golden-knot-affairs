@@ -7,6 +7,7 @@ import { Loader } from "@/components/common/Loader";
 const nav = [
   { to: "/admin/dashboard", label: "Dashboard" },
   { to: "/admin/guests", label: "Guests" },
+  { to: "/admin/check-in", label: "Entrance check-in" },
   { to: "/admin/rsvps", label: "RSVPs" },
   { to: "/admin/program", label: "Program" },
   { to: "/admin/settings", label: "Wedding Settings" },

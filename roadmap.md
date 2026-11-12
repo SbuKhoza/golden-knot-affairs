@@ -1,5 +1,11 @@
 # Roadmap
 
+## Guest QR RSVP and entrance check-in
+- [ ] Give every guest a unique QR invitation that opens their RSVP.
+- [ ] Show the guest's QR pass on their invitation page.
+- [ ] Add an admin scanner that matches the QR to the guest and records arrival.
+- [ ] Test QR uniqueness and guest matching.
+
 - [x] PDF hero image: proportional cover crop (no squeezing), crop from bottom
 - [x] Remove box/border around guest name; explicit first name + surname spacing
 - [x] Spacing pass so no text overlaps; dynamic content wraps

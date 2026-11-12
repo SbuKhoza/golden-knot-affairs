@@ -13,7 +13,7 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import { db } from "@/firebase/config";
+import { auth, db } from "@/firebase/config";
 import { ensureGuestSignIn } from "@/services/authService";
 import { makeInvitationCode, normalise, titleCase } from "@/utils/format";
 
@@ -46,6 +46,8 @@ export async function createGuest(input) {
     rsvpResponse: null,
     dietaryRequirements: "",
     specialRequirements: "",
+    checkedInAt: null,
+    checkedInBy: null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -61,6 +63,31 @@ export async function updateGuest(id, input) {
 
 export async function deleteGuest(id) {
   await deleteDoc(doc(db(), COLLECTION, id));
+}
+
+/** Find and mark a single guest when an administrator scans their entry QR. */
+export async function checkInGuest(id) {
+  const guestId = String(id || "").trim();
+  if (!/^[A-Za-z0-9_-]{1,150}$/.test(guestId)) return null;
+  const ref = doc(db(), COLLECTION, guestId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+
+  const guest = { id: snap.id, ...snap.data() };
+  if (guest.checkedInAt) {
+    return { guest, alreadyCheckedIn: true };
+  }
+
+  await updateDoc(ref, {
+    checkedInAt: serverTimestamp(),
+    checkedInBy: auth().currentUser?.uid || "",
+    updatedAt: serverTimestamp(),
+  });
+  const updated = await getDoc(ref);
+  return {
+    guest: updated.exists() ? { id: updated.id, ...updated.data() } : guest,
+    alreadyCheckedIn: false,
+  };
 }
 
 export function subscribeToGuests(onData, onError) {
@@ -89,6 +116,7 @@ function publicGuest(id, data) {
     plusOneAllowed: Boolean(data.plusOneAllowed),
     plusOneName: data.plusOneName || "",
     rsvpStatus: data.rsvpStatus || "pending",
+    checkedIn: Boolean(data.checkedInAt),
   };
 }
 
@@ -110,6 +138,12 @@ export async function verifyGuest({ firstName, surname, invitationCode }) {
   const first = snap.docs[0];
   if (!first) return null;
   return publicGuest(first.id, first.data());
+}
+
+/** Open a guest's own invitation using its unique ID from their personal QR. */
+export async function verifyGuestById(id) {
+  if (!/^[A-Za-z0-9_-]{1,150}$/.test(String(id || ""))) return null;
+  return fetchVerifiedGuest(id);
 }
 
 /** Re-validate a session guest id against Firestore on every protected page. */
