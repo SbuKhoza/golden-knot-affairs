@@ -9,4 +9,4 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- Create each guest's QR token as `<Firestore document ID>.<random UUID>`, persist it on their invitation record, and use that same token for RSVP and entrance check-in so identities stay unique and unguessable.
+- Encode each guest's existing unique Firestore document ID in their QR; validate QR scans through the authenticated guest-document lookup, and record arrivals only from the admin entrance scanner.
