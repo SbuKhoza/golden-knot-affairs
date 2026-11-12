@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Ornament } from "@/components/wedding/Ornament";
-import { verifyGuest } from "@/services/guestService";
+import { verifyGuest, verifyGuestById } from "@/services/guestService";
 import { getSettings } from "@/services/settingsService";
 import { saveGuestSession } from "@/hooks/useGuestSession";
 import { formatWeddingDate, friendlyError } from "@/utils/format";

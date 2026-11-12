@@ -67,7 +67,9 @@ export async function deleteGuest(id) {
 
 /** Find and mark a single guest when an administrator scans their entry QR. */
 export async function checkInGuest(id) {
-  const ref = doc(db(), COLLECTION, String(id || "").trim());
+  const guestId = String(id || "").trim();
+  if (!/^[A-Za-z0-9_-]{1,150}$/.test(guestId)) return null;
+  const ref = doc(db(), COLLECTION, guestId);
   const snap = await getDoc(ref);
   if (!snap.exists()) return null;
 
@@ -136,6 +138,12 @@ export async function verifyGuest({ firstName, surname, invitationCode }) {
   const first = snap.docs[0];
   if (!first) return null;
   return publicGuest(first.id, first.data());
+}
+
+/** Open a guest's own invitation using its unique ID from their personal QR. */
+export async function verifyGuestById(id) {
+  if (!/^[A-Za-z0-9_-]{1,150}$/.test(String(id || ""))) return null;
+  return fetchVerifiedGuest(id);
 }
 
 /** Re-validate a session guest id against Firestore on every protected page. */

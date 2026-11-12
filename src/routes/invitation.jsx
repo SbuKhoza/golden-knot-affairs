@@ -3,6 +3,7 @@ import { useState } from "react";
 import { GuestGate } from "@/components/wedding/GuestGate";
 import { GuestNav } from "@/components/wedding/GuestNav";
 import { Ornament, Monogram } from "@/components/wedding/Ornament";
+import { GuestQrPass } from "@/components/wedding/GuestQrPass";
 import { downloadFilledInvitationTemplate, InvitationTemplateError } from "@/utils/pdfFormFill";
 import { formatWeddingDate, isPastDeadline } from "@/utils/format";
 
@@ -254,6 +255,8 @@ function InvitationPage({ guest, settings, signOut }) {
               </p>
             )}
           </section>
+
+          <GuestQrPass guest={guest} />
 
           <section className="animate-soft mt-8 grid gap-4 sm:grid-cols-2">
             {settings.invitationPdfUrl ? (

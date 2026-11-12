@@ -20,5 +20,5 @@ export function guestIdFromQr(value) {
     // A raw guest ID is valid scan data too.
   }
 
-  return scanned;
+  return /^[A-Za-z0-9_-]{1,150}$/.test(scanned) ? scanned : "";
 }
