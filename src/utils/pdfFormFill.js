@@ -14,6 +14,7 @@
 import { rgb } from "pdf-lib";
 import { downloadBlob } from "@/utils/pdf";
 import { getColorScheme } from "@/utils/pdfThemes";
+import { drawGuestQr } from "@/utils/pdfGuestQr";
 
 const WARM_CHARCOAL = rgb(65 / 255, 58 / 255, 48 / 255);
 const WEDDING_DAY_CHARCOAL = rgb(45 / 255, 40 / 255, 34 / 255);
@@ -322,6 +323,9 @@ export async function downloadFilledInvitationTemplate(settings, guest) {
     });
     page.node.addAnnot(pdfDoc.context.register(annot));
   }
+
+  // Guest's personal entry QR, blended into the template's "qrCode" field box.
+  await drawGuestQr(pdfDoc, form, guest, scheme.gold);
 
   // Bakes the entered text into the page content and removes the
   // interactive form, so the guest downloads a normal finished PDF rather
