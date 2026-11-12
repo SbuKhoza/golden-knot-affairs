@@ -4,7 +4,7 @@ import { AdminShell, Badge } from "@/components/admin/AdminShell";
 import { GuestForm } from "@/components/admin/GuestForm";
 import { Modal } from "@/components/common/Modal";
 import { EmptyState, Loader } from "@/components/common/Loader";
-import { createGuest, deleteGuest, subscribeToGuests, updateGuest } from "@/services/guestService";
+import { compareGuestsByName, createGuest, deleteGuest, subscribeToGuests, updateGuest } from "@/services/guestService";
 import { parseGuestImportCsv } from "@/utils/guestImport";
 import { friendlyError } from "@/utils/format";
 
@@ -74,7 +74,7 @@ function GuestsPage() {
     return [...list].sort((a, b) => {
       const av = String(a[sort.key] ?? "").toLowerCase();
       const bv = String(b[sort.key] ?? "").toLowerCase();
-      if (av === bv) return 0;
+      if (av === bv) return compareGuestsByName(a, b);
       return av < bv ? -dir : dir;
     });
   }, [guests, filter, search, sort]);

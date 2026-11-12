@@ -7,7 +7,6 @@ import {
   getDocs,
   limit,
   onSnapshot,
-  orderBy,
   query,
   runTransaction,
   serverTimestamp,
@@ -116,18 +115,33 @@ export async function approveGuest(id, via = "manual") {
   });
 }
 
+const collator = new Intl.Collator(undefined, { sensitivity: "base", numeric: true });
+
+/** A–Z by surname, then first name. Used for every guest list in the app. */
+export function compareGuestsByName(a, b) {
+  return (
+    collator.compare(String(a?.surname ?? "").trim(), String(b?.surname ?? "").trim()) ||
+    collator.compare(String(a?.firstName ?? "").trim(), String(b?.firstName ?? "").trim())
+  );
+}
+
+export function sortGuestsAlphabetically(list) {
+  return [...list].sort(compareGuestsByName);
+}
+
+// Sorted in the browser rather than with orderBy("surnameLower"), so guests
+// missing that field are no longer silently left out of the list.
 export function subscribeToGuests(onData, onError) {
-  const q = query(collection(db(), COLLECTION), orderBy("surnameLower"));
   return onSnapshot(
-    q,
-    (snap) => onData(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+    collection(db(), COLLECTION),
+    (snap) => onData(sortGuestsAlphabetically(snap.docs.map((d) => ({ id: d.id, ...d.data() })))),
     onError,
   );
 }
 
 export async function listGuests() {
-  const snap = await getDocs(query(collection(db(), COLLECTION), orderBy("surnameLower")));
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const snap = await getDocs(collection(db(), COLLECTION));
+  return sortGuestsAlphabetically(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
 }
 
 /** Minimal, safe projection returned to a verified guest. */
