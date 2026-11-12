@@ -117,11 +117,14 @@ export async function approveGuest(id, via = "manual") {
 
 const collator = new Intl.Collator(undefined, { sensitivity: "base", numeric: true });
 
-/** A–Z by surname, then first name. Used for every guest list in the app. */
+/**
+ * A–Z by the name as it is displayed ("First Surname"): first name, then
+ * surname. Used for every guest list in the app.
+ */
 export function compareGuestsByName(a, b) {
   return (
-    collator.compare(String(a?.surname ?? "").trim(), String(b?.surname ?? "").trim()) ||
-    collator.compare(String(a?.firstName ?? "").trim(), String(b?.firstName ?? "").trim())
+    collator.compare(String(a?.firstName ?? "").trim(), String(b?.firstName ?? "").trim()) ||
+    collator.compare(String(a?.surname ?? "").trim(), String(b?.surname ?? "").trim())
   );
 }
 

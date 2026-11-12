@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EmptyState, Loader } from "@/components/common/Loader";
-import { approveGuest, isGuestApproved, subscribeToGuests } from "@/services/guestService";
+import { approveGuest, isGuestApproved, sortGuestsAlphabetically, subscribeToGuests } from "@/services/guestService";
 import { guestIdFromQr } from "@/utils/guestQr";
 import { friendlyError } from "@/utils/format";
 
@@ -34,7 +34,7 @@ export function CheckInPanel() {
     () =>
       subscribeToGuests(
         (data) => {
-          setGuests(data);
+          setGuests(sortGuestsAlphabetically(data));
           setLoading(false);
         },
         () => {
@@ -277,7 +277,7 @@ function GuestList({ guests, onApproved }) {
   const [error, setError] = useState("");
 
   const visible = useMemo(() => {
-    let list = guests;
+    let list = sortGuestsAlphabetically(guests);
     if (filter === "approved") list = list.filter(isGuestApproved);
     if (filter === "waiting") list = list.filter((g) => !isGuestApproved(g));
     const q = search.trim().toLowerCase();

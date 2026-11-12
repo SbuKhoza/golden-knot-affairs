@@ -41,7 +41,7 @@ function GuestsPage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
-  const [sort, setSort] = useState({ key: "surname", dir: "asc" });
+  const [sort, setSort] = useState({ key: "firstName", dir: "asc" });
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState(null);
