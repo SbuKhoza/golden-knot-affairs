@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DisplayRouteImport } from './routes/display'
 import { Route as InvitationRouteImport } from './routes/invitation'
 import { Route as ProgramRouteImport } from './routes/program'
 import { Route as RsvpRouteImport } from './routes/rsvp'
@@ -28,6 +29,11 @@ import { Route as ApiPublicInvitationTemplateRouteImport } from './routes/api/pu
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DisplayRoute = DisplayRouteImport.update({
+  id: '/display',
+  path: '/display',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InvitationRoute = InvitationRouteImport.update({
@@ -104,6 +110,7 @@ const ApiPublicInvitationTemplateRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/display': typeof DisplayRoute
   '/invitation': typeof InvitationRoute
   '/program': typeof ProgramRoute
   '/rsvp': typeof RsvpRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/display': typeof DisplayRoute
   '/invitation': typeof InvitationRoute
   '/program': typeof ProgramRoute
   '/rsvp': typeof RsvpRoute
@@ -139,6 +147,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/display': typeof DisplayRoute
   '/invitation': typeof InvitationRoute
   '/program': typeof ProgramRoute
   '/rsvp': typeof RsvpRoute
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/display'
     | '/invitation'
     | '/program'
     | '/rsvp'
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/display'
     | '/invitation'
     | '/program'
     | '/rsvp'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/display'
     | '/invitation'
     | '/program'
     | '/rsvp'
@@ -210,6 +222,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DisplayRoute: typeof DisplayRoute
   InvitationRoute: typeof InvitationRoute
   ProgramRoute: typeof ProgramRoute
   RsvpRoute: typeof RsvpRoute
@@ -233,6 +246,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/display': {
+      id: '/display'
+      path: '/display'
+      fullPath: '/display'
+      preLoaderRoute: typeof DisplayRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invitation': {
@@ -338,6 +358,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DisplayRoute: DisplayRoute,
   InvitationRoute: InvitationRoute,
   ProgramRoute: ProgramRoute,
   RsvpRoute: RsvpRoute,

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { EmptyState, Loader } from "@/components/common/Loader";
 import { approveGuest, isGuestApproved, sortGuestsAlphabetically, subscribeToGuests } from "@/services/guestService";
+import { announceWelcome } from "@/services/welcomeService";
 import { guestIdFromQr } from "@/utils/guestQr";
 import { friendlyError } from "@/utils/format";
 
@@ -47,6 +48,12 @@ export function CheckInPanel() {
 
   const approvedCount = guests.filter(isGuestApproved).length;
 
+  // Every new approval (scan or button) goes to the secondary welcome screen too.
+  function handleApproved(guest) {
+    setLastApproved(guest);
+    announceWelcome(guest);
+  }
+
   if (loading) return <Loader label="Loading guests…" />;
 
   return (
@@ -75,6 +82,13 @@ export function CheckInPanel() {
         </p>
       </div>
 
+      <p className="text-center text-xs text-muted-foreground sm:text-right">
+        <a href="/display" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-primary">
+          Open the guest welcome screen ↗
+        </a>{" "}
+        on the TV or second monitor.
+      </p>
+
       {loadError ? (
         <p role="alert" className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {loadError}
@@ -82,9 +96,9 @@ export function CheckInPanel() {
       ) : null}
 
       {tab === "scan" ? (
-        <Scanner lastApproved={lastApproved} onResult={setLastApproved} />
+        <Scanner lastApproved={lastApproved} onResult={handleApproved} />
       ) : (
-        <GuestList guests={guests} onApproved={setLastApproved} />
+        <GuestList guests={guests} onApproved={handleApproved} />
       )}
     </div>
   );
