@@ -15,6 +15,7 @@ import { rgb } from "pdf-lib";
 import { downloadBlob } from "@/utils/pdf";
 import { getColorScheme } from "@/utils/pdfThemes";
 import { drawGuestQr } from "@/utils/pdfGuestQr";
+import { applyVenueLink } from "@/utils/pdfVenueLinks";
 
 const WARM_CHARCOAL = rgb(65 / 255, 58 / 255, 48 / 255);
 const WEDDING_DAY_CHARCOAL = rgb(45 / 255, 40 / 255, 34 / 255);
@@ -298,7 +299,6 @@ export async function downloadFilledInvitationTemplate(settings, guest) {
     ["ceremonyVenueName", "ceremonyVenueMapUrl", settings.ceremonyVenueMapUrl, settings.ceremonyVenueAddress || settings.ceremonyVenueName],
     ["receptionVenueName", "receptionVenueMapUrl", settings.receptionVenueMapUrl, settings.receptionVenueAddress || settings.receptionVenueName],
   ];
-  const { PDFString } = await import("pdf-lib");
   for (const [nameField, urlField, url, place] of mapLinks) {
     const href = url || (place ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}` : "");
     if (!href) continue;
@@ -313,15 +313,13 @@ export async function downloadFilledInvitationTemplate(settings, guest) {
     if (!target) continue;
     const pageRef = target.w.P();
     const page = pdfDoc.getPages().find((pg) => pg.ref === pageRef) || pdfDoc.getPages()[0];
-    const { x, y, width, height } = target.r;
-    const annot = pdfDoc.context.obj({
-      Type: "Annot",
-      Subtype: "Link",
-      Rect: [x, y, x + width, y + height],
-      Border: [0, 0, 0],
-      A: { Type: "Action", S: "URI", URI: PDFString.of(href) },
-    });
-    page.node.addAnnot(pdfDoc.context.register(annot));
+    applyVenueLink(
+      pdfDoc,
+      page,
+      target.r,
+      nameField === "ceremonyVenueName" ? "ceremonyVenueLink" : "receptionVenueLink",
+      href,
+    );
   }
 
   // Guest's personal entry QR, blended into the template's "qrCode" field box.
