@@ -4,8 +4,10 @@ import { GuestGate } from "@/components/wedding/GuestGate";
 import { GuestNav } from "@/components/wedding/GuestNav";
 import { Ornament, Monogram } from "@/components/wedding/Ornament";
 import { GuestQrPass } from "@/components/wedding/GuestQrPass";
+import { Button } from "@/components/ui/button";
 import { downloadFilledInvitationTemplate, InvitationTemplateError } from "@/utils/pdfFormFill";
 import { formatWeddingDate, isPastDeadline } from "@/utils/format";
+import { hasAcceptedRsvp } from "@/utils/guestQr";
 
 export const Route = createFileRoute("/invitation")({
   head: () => ({
@@ -58,9 +60,30 @@ function DressCodeDetail({ label, value, imageUrl }) {
   );
 }
 
+function MapsButton({ href, attending }) {
+  const className = "mt-6 border-gold/60 px-6 py-3 text-xs uppercase tracking-[0.3em] text-primary";
+
+  if (!attending) {
+    return (
+      <Button type="button" variant="outline" className={className} disabled title="Available after accepting the invitation">
+        Open in maps
+      </Button>
+    );
+  }
+
+  return (
+    <Button asChild variant="outline" className={className}>
+      <a href={href} target="_blank" rel="noopener noreferrer">
+        Open in maps
+      </a>
+    </Button>
+  );
+}
+
 function InvitationPage({ guest, settings, signOut }) {
   const [downloading, setDownloading] = useState("");
   const [error, setError] = useState("");
+  const attending = hasAcceptedRsvp(guest);
   const deadlinePassed = isPastDeadline(settings.rsvpDeadline);
   const rsvpOpen = settings.rsvpEnabled !== false && !deadlinePassed;
   const hasBackground = Boolean(settings.backgroundImageUrl);
@@ -80,6 +103,7 @@ function InvitationPage({ guest, settings, signOut }) {
       : "");
 
   async function handleInvitationDownload() {
+    if (!attending) return;
     setError("");
     setDownloading("invitation");
     try {
@@ -198,14 +222,7 @@ function InvitationPage({ guest, settings, signOut }) {
               ) : null}
               <p className="mt-3 whitespace-pre-line text-sm text-muted-foreground">{settings.ceremonyVenueAddress}</p>
               {ceremonyMapsUrl ? (
-                <a
-                  href={ceremonyMapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-6 inline-block rounded-md border border-gold/60 px-6 py-3 text-xs uppercase tracking-[0.3em] text-primary transition hover:bg-secondary"
-                >
-                  Open in maps
-                </a>
+                <MapsButton href={ceremonyMapsUrl} attending={attending} />
               ) : null}
             </section>
           ) : null}
@@ -218,14 +235,7 @@ function InvitationPage({ guest, settings, signOut }) {
               ) : null}
               <p className="mt-3 whitespace-pre-line text-sm text-muted-foreground">{settings.receptionVenueAddress}</p>
               {receptionMapsUrl ? (
-                <a
-                  href={receptionMapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-6 inline-block rounded-md border border-gold/60 px-6 py-3 text-xs uppercase tracking-[0.3em] text-primary transition hover:bg-secondary"
-                >
-                  Open in maps
-                </a>
+                <MapsButton href={receptionMapsUrl} attending={attending} />
               ) : null}
             </section>
           ) : null}
@@ -260,14 +270,19 @@ function InvitationPage({ guest, settings, signOut }) {
 
           <section className="animate-soft mt-8 grid gap-4 sm:grid-cols-2">
             {settings.invitationPdfUrl ? (
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={handleInvitationDownload}
-                disabled={downloading === "invitation"}
-                className="rounded-md border border-gold/60 bg-white/85 px-6 py-5 text-xs uppercase tracking-[0.3em] text-primary backdrop-blur-md transition hover:bg-white disabled:opacity-60"
+                disabled={!attending || downloading === "invitation"}
+                className="h-auto min-h-16 whitespace-normal rounded-md border-gold/60 bg-white/85 px-6 py-5 text-xs uppercase tracking-[0.3em] text-primary backdrop-blur-md transition hover:bg-white"
               >
-                {downloading === "invitation" ? "Preparing download…" : "Download invitation"}
-              </button>
+                {downloading === "invitation"
+                  ? "Preparing download…"
+                  : attending
+                    ? "Download invitation"
+                    : "Available after accepting the invitation"}
+              </Button>
             ) : (
               <div className="rounded-md border border-dashed border-border bg-white/70 px-6 py-5 text-center text-xs uppercase tracking-[0.3em] text-muted-foreground backdrop-blur-md">
                 Invitation coming soon

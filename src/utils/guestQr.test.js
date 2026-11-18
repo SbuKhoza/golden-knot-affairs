@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { guestIdFromQr, guestQrPayload } from "./guestQr.js";
+import { guestIdFromQr, guestQrPayload, hasAcceptedRsvp } from "./guestQr.js";
+
+test("only guests with an attending RSVP can access invitation benefits", () => {
+  assert.equal(hasAcceptedRsvp({ rsvpStatus: "attending" }), true);
+  assert.equal(hasAcceptedRsvp({ rsvpStatus: "declined" }), false);
+  assert.equal(hasAcceptedRsvp({ rsvpStatus: "pending" }), false);
+  assert.equal(hasAcceptedRsvp(null), false);
+});
 
 test("each guest document ID produces its own QR payload", () => {
   assert.notEqual(guestQrPayload("guest-one"), guestQrPayload("guest-two"));

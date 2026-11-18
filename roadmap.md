@@ -3,6 +3,7 @@
 ## Guest QR RSVP and entrance check-in
 - [ ] Give every guest a unique QR invitation that opens their RSVP.
 - [ ] Show the guest's QR pass on their invitation page.
+- [x] Restrict invitation downloads, QR passes, and map links to attending guests.
 - [ ] Add an admin scanner that matches the QR to the guest and records arrival.
 - [ ] Test QR uniqueness and guest matching.
 

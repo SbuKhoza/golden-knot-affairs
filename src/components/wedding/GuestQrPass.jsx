@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Download, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { guestQrPayload } from "@/utils/guestQr";
+import { guestQrPayload, hasAcceptedRsvp } from "@/utils/guestQr";
 
 export function GuestQrPass({ guest }) {
   const [visible, setVisible] = useState(false);
@@ -27,6 +27,8 @@ export function GuestQrPass({ guest }) {
       active = false;
     };
   }, [guest.id, visible]);
+
+  if (!hasAcceptedRsvp(guest)) return null;
 
   return (
     <section className="animate-soft mt-8 rounded-md border border-border/60 bg-card/90 p-6 text-center backdrop-blur-md sm:p-8">

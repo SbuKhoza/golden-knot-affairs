@@ -10,6 +10,11 @@
 export const QR_PREFIX = "GKA1:";
 const ID_PATTERN = /^[A-Za-z0-9_-]{1,150}$/;
 
+/** Invitation downloads, entry QR passes, and venue maps require an accepted RSVP. */
+export function hasAcceptedRsvp(guest) {
+  return guest?.rsvpStatus === "attending";
+}
+
 /** Build the payload encoded in a guest's personal entry QR. */
 export function guestQrPayload(guestId) {
   return `${QR_PREFIX}${String(guestId)}`;
