@@ -20,3 +20,8 @@
 - [x] Embed maps links into their PDF fields (clickable/annotation)
 - [x] Admin: remove "How the image fills the invitation" + dress code image logic
 - [x] Admin colour scheme drives filled text colour in PDF
+
+## Admin interface refresh
+- [ ] Restyle admin pages to match the uploaded elegant floral dashboard reference without changing existing workflows.
+- [ ] Show a result modal after scans and manual approvals, with "Accept the next guest" and "Close" actions.
+- [ ] Validate the admin screens and guest-result modal in the preview.
