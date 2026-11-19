@@ -149,8 +149,8 @@ function InvitationPage({ guest, settings, signOut }) {
         <GuestNav guest={guest} onSignOut={signOut} />
 
         <main className="mx-auto max-w-3xl px-4">
-          <section className="animate-rise mt-8 rounded-2xl border border-gold/40 bg-white/85 p-1 shadow-[0_30px_80px_-35px_rgba(60,70,55,0.55)] backdrop-blur-md">
-            <div className="rounded-xl border border-border/60 px-5 py-12 text-center sm:px-12 sm:py-16">
+          <section className="animate-rise mt-8 rounded-[10px] border border-gold/40 bg-white/80 p-1 shadow-[0_30px_80px_-35px_rgba(60,70,55,0.55)] backdrop-blur-md">
+            <div className="rounded-[10px] border border-border/60 px-5 py-12 text-center sm:px-12 sm:py-16">
               {settings.invitationImageUrl ? (
                 <img
                   src={settings.invitationImageUrl}
