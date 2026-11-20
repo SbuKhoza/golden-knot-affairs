@@ -13,6 +13,7 @@ import {
 import { announceWelcome } from "@/services/welcomeService";
 import { guestIdFromQr } from "@/utils/guestQr";
 import { friendlyError } from "@/utils/format";
+import { CircleCheck, CircleX, DoorOpen } from "lucide-react";
 
 const FILTERS = [
   ["all", "All"],
@@ -40,7 +41,6 @@ export function CheckInPanel() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [tab, setTab] = useState("scan");
-  const [lastApproved, setLastApproved] = useState(null);
 
   useEffect(
     () =>
@@ -61,7 +61,6 @@ export function CheckInPanel() {
 
   // Every new approval (scan or button) goes to the secondary welcome screen too.
   function handleApproved(guest) {
-    setLastApproved(guest);
     announceWelcome(guest);
   }
 
@@ -107,7 +106,7 @@ export function CheckInPanel() {
       ) : null}
 
       {tab === "scan" ? (
-        <Scanner lastApproved={lastApproved} onResult={handleApproved} />
+        <Scanner onResult={handleApproved} />
       ) : (
         <GuestList guests={guests} onApproved={handleApproved} canRevert={isAdmin} />
       )}
@@ -123,10 +122,16 @@ function Scanner({ onResult }) {
   const videoRef = useRef(null);
   const controlsRef = useRef(null);
   const busyRef = useRef(false);
+  const resultRef = useRef(null);
   const lastScanRef = useRef({ id: "", at: 0 });
   const [running, setRunning] = useState(false);
   const [cameraError, setCameraError] = useState("");
   const [result, setResult] = useState(null);
+
+  function updateResult(nextResult) {
+    resultRef.current = nextResult;
+    setResult(nextResult);
+  }
 
   const stop = useCallback(() => {
     try {
@@ -146,25 +151,25 @@ function Scanner({ onResult }) {
       const now = Date.now();
       // Ignore the same code being re-read by the camera for a few seconds.
       if (id && lastScanRef.current.id === id && now - lastScanRef.current.at < 4000) return;
-      if (busyRef.current) return;
+      if (busyRef.current || resultRef.current) return;
       busyRef.current = true;
       lastScanRef.current = { id: id || String(text), at: now };
 
       try {
         if (!id) {
-          setResult({ kind: "invalid" });
+          updateResult({ kind: "invalid" });
           return;
         }
         const outcome = await approveGuest(id, "qr");
         if (!outcome) {
-          setResult({ kind: "unknown" });
+          updateResult({ kind: "unknown" });
           return;
         }
-        setResult({ kind: outcome.alreadyApproved ? "already" : "approved", guest: outcome.guest });
+        updateResult({ kind: outcome.alreadyApproved ? "already" : "approved", guest: outcome.guest });
         if (!outcome.alreadyApproved) onResult?.(outcome.guest);
         if (navigator.vibrate) navigator.vibrate(outcome.alreadyApproved ? [80, 60, 80] : 120);
       } catch (err) {
-        setResult({ kind: "error", message: friendlyError(err, "We couldn't check that code. Please try again.") });
+        updateResult({ kind: "error", message: friendlyError(err, "We couldn't check that code. Please try again.") });
       } finally {
         busyRef.current = false;
       }
@@ -174,7 +179,7 @@ function Scanner({ onResult }) {
 
   async function start() {
     setCameraError("");
-    setResult(null);
+    updateResult(null);
     try {
       if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error("unsupported");
@@ -241,53 +246,76 @@ function Scanner({ onResult }) {
         </p>
       ) : null}
 
-      <ScanResult result={result} />
+      {!result ? (
+        <p className="text-center text-sm text-muted-foreground">
+          Point the camera at a guest’s entry QR. Valid guests are approved automatically.
+        </p>
+      ) : null}
+      <CheckInResultDialog
+        result={result}
+        onNext={() => updateResult(null)}
+        onClose={() => updateResult(null)}
+      />
     </section>
   );
 }
 
-function ScanResult({ result }) {
-  if (!result) {
-    return (
-      <p className="text-center text-sm text-muted-foreground">
-        Point the camera at a guest’s entry QR. Valid guests are approved automatically.
-      </p>
-    );
-  }
-
+function CheckInResultDialog({ result, onNext, onClose }) {
+  if (!result) return null;
   const tones = {
-    approved: ["border-primary/50 bg-primary/10", "Approved — welcome in"],
-    already: ["border-gold/60 bg-gold/15", "Already approved"],
-    unknown: ["border-destructive/40 bg-destructive/10", "Guest not found"],
-    invalid: ["border-destructive/40 bg-destructive/10", "Not a wedding entry QR"],
-    error: ["border-destructive/40 bg-destructive/10", "Something went wrong"],
+    approved: ["bg-primary/10 text-primary", "Guest accepted", "The guest has been approved for entry."],
+    already: ["bg-gold/20 text-foreground", "Already accepted", "This guest was approved earlier."],
+    unknown: ["bg-destructive/10 text-destructive", "Guest not found", "This code does not match a guest invitation."],
+    invalid: ["bg-destructive/10 text-destructive", "Guest not accepted", "This QR code is not a wedding entry pass."],
+    error: ["bg-destructive/10 text-destructive", "Guest not accepted", result.message || "We couldn't check this guest."],
   };
-  const [tone, title] = tones[result.kind];
+  const [tone, title, description] = tones[result.kind] || tones.error;
   const guest = result.guest;
+  const accepted = result.kind === "approved" || result.kind === "already";
+  const Icon = accepted ? CircleCheck : CircleX;
 
   return (
-    <div role="status" aria-live="assertive" className={`rounded-2xl border p-6 text-center ${tone}`}>
-      <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{title}</p>
-      {guest ? (
-        <>
-          <p className="mt-3 font-display text-3xl">{fullName(guest)}</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {guest.numberOfSeats ?? 1} seat{(guest.numberOfSeats ?? 1) > 1 ? "s" : ""}
-            {guest.tableNumber ? ` · Table ${guest.tableNumber}` : ""}
-            {guest.rsvpStatus ? ` · RSVP ${guest.rsvpStatus}` : ""}
-          </p>
-          {result.kind === "already" && timeOf(guest.approvedAt || guest.checkedInAt) ? (
-            <p className="mt-2 text-sm">First approved at {timeOf(guest.approvedAt || guest.checkedInAt)}</p>
-          ) : null}
-        </>
-      ) : (
-        <p className="mt-3 text-sm">
-          {result.kind === "unknown" && "This code doesn’t match anyone on the guest list."}
-          {result.kind === "invalid" && "This QR wasn’t issued by the invitation site."}
-          {result.kind === "error" && result.message}
-        </p>
-      )}
-    </div>
+    <Modal open={Boolean(result)} onClose={onClose} title="Guest check-in">
+      <div role="status" aria-live="assertive" className="text-center">
+        <span className={`mx-auto flex size-16 items-center justify-center rounded-full ${tone}`}>
+          <Icon className="size-9" strokeWidth={1.8} aria-hidden="true" />
+        </span>
+        <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{title}</p>
+        {guest ? (
+          <>
+            <p className="mt-2 break-words font-display text-3xl text-foreground">{fullName(guest)}</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {guest.numberOfSeats ?? 1} seat{(guest.numberOfSeats ?? 1) > 1 ? "s" : ""}
+              {guest.tableNumber ? ` · Table ${guest.tableNumber}` : ""}
+              {guest.rsvpStatus ? ` · RSVP ${guest.rsvpStatus}` : ""}
+            </p>
+            {result.kind === "already" && timeOf(guest.approvedAt || guest.checkedInAt) ? (
+              <p className="mt-2 text-sm text-muted-foreground">First approved at {timeOf(guest.approvedAt || guest.checkedInAt)}</p>
+            ) : null}
+          </>
+        ) : (
+          <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+        )}
+        <div className="mt-7 grid gap-3 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={onNext}
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-md transition hover:brightness-105"
+          >
+            <DoorOpen className="size-4" aria-hidden="true" />
+            Accept the next guest
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-border bg-card px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-secondary"
+          >
+            <X className="size-4" aria-hidden="true" />
+            Close
+          </button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 
@@ -300,6 +328,7 @@ function GuestList({ guests, onApproved, canRevert = false }) {
   const [filter, setFilter] = useState("all");
   const [pendingId, setPendingId] = useState("");
   const [error, setError] = useState("");
+  const [approvalResult, setApprovalResult] = useState(null);
   const [reverting, setReverting] = useState(null); // a guest, "all", or null
   const [revertBusy, setRevertBusy] = useState(false);
   const approvedTotal = guests.filter(isGuestApproved).length;
@@ -315,12 +344,20 @@ function GuestList({ guests, onApproved, canRevert = false }) {
 
   async function handleApprove(guest) {
     setError("");
+    setApprovalResult(null);
     setPendingId(guest.id);
     try {
       const outcome = await approveGuest(guest.id, "manual");
-      if (outcome && !outcome.alreadyApproved) onApproved?.(outcome.guest);
+      if (!outcome) {
+        setApprovalResult({ kind: "unknown" });
+        return;
+      }
+      setApprovalResult({ kind: outcome.alreadyApproved ? "already" : "approved", guest: outcome.guest });
+      if (!outcome.alreadyApproved) onApproved?.(outcome.guest);
     } catch (err) {
-      setError(friendlyError(err, "We couldn't approve that guest. Please try again."));
+      const message = friendlyError(err, "We couldn't approve that guest. Please try again.");
+      setError(message);
+      setApprovalResult({ kind: "error", message });
     } finally {
       setPendingId("");
     }
@@ -524,6 +561,11 @@ function GuestList({ guests, onApproved, canRevert = false }) {
           </button>
         </div>
       </Modal>
+      <CheckInResultDialog
+        result={approvalResult}
+        onNext={() => setApprovalResult(null)}
+        onClose={() => setApprovalResult(null)}
+      />
     </section>
   );
 }

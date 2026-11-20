@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Each guest's entry QR encodes `GKA1:<Firestore document ID>` (never a URL). Only staff listed in the `admins` or `scan-admin` collections can read it back, and `scan-admin` users may only flip `approved` false -> true (see firestore.rules).
+- Keep the wedding admin's rose-and-ivory visual theme scoped to `.admin-portal` in `src/styles.css`, so the staff refresh cannot change guest-facing pages.

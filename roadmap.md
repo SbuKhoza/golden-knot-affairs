@@ -22,6 +22,6 @@
 - [x] Admin colour scheme drives filled text colour in PDF
 
 ## Admin interface refresh
-- [ ] Restyle admin pages to match the uploaded elegant floral dashboard reference without changing existing workflows.
-- [ ] Show a result modal after scans and manual approvals, with "Accept the next guest" and "Close" actions.
+- [x] Restyle admin pages to match the uploaded elegant floral dashboard reference without changing existing workflows.
+- [x] Show a result modal after scans and manual approvals, with "Accept the next guest" and "Close" actions.
 - [ ] Validate the admin screens and guest-result modal in the preview.
